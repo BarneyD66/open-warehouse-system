@@ -1,5 +1,7 @@
 # Open Warehouse System
 
+[English README](README.en.md) | 中文说明
+
 中文优先的开源仓储管理系统 Starter，面向跨境电商、海外仓、3PL 和自营仓配团队。项目覆盖官网获客、客户自助门户、运营后台、仓库作业台、库存、入库、出库、账单、退货和物流轨迹等核心流程，适合作为轻量 WMS / OMS / TMS 一体化系统的参考实现。
 
 > English: an open-source WMS starter for cross-border warehouse operations, fulfillment, inventory, billing, returns, and customer self-service workflows.
