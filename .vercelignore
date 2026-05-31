@@ -1,0 +1,13 @@
+.git
+.next
+.local-data
+deliverables
+docs
+logs
+node_modules
+test-artifacts
+tmp
+prototype-*.png
+tmp-upload-test
+cursor-talk-to-figma-*.tgz
+figma-socket*.log

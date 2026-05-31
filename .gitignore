@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/test-artifacts/
 
 # next.js
 /.next/
@@ -32,9 +33,25 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 
 # vercel
 .vercel
+
+# local runtime and generated review artifacts
+/.local-data/
+/logs/
+/tmp/
+/deliverables/
+prototype-*.png
+__pycache__/
+*.pyc
+
+# local Figma MCP scratch files
+/package/
+/tmp-upload-test/
+cursor-talk-to-figma-*.tgz
+figma-socket*.log
 
 # typescript
 *.tsbuildinfo

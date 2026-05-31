@@ -1,17 +1,36 @@
 {
-  "name": "warehouse-system",
+  "name": "open-warehouse-system",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
+  "description": "Chinese-first open-source WMS starter for cross-border warehouse, fulfillment, inbound, outbound, billing, and returns workflows.",
+  "license": "MIT",
+  "keywords": [
+    "wms",
+    "warehouse",
+    "fulfillment",
+    "cross-border",
+    "logistics",
+    "nextjs",
+    "postgres",
+    "3pl"
+  ],
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:init": "node scripts/init-postgres.mjs",
+    "db:migrate:local": "node scripts/migrate-local-json-to-postgres.mjs"
   },
   "dependencies": {
+    "@react-three/fiber": "^9.6.1",
+    "@types/three": "^0.184.1",
+    "lucide-react": "^1.14.0",
     "next": "16.2.6",
+    "postgres": "^3.4.9",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -20,6 +39,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
+    "playwright": "^1.59.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
