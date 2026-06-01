@@ -88,6 +88,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/CODEX_FOR_OSS_APPLICATION.md`: Chinese/primary Codex for OSS application draft.
 - `docs/CODEX_FOR_OSS_APPLICATION_EN.md`: English Codex for OSS application draft.
 - `docs/ARCHITECTURE.md`: application surfaces, domain modules, persistence and security boundaries.
+- `docs/INTERNATIONALIZATION.md`: localization, regional adaptation, and global-readiness notes.
 - `docs/OPEN_SOURCE_LAUNCH_CHECKLIST.md`: launch checklist and repository setup notes.
 - `docs/INITIAL_ISSUES.md`: first public issues for contributors.
 - `docs/STAR_AND_FORK_MESSAGE.md`: copy for asking friends to star or fork.
