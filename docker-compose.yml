@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: open-warehouse-postgres
+    environment:
+      POSTGRES_DB: open_warehouse_system
+      POSTGRES_USER: warehouse
+      POSTGRES_PASSWORD: warehouse
+    ports:
+      - "5432:5432"
+    volumes:
+      - open_warehouse_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U warehouse -d open_warehouse_system"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  open_warehouse_postgres_data:
