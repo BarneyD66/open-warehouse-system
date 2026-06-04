@@ -89,6 +89,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/CODEX_FOR_OSS_APPLICATION_EN.md`: English Codex for OSS application draft.
 - `docs/ARCHITECTURE.md`: application surfaces, domain modules, persistence and security boundaries.
 - `docs/CONTRIBUTOR_ONBOARDING.md`: first-run, first-contribution, and PR guidance for contributors.
+- `docs/DEMO_DATA_PLAN.md`: safe fake demo data plan for onboarding, screenshots, and tests.
 - `docs/INTERNATIONALIZATION.md`: localization, regional adaptation, and global-readiness notes.
 - `docs/LOCAL_POSTGRESQL.md`: local PostgreSQL and Docker Compose setup.
 - `docs/OPEN_SOURCE_LAUNCH_CHECKLIST.md`: launch checklist and repository setup notes.
