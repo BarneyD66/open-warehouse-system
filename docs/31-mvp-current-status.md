@@ -43,7 +43,7 @@
 - `/warehouse/print/pick-list/batch`：批量出库拣货单打印页，支持按多个出库单汇总 SKU、库位和数量。
 - `/warehouse/print/label/[id]`：面单打印页，当前可展示承运商服务、追踪号、包裹重量、件数和预估运费；后续可替换为真实承运商 PDF/ZPL。
 - `/login`、`/workspace`：客户自注册和登录入口，不需要开通码或客户编号，注册后系统自动生成客户编号。
-- `/ops-login`：内部员工白名单登录页，MVP 白名单账号包括 `ops / ops`、`warehouse / ops`、`admin / admin`，正式环境可通过 `STAFF_WHITELIST_JSON` 配置。
+- `/ops-login`：内部员工白名单登录页，本地 demo 白名单账号包括 `ops / Ops@2026Test`、`warehouse / Warehouse@2026Test`、`admin / Admin@2026Test`，正式环境可通过 `STAFF_WHITELIST_JSON` 配置真实员工账号。
 
 ## 当前 MVP API
 
@@ -85,7 +85,7 @@
 - 新增物流面单 MVP：`warehouseCoreStore` 增加承运商规则、运费试算、面单生成、追踪号和追踪事件；运营后台可生成面单并回传追踪节点。
 - `/tracking` 重写为干净 UTF-8 页面，并接入正式出库物流数据，客户可看到承运商、追踪号、预估运费和最新节点。
 - `db/schema.sql` 新增 `warehouse_locations`，为后续正式库位管理预留结构。
-- `/api/staff-login` 会按员工角色返回默认入口，`warehouse / ops` 登录后进入 `/warehouse`。
+- `/api/staff-login` 会按员工角色返回默认入口，`warehouse / Warehouse@2026Test` 本地 demo 登录后进入 `/warehouse`。
 - `/ops` 顶部新增“仓库作业台”入口，运营可快速切到仓库视角核对作业。
 - `/ops` 新增“客户认证审核”工作区：运营可查看自注册客户的公司、联系人、VAT、EORI、平台店铺资料，并将账号切换为未认证、已认证或暂停。
 - 新增 `auditLogStore` 与 `.local-data/audit-logs.json` 本地留痕，客户注册、客户资料更新和运营审核状态变更都会写入操作记录。
