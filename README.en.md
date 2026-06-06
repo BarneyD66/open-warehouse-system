@@ -94,6 +94,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/LOCAL_POSTGRESQL.md`: local PostgreSQL and Docker Compose setup.
 - `docs/MAINTENANCE_PLAN.md`: issue triage, release rhythm, review policy, and quality gates.
 - `docs/OPEN_SOURCE_LAUNCH_CHECKLIST.md`: launch checklist and repository setup notes.
+- `docs/SCREENSHOT_GUIDE.md`: safe screenshot and demo media guidance.
 - `docs/INITIAL_ISSUES.md`: first public issues for contributors.
 - `docs/STAR_AND_FORK_MESSAGE.md`: copy for asking friends to star or fork.
 - `ROADMAP.md`: project roadmap.
