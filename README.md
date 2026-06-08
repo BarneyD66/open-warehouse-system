@@ -78,6 +78,7 @@ Schema 位于 `db/schema.sql`。本地 JSON 到 PostgreSQL 的迁移脚本位于
 - `docs/27-postgres-migration.md`：PostgreSQL 迁移说明
 - `docs/35-launch-readiness-hardening.md`：上线前安全和配置检查
 - `docs/STAFF_AUTH.md`：员工白名单、demo 登录和生产认证配置说明
+- `SECURITY.md`：漏洞报告、安全范围和公开数据处理政策
 - `docs/CODEX_FOR_OSS_APPLICATION.md`：Codex for OSS 申请草稿
 - `docs/OPEN_SOURCE_LAUNCH_CHECKLIST.md`：公开仓库发布清单
 - `docs/GITHUB_REPO_PROFILE.md`：GitHub About、topics 和 release 文案

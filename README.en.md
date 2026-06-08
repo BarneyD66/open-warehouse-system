@@ -96,6 +96,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/OPEN_SOURCE_LAUNCH_CHECKLIST.md`: launch checklist and repository setup notes.
 - `docs/SCREENSHOT_GUIDE.md`: safe screenshot and demo media guidance.
 - `docs/STAFF_AUTH.md`: staff whitelist, demo login, and production authentication guidance.
+- `SECURITY.md`: vulnerability reporting, security scope, and public data policy.
 - `docs/INITIAL_ISSUES.md`: first public issues for contributors.
 - `docs/STAR_AND_FORK_MESSAGE.md`: copy for asking friends to star or fork.
 - `ROADMAP.md`: project roadmap.
