@@ -97,6 +97,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/SCREENSHOT_GUIDE.md`: safe screenshot and demo media guidance.
 - `docs/STAFF_AUTH.md`: staff whitelist, demo login, and production authentication guidance.
 - `SECURITY.md`: vulnerability reporting, security scope, and public data policy.
+- `CHANGELOG.md`: public release history and release-note summary.
 - `docs/INITIAL_ISSUES.md`: first public issues for contributors.
 - `docs/STAR_AND_FORK_MESSAGE.md`: copy for asking friends to star or fork.
 - `ROADMAP.md`: project roadmap.

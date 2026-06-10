@@ -1,13 +1,40 @@
 # Changelog
 
-All notable changes to Open Warehouse System will be documented in this file.
+All notable public-facing changes to Open Warehouse System are summarized here.
 
-## 0.1.0 - Open-source Launch
+This project is still in the `0.x` phase. Release notes should stay short, workflow-focused, and explicit about setup, security, migration, and contributor-facing changes.
 
-- Repackaged the project as `open-warehouse-system`.
-- Added MIT license, contribution guide, security policy, code of conduct, maintainers notes, and roadmap.
-- Added README with Chinese-first positioning, feature overview, tech stack, setup instructions, and documentation index.
-- Added `.env.example` for safe local setup.
-- Added GitHub issue templates, pull request template, and CI workflow for lint/build.
-- Added open-source launch checklist, repository profile copy, architecture notes, initial issue backlog, and Codex for OSS application draft.
-- Verified `npm run lint` and `npm run build`.
+## Unreleased
+
+### Added
+
+- Added `good first issue` issue template for small, well-scoped contributor tasks.
+- Added staff authentication documentation covering local demo accounts, `STAFF_WHITELIST_JSON`, and production login rules.
+- Expanded `SECURITY.md` with vulnerability reporting, security scope, data handling, and public demo policies.
+- Added screenshot and demo media guidance for safe public README assets, release notes, and Codex for OSS application materials.
+- Added an open-source maintenance plan covering triage cadence, review policy, quality gates, and release rhythm.
+- Added contributor onboarding, safe demo data planning, local PostgreSQL setup notes, and internationalization guidance.
+
+### Changed
+
+- README documentation index now links to security, staff authentication, screenshot, onboarding, maintenance, and Codex for OSS materials.
+- Demo login documentation now reflects the current customer self-registration flow instead of the old fixed `test / test` prototype login.
+
+### Security
+
+- Public contribution guidance now explicitly rejects real customer data, production screenshots, secrets, logs, `.env.local`, database URLs, carrier credentials, payment proofs, and private pricing sheets.
+- Chinese-mode customer-facing exports and templates are documented as Chinese-first, with English field names kept as internal aliases when needed.
+
+## v0.1.0 - 2026-05-31
+
+### Added
+
+- Initial open-source launch package for a Chinese-first WMS starter focused on cross-border warehouse, fulfillment, inventory, billing, returns, and customer self-service workflows.
+- Next.js 16, React 19, TypeScript, Tailwind CSS, PostgreSQL schema, local JSON fallback stores, and Playwright-ready project structure.
+- Customer, ops, and warehouse surfaces documented in README and architecture notes.
+- Codex for OSS application draft, GitHub repository profile copy, launch checklist, initial issue ideas, and star/fork outreach copy.
+
+### Notes
+
+- The launch tag represents an early `0.x` foundation, not a production-ready ERP replacement.
+- Public examples and screenshots must use fake demo data only.
