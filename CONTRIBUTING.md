@@ -10,6 +10,8 @@
 4. 本地开发：`npm run dev`。
 5. 提交前运行：`npm run lint` 和 `npm run build`。
 
+英文新贡献者可以先看 `docs/CONTRIBUTOR_QUICK_PATH.md`，再按需阅读完整的 `docs/CONTRIBUTOR_ONBOARDING.md`。
+
 ## 贡献优先级
 
 - P0：修复安全问题、数据隔离、构建失败、明显业务闭环错误。
