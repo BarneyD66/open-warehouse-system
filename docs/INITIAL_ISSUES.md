@@ -2,6 +2,8 @@
 
 公开仓库后，可以把下面这些 issue 复制到 GitHub。建议先打上 `good first issue`、`help wanted`、`documentation`、`test`、`backend`、`frontend` 等标签。
 
+如果需要更适合直接粘贴到 GitHub Issues 的英文版本，见 `docs/GOOD_FIRST_ISSUE_DRAFTS.md`。
+
 ## 1. Add seed data for local demo
 
 Labels: `good first issue`, `developer-experience`

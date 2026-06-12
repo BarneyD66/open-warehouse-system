@@ -85,6 +85,7 @@ Schema 位于 `db/schema.sql`。本地 JSON 到 PostgreSQL 的迁移脚本位于
 - `docs/OPEN_SOURCE_LAUNCH_CHECKLIST.md`：公开仓库发布清单
 - `docs/GITHUB_REPO_PROFILE.md`：GitHub About、topics 和 release 文案
 - `docs/INITIAL_ISSUES.md`：公开后可复制的首批 issues
+- `docs/GOOD_FIRST_ISSUE_DRAFTS.md`：可直接复制到 GitHub 的英文新手 issue 草稿
 - `docs/STAR_AND_FORK_MESSAGE.md`：发给朋友帮忙 star/fork 的短文案
 - `docs/ARCHITECTURE.md`：系统架构和边界说明
 - `ROADMAP.md`：开源路线图
