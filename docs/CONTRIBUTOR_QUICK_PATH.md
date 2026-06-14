@@ -46,6 +46,8 @@ Useful routes:
 
 For staff demo access, see `docs/STAFF_AUTH.md`.
 
+If your local fallback data gets messy, reset it with `docs/LOCAL_DEMO_RESET.md`.
+
 ## 3. Keep the Change Narrow
 
 Before editing, write down:
