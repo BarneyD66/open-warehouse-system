@@ -95,6 +95,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/LOCAL_DEMO_RESET.md`: safe local fallback data reset guidance.
 - `docs/LOCAL_POSTGRESQL.md`: local PostgreSQL and Docker Compose setup.
 - `docs/MAINTENANCE_PLAN.md`: issue triage, release rhythm, review policy, and quality gates.
+- `docs/MOCK_CARRIER_ADAPTER.md`: safe mock carrier adapter design for logistics contributors.
 - `docs/OPEN_SOURCE_LAUNCH_CHECKLIST.md`: launch checklist and repository setup notes.
 - `docs/SCREENSHOT_GUIDE.md`: safe screenshot and demo media guidance.
 - `docs/STAFF_AUTH.md`: staff whitelist, demo login, and production authentication guidance.

@@ -111,6 +111,8 @@ The project has screenshot guidance in `docs/SCREENSHOT_GUIDE.md`. The PR templa
 
 Suggested labels: `good first issue`, `logistics`, `documentation`
 
+Status: baseline design doc exists in `docs/MOCK_CARRIER_ADAPTER.md`; future issues can refine the interface or add tests.
+
 ### Summary
 
 Write a short design note for a mock carrier adapter that can support rate quoting, label creation, tracking events, and webhook-like updates without real carrier credentials.
