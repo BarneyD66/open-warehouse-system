@@ -4,6 +4,8 @@ Open Warehouse System is Chinese-first, but it is designed to be adapted for cro
 
 This document clarifies what "global-ready" means in this repository. It is intended for contributors, early adopters, and reviewers who want to understand how the project can support users outside one local market without making unrealistic compliance claims.
 
+For a more practical region-by-region checklist, see `docs/REGIONAL_ADAPTATION_GUIDE.md`.
+
 ## Positioning
 
 - Chinese-first: the first complete business flows are written for Chinese-speaking cross-border sellers and warehouse operators.
