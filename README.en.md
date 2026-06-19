@@ -104,6 +104,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `CHANGELOG.md`: public release history and release-note summary.
 - `docs/INITIAL_ISSUES.md`: first public issues for contributors.
 - `docs/GOOD_FIRST_ISSUE_DRAFTS.md`: copy-ready good first issue drafts.
+- `docs/ISSUE_TRIAGE_LABELS.md`: GitHub issue label guide for maintainers and contributors.
 - `docs/STAR_AND_FORK_MESSAGE.md`: copy for asking friends to star or fork.
 - `ROADMAP.md`: project roadmap.
 

@@ -18,6 +18,7 @@ Recommended cadence while the project is in early open-source launch:
 
 - Review new issues at least weekly.
 - Label issues by type: `bug`, `documentation`, `developer-experience`, `backend`, `frontend`, `test`, `security`, `logistics`, `inventory`, `billing`, `good first issue`, `help wanted`.
+- Use `docs/ISSUE_TRIAGE_LABELS.md` as the shared label guide for maintainers and first-time contributors.
 - Ask for reproduction steps when a bug report is incomplete.
 - Keep `good first issue` items small enough for a first contributor to finish in one focused PR.
 - Close or convert vague feature requests into concrete workflow proposals.
