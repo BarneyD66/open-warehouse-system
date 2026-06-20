@@ -20,8 +20,8 @@ export function StaffLoginForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: username.trim(), password }),
       });
-      if (!response.ok) throw new Error("账号不在员工白名单内，或密码错误。");
-      const payload = (await response.json().catch(() => ({}))) as { nextPath?: string };
+      const payload = (await response.json().catch(() => ({}))) as { message?: string; nextPath?: string };
+      if (!response.ok) throw new Error(payload.message || "账号不在员工白名单内，或密码错误。");
       window.location.assign(payload.nextPath || "/ops");
     } catch (err) {
       setError(err instanceof Error ? err.message : "登录失败，请稍后再试。");
