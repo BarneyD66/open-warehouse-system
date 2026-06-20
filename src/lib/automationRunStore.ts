@@ -80,6 +80,21 @@ async function ensureAutomationRunTable() {
   automationRunTableReady = true;
 }
 
+function normalizeAutomationTask(task: AutomationTaskRunRecord): AutomationTaskRunRecord {
+  return {
+    ...task,
+    handlingStatus: task.handlingStatus ?? (task.status === "completed" ? "resolved" : "open"),
+    retryCount: Math.max(0, Math.floor(Number(task.retryCount ?? 0))),
+  };
+}
+
+function normalizeAutomationRun(run: AutomationRunRecord): AutomationRunRecord {
+  return {
+    ...run,
+    results: Array.isArray(run.results) ? run.results.map(normalizeAutomationTask) : [],
+  };
+}
+
 async function readAutomationRunData(): Promise<AutomationRunData> {
   if (hasPostgresConfig()) {
     await ensureAutomationRunTable();
@@ -97,21 +112,6 @@ async function readAutomationRunData(): Promise<AutomationRunData> {
     if (error instanceof SyntaxError) return { runs: [] };
     throw error;
   }
-}
-
-function normalizeAutomationTask(task: AutomationTaskRunRecord): AutomationTaskRunRecord {
-  return {
-    ...task,
-    handlingStatus: task.handlingStatus ?? (task.status === "completed" ? "resolved" : "open"),
-    retryCount: Math.max(0, Math.floor(Number(task.retryCount ?? 0))),
-  };
-}
-
-function normalizeAutomationRun(run: AutomationRunRecord): AutomationRunRecord {
-  return {
-    ...run,
-    results: Array.isArray(run.results) ? run.results.map(normalizeAutomationTask) : [],
-  };
 }
 
 async function writeAutomationRunData(data: AutomationRunData) {
