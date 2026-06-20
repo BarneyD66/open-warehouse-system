@@ -95,6 +95,7 @@ import { evaluateProductionIntegrationReadiness, type IntegrationReadinessStatus
 import { buildCustomerSelfServiceOpsReport } from "@/lib/customerSelfServiceOpsReport";
 import { buildReportCenterData } from "@/lib/reportCenter";
 import { getSystemAlerts, type SystemAlert, type SystemAlertSeverity } from "@/lib/systemAlertStore";
+import { buildLaunchGuardTasks } from "@/lib/launchGuard";
 import { billingInvoiceStatusLabel, billingStatusLabel, buildReplenishmentSuggestions, buildStocktakeCandidates, getLocationUtilization, getWarehouseCoreData, outboundWorkModeLabel, returnOrderStatusLabel, returnResolutionLabel, suggestCarrierServiceForOutbound, warehouseLocationStatusLabel, warehouseLocationZoneTypeLabel, type BillingRecord, type CoreOutboundOrder, type CustomerProfile, type InventoryAdjustmentRequest, type InventoryBalance, type InventoryLot, type InventoryMovement, type ReturnOrder, type WarehouseLocation } from "@/lib/warehouseCoreStore";
 import { getWebhookEvents, type WebhookEventRecord, type WebhookEventStatus } from "@/lib/webhookEventStore";
 
@@ -2321,7 +2322,8 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
     documents,
     workOrders: expansionData.selfServiceWorkOrders,
   });
-  const reportCenterData = buildReportCenterData({ expansionData, auditLogs, coreData, notificationDeliveries, automationRuns, customerSelfServiceReport: customerSelfServiceOpsReport, documents });
+  const launchGuardTasks = buildLaunchGuardTasks({ launchReadiness, integrationReadiness: productionIntegrationReadiness, systemHealth: opsSystemHealth, alerts: systemAlerts });
+  const reportCenterData = buildReportCenterData({ expansionData, auditLogs, coreData, notificationDeliveries, automationRuns, customerSelfServiceReport: customerSelfServiceOpsReport, documents, launchGuardTasks });
   const todoCount = staffNotifications.length || openInquiries + missingDocs + missingTracking + openInboundReceivingExceptions.length + openLogistics + openOutbound + openScanExceptions.length + inventoryRisks + unverifiedCustomers;
   const pendingBilling = coreData.billingRecords.filter((item) => item.status === "draft" || item.status === "pending_confirmation").length;
   const lowStockBalances = coreData.inventoryBalances.filter((item) => item.availableQty < item.alertQty).length;

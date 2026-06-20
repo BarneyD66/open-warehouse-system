@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordAuditLog } from "@/lib/auditLogStore";
 import { buildLaunchGuardTasks, guardStatusLabel, summarizeLaunchGuard } from "@/lib/launchGuard";
 import { evaluateLaunchReadiness } from "@/lib/launchReadiness";
 import { evaluateOpsSystemHealth } from "@/lib/opsSystemHealth";
@@ -25,7 +26,7 @@ function csvResponse(filename: string, rows: unknown[][]) {
 }
 
 export async function GET(request: Request) {
-  await requireStaffSession();
+  const staff = await requireStaffSession();
   const [launchReadiness, integrationReadiness, systemHealth, alerts] = await Promise.all([
     evaluateLaunchReadiness(),
     evaluateProductionIntegrationReadiness(),
@@ -56,6 +57,19 @@ export async function GET(request: Request) {
             task.href ?? "",
           ])
         : [[summary.generatedAt, "可进入上线复核", summary.score, 0, 0, 1, "上线守门板", "已就绪", "运营", "暂无待处理事项", "当前上线体检、生产集成、系统健康和告警均未发现阻塞项。", "保持上线前复核节奏。", "/ops?section=overview"]];
+
+    if (!["saved_view", "scheduled_report"].includes(url.searchParams.get("auditSource") ?? "")) {
+      await recordAuditLog({
+        action: "report_export",
+        actorRole: "staff",
+        actorName: staff.displayName || staff.username,
+        targetType: "report",
+        targetId: "launch-guard",
+        summary: "导出上线复核包",
+        note: `阻塞项 ${summary.blocked} 个，关注项 ${summary.warning} 个，总评分 ${summary.score}`,
+        after: summary,
+      });
+    }
 
     return csvResponse(`上线复核包-${new Date().toISOString().slice(0, 10)}.csv`, [
       ["生成时间", "总体结论", "总评分", "阻塞项", "关注项", "序号", "来源", "状态", "负责人", "事项", "详情", "下一步动作", "处理入口"],

@@ -144,6 +144,12 @@ function reportUrlForView(request: Request, view: SavedReportView) {
     return new URL(`/api/ops/reports/documents-security?${params.toString()}`, request.url);
   }
 
+  if (view.module === "launch_guard") {
+    params.set("auditSource", "saved_view");
+    params.set("format", "csv");
+    return new URL(`/api/ops/launch-guard?${params.toString()}`, request.url);
+  }
+
   const reportModule = view.module === "orders" ? "outbound" : view.module;
   params.set("module", reportModule);
   params.set("auditSource", "saved_view");

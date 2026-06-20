@@ -2,11 +2,16 @@ import { NextResponse } from "next/server";
 import { getAuditLogs, recordAuditLog } from "@/lib/auditLogStore";
 import { getAutomationRuns } from "@/lib/automationRunStore";
 import { getDocuments } from "@/lib/documentStore";
+import { buildLaunchGuardTasks } from "@/lib/launchGuard";
+import { evaluateLaunchReadiness } from "@/lib/launchReadiness";
 import { getNotificationDeliveries } from "@/lib/notificationStore";
+import { evaluateOpsSystemHealth } from "@/lib/opsSystemHealth";
 import { getOpsExpansionData } from "@/lib/opsExpansionStore";
+import { evaluateProductionIntegrationReadiness } from "@/lib/productionIntegrationReadiness";
 import { buildReportCenterData, reportCenterCsvRows } from "@/lib/reportCenter";
 import { requireStaffSession } from "@/lib/staffAuth";
 import { canAccessOpsModule } from "@/lib/staffPermissions";
+import { getSystemAlerts } from "@/lib/systemAlertStore";
 import { getWarehouseCoreData } from "@/lib/warehouseCoreStore";
 
 export const runtime = "nodejs";
@@ -36,14 +41,19 @@ export async function GET(request: Request) {
   const expansionData = await getOpsExpansionData();
   if (!canAccessOpsModule(staff, "reports", expansionData)) return NextResponse.json({ error: "当前角色无权查看报表中心。" }, { status: 403 });
 
-  const [auditLogs, coreData, notificationDeliveries, automationRuns, documents] = await Promise.all([
+  const [auditLogs, coreData, notificationDeliveries, automationRuns, documents, launchReadiness, integrationReadiness, systemHealth, alerts] = await Promise.all([
     getAuditLogs({ limit: 500 }),
     getWarehouseCoreData(),
     getNotificationDeliveries(500),
     getAutomationRuns({ limit: 100 }),
     getDocuments(),
+    evaluateLaunchReadiness(),
+    evaluateProductionIntegrationReadiness(),
+    evaluateOpsSystemHealth(),
+    getSystemAlerts(),
   ]);
-  const data = buildReportCenterData({ expansionData, auditLogs, coreData, notificationDeliveries, automationRuns, documents });
+  const launchGuardTasks = buildLaunchGuardTasks({ launchReadiness, integrationReadiness, systemHealth, alerts });
+  const data = buildReportCenterData({ expansionData, auditLogs, coreData, notificationDeliveries, automationRuns, documents, launchGuardTasks });
   const url = new URL(request.url);
 
   if (url.searchParams.get("format") === "csv") {

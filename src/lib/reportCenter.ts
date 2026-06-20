@@ -2,6 +2,7 @@ import type { AuditLogRecord } from "./auditLogStore";
 import type { AutomationRunRecord } from "./automationRunStore";
 import type { CustomerSelfServiceOpsReport } from "./customerSelfServiceOpsReport";
 import type { DocumentRecord } from "./documentStore";
+import type { GuardTask } from "./launchGuard";
 import type { NotificationDelivery } from "./notificationStore";
 import type { OpsExpansionData, SavedReportView } from "./opsExpansionStore";
 import type { WarehouseCoreData } from "./warehouseCoreStore";
@@ -89,6 +90,7 @@ const reportModules: Array<Pick<ReportCenterModuleRow, "module" | "label" | "des
   { module: "staff_performance", label: "员工绩效", description: "扫码次数、作业动作、账单复核、报表导出和审计动作。", href: "/api/ops/reports/staff-performance" },
   { module: "automation_runs", label: "自动化运行记录", description: "定时任务、重试、失败原因和处理动作。", href: "/api/ops/reports/automation-runs" },
   { module: "notification_deliveries", label: "通知投递", description: "邮件、短信、微信通知投递、失败和重试。", href: "/api/ops/reports/notification-deliveries" },
+  { module: "launch_guard", label: "上线复核包", description: "上线体检、生产集成、系统健康和系统告警的老板视角责任清单。", href: "/api/ops/launch-guard?format=csv" },
 ];
 
 reportModules.splice(3, 0, {
@@ -131,6 +133,7 @@ function reportRisk(
   customerSelfServiceReport?: Pick<CustomerSelfServiceOpsReport, "summary">,
   documents: DocumentRecord[] = [],
   opsData?: Pick<OpsExpansionData, "selfServiceWorkOrders">,
+  launchGuardTasks: GuardTask[] = [],
 ): { riskLevel: ReportCenterRisk; riskReason: string } {
   const nowMs = Date.now();
   const overdueBilling = coreData.billingRecords.filter((item) => item.dueDate && new Date(`${item.dueDate}T23:59:59`).getTime() < Date.now() && item.status !== "paid").length;
@@ -166,6 +169,8 @@ function reportRisk(
   const failedRuns = automationRuns.filter((item) => item.status === "failed" || item.status === "partial_failed" || item.summary.failed > 0 || item.results.some((task) => task.status === "failed")).length;
   const selfServiceRisk = (customerSelfServiceReport?.summary.overdueActions ?? 0) + (customerSelfServiceReport?.summary.urgentActions ?? 0);
   const documentSecurityRisk = documents.filter((item) => item.scanStatus === "blocked" || item.scanStatus === "pending" || !item.scanStatus).length;
+  const launchGuardBlocked = launchGuardTasks.filter((item) => item.status === "blocked").length;
+  const launchGuardWarning = launchGuardTasks.filter((item) => item.status === "warning").length;
   const pendingFinanceReviews = (opsData?.selfServiceWorkOrders ?? []).filter((item) => item.financeReviewRequired && item.status !== "resolved" && item.status !== "cancelled").length;
   const adjustmentBillingAttention = coreData.billingRecords.filter(
     (item) =>
@@ -202,6 +207,7 @@ function reportRisk(
     notification_deliveries: { count: failedDeliveries, reason: `通知失败/阻塞 ${failedDeliveries} 条` },
     customer_self_service: { count: selfServiceRisk, reason: `客户自助超时/紧急 ${selfServiceRisk} 条` },
     documents_security: { count: documentSecurityRisk, reason: `文件待扫描/阻塞 ${documentSecurityRisk} 个` },
+    launch_guard: { count: launchGuardBlocked * 5 + launchGuardWarning, reason: `上线阻塞 ${launchGuardBlocked} 项，关注 ${launchGuardWarning} 项` },
   };
 
   const risk = riskMap[module] ?? { count: 0, reason: "暂无异常信号" };
@@ -218,6 +224,7 @@ export function buildReportCenterData(input: {
   automationRuns: AutomationRunRecord[];
   customerSelfServiceReport?: Pick<CustomerSelfServiceOpsReport, "summary">;
   documents?: DocumentRecord[];
+  launchGuardTasks?: GuardTask[];
 }): ReportCenterData {
   const recentReportExports = input.auditLogs
     .filter((item) => item.action === "report_export")
@@ -235,7 +242,7 @@ export function buildReportCenterData(input: {
     const views = input.expansionData.savedViews.filter((view) => view.module === module.module);
     const schedules = input.expansionData.reportSchedules.filter((schedule) => schedule.status !== "archived" && views.some((view) => view.id === schedule.viewId));
     const failedScheduleCount = schedules.filter((schedule) => schedule.lastDeliveryStatus === "failed").length;
-    const risk = reportRisk(module.module, input.coreData, input.notificationDeliveries, input.automationRuns, input.customerSelfServiceReport, input.documents, input.expansionData);
+    const risk = reportRisk(module.module, input.coreData, input.notificationDeliveries, input.automationRuns, input.customerSelfServiceReport, input.documents, input.expansionData, input.launchGuardTasks);
     const recentExportCount = views.reduce((sum, view) => sum + (exportCountByTarget.get(view.id) ?? 0), 0);
     return {
       ...module,

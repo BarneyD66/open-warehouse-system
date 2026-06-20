@@ -364,7 +364,8 @@ export type SavedReportView = {
     | "platform_sync"
     | "customer_self_service"
     | "documents_security"
-    | "notification_deliveries";
+    | "notification_deliveries"
+    | "launch_guard";
   filters: Record<string, string>;
   metrics: string[];
   ownerRole: string;
@@ -442,6 +443,15 @@ function makeId(prefix: string) {
 
 function systemDefaultSavedViews(): SavedReportView[] {
   return [
+    {
+      id: "SYS-VIEW-LAUNCH-GUARD",
+      name: "上线复核包",
+      module: "launch_guard",
+      filters: { scope: "all" },
+      metrics: ["总体结论", "总评分", "阻塞项", "负责人", "下一步动作"],
+      ownerRole: "admin",
+      updatedAt: systemViewUpdatedAt,
+    },
     {
       id: "SYS-VIEW-FINANCE-PENDING-APPROVAL",
       name: "财务调账/赔付-待审批",

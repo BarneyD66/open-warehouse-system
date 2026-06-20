@@ -38,6 +38,7 @@ function metric(label: string, value: number | string, tone: "slate" | "cyan" | 
 export function OpsReportCenterPanel({ data }: Props) {
   const riskModules = data.modules.filter((item) => item.riskLevel !== "正常").slice(0, 6);
   const financeModule = data.modules.find((item) => item.module === "finance_adjustments");
+  const launchGuardModule = data.modules.find((item) => item.module === "launch_guard");
   const primaryModules = [...data.modules]
     .sort((left, right) => {
       const rank: Record<ReportCenterRisk, number> = { 高风险: 0, 关注: 1, 正常: 2 };
@@ -131,6 +132,29 @@ export function OpsReportCenterPanel({ data }: Props) {
               { id: "SYS-VIEW-FINANCE-MISSING-ATTACHMENT", name: "附件待补", description: "每日发送需要补审批附件的记录。" },
               { id: "SYS-VIEW-FINANCE-DISPUTED", name: "争议待复核", description: "每日发送驳回或有争议的调账/赔付。" },
               { id: "SYS-VIEW-FINANCE-PAYMENT-REVIEW", name: "付款待核销", description: "每日发送等待财务核销的记录。" },
+            ]}
+          />
+        </div>
+      ) : null}
+
+      {launchGuardModule ? (
+        <div className="mt-4 rounded-md border border-violet-100 bg-violet-50 p-3">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-violet-950">上线复核常用视图</h3>
+              <p className="mt-1 text-xs leading-5 text-violet-800">把上线体检、生产集成、系统健康和系统告警合成一份老板视角清单，适合上线前每天自动发送。</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <span className={`w-fit rounded-md border px-2 py-1 text-xs font-semibold ${riskClass[launchGuardModule.riskLevel]}`}>{launchGuardModule.riskReason}</span>
+              <Link className="inline-flex min-h-8 items-center gap-2 rounded-md border border-violet-200 bg-white px-3 text-xs font-semibold text-violet-800 hover:bg-violet-50" href="/api/ops/reports/views/SYS-VIEW-LAUNCH-GUARD">
+                <FileDown size={14} />
+                导出复核包
+              </Link>
+            </div>
+          </div>
+          <ReportScheduleQuickCreate
+            views={[
+              { id: "SYS-VIEW-LAUNCH-GUARD", name: "上线复核包", description: "每日发送上线阻塞项、负责人和下一步动作。" },
             ]}
           />
         </div>

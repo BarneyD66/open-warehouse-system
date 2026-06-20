@@ -84,6 +84,10 @@ function reportDownloadUrlForView(request: Request, view: SavedReportView) {
   if (view.module === "notification_deliveries") return new URL(`/api/ops/reports/notification-deliveries?${params.toString()}`, request.url).toString();
   if (view.module === "customer_self_service") return new URL(`/api/ops/reports/customer-self-service?${params.toString()}`, request.url).toString();
   if (view.module === "documents_security") return new URL(`/api/ops/reports/documents-security?${params.toString()}`, request.url).toString();
+  if (view.module === "launch_guard") {
+    params.set("format", "csv");
+    return new URL(`/api/ops/launch-guard?${params.toString()}`, request.url).toString();
+  }
 
   const reportModule = view.module === "orders" ? "outbound" : view.module;
   params.set("module", reportModule);
