@@ -47,11 +47,12 @@ function syncSecret() {
 function authorizedBySecret(request: Request) {
   const secret = syncSecret();
   if (!secret) return false;
-  return request.headers.get("authorization") === `Bearer ${secret}` || new URL(request.url).searchParams.get("secret") === secret;
+  const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
+  return token === secret || new URL(request.url).searchParams.get("secret") === secret;
 }
 
 async function authorize(request: Request): Promise<SyncActor | null> {
-  if (authorizedBySecret(request)) return { actorRole: "system", actorName: "承运商轨迹/POD 自动同步任务" };
+  if (authorizedBySecret(request)) return { actorRole: "system", actorName: "承运商轨迹与 POD 自动同步任务" };
 
   const cookieStore = await cookies();
   const staff = parseStaffSession(cookieStore.get(staffCookieName)?.value);
@@ -158,7 +159,7 @@ async function syncOrder(order: CoreOutboundOrder, carrierConfigs: Awaited<Retur
     const result = await createCoreOutboundDeliveryException({
       id: updatedOrder.id,
       exceptionType: "proof_uploaded",
-      message: tracking.detail || "承运商返回签收证明/POD。",
+      message: tracking.detail || "承运商返回签收证明 POD。",
       severity: "warning",
       proofUrl: tracking.proofUrl,
       claimStatus: "not_required",

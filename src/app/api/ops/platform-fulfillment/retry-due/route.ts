@@ -33,7 +33,8 @@ function retrySecret() {
 function authorizedBySecret(request: Request) {
   const secret = retrySecret();
   if (!secret) return false;
-  return request.headers.get("authorization") === `Bearer ${secret}`;
+  const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
+  return token === secret || new URL(request.url).searchParams.get("secret") === secret;
 }
 
 async function authorize(request: Request): Promise<RetryActor | null> {
@@ -116,9 +117,7 @@ async function runRetry(request: Request, body?: { limit?: number }) {
     .slice(0, limit);
 
   const results: RetryResultRow[] = [];
-  for (const order of retryOrders) {
-    results.push(await retryOrder(order, expansionData.platformConnections));
-  }
+  for (const order of retryOrders) results.push(await retryOrder(order, expansionData.platformConnections));
 
   const summary = {
     limit,

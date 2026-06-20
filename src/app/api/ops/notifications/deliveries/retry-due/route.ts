@@ -20,7 +20,8 @@ function cronSecret() {
 function authorizedBySecret(request: Request) {
   const secret = cronSecret();
   if (!secret) return false;
-  return request.headers.get("authorization") === `Bearer ${secret}`;
+  const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
+  return token === secret || new URL(request.url).searchParams.get("secret") === secret;
 }
 
 async function authorize(request: Request): Promise<RetryActor | null> {

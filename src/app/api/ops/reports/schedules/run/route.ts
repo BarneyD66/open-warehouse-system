@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { NextResponse } from "next/server";
 import { recordAuditLog } from "@/lib/auditLogStore";
 import { getOpsExpansionData, updateReportScheduleDelivery, type ReportScheduleConfig, type SavedReportView } from "@/lib/opsExpansionStore";
 import { checkRateLimit, rateLimitKey } from "@/lib/rateLimitStore";
@@ -19,10 +19,15 @@ type DeliveryResult = {
   recipients: string[];
 };
 
+function scheduleSecret() {
+  return process.env.REPORT_SCHEDULE_SECRET || process.env.CRON_SECRET || "";
+}
+
 function authorizedBySecret(request: Request) {
-  const secret = process.env.REPORT_SCHEDULE_SECRET;
+  const secret = scheduleSecret();
   if (!secret) return false;
-  return request.headers.get("x-report-schedule-secret") === secret || new URL(request.url).searchParams.get("secret") === secret;
+  const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
+  return token === secret || request.headers.get("x-report-schedule-secret") === secret || new URL(request.url).searchParams.get("secret") === secret;
 }
 
 async function authorize(request: Request, expansionData: Awaited<ReturnType<typeof getOpsExpansionData>>) {
@@ -109,18 +114,17 @@ async function deliverReport(input: { schedule: ReportScheduleConfig; view: Save
   return { status: "sent" as const, note: "已提交到报表投递 webhook。" };
 }
 
-export async function POST(request: Request) {
+async function runSchedules(request: Request, body?: { force?: boolean; scheduleId?: string }) {
   const rate = checkRateLimit(rateLimitKey(request, "ops-report-schedule-run"), 20, 10 * 60_000);
   if (!rate.ok) return NextResponse.json({ error: "定时报表执行过于频繁，请稍后再试。", resetAt: rate.resetAt }, { status: 429 });
 
   const expansionData = await getOpsExpansionData();
   const auth = await authorize(request, expansionData);
-  if (!auth.ok) return NextResponse.json({ error: "当前账号无权执行定时报表" }, { status: 403 });
+  if (!auth.ok) return NextResponse.json({ error: "当前账号无权执行定时报表。" }, { status: 403 });
 
-  const body = (await request.json().catch(() => ({}))) as { force?: boolean; scheduleId?: string };
   const timestamp = new Date();
   const generatedAt = timestamp.toISOString();
-  const schedules = expansionData.reportSchedules.filter((schedule) => (!body.scheduleId || schedule.id === body.scheduleId) && (body.force || cadenceDue(schedule, timestamp)));
+  const schedules = expansionData.reportSchedules.filter((schedule) => (!body?.scheduleId || schedule.id === body.scheduleId) && (body?.force || cadenceDue(schedule, timestamp)));
   const results: DeliveryResult[] = [];
 
   for (const schedule of schedules) {
@@ -155,8 +159,8 @@ export async function POST(request: Request) {
     targetType: "report",
     targetId: "scheduled-reports",
     summary: "执行定时报表发送任务",
-    note: `执行 ${results.length} 个定时报表；来源：${auth.source}`,
-    after: { force: Boolean(body.force), scheduleId: body.scheduleId ?? "", results },
+    note: `执行 ${results.length} 个定时报表；来源：${auth.source}。`,
+    after: { force: Boolean(body?.force), scheduleId: body?.scheduleId ?? "", results },
   });
 
   return NextResponse.json({
@@ -167,4 +171,17 @@ export async function POST(request: Request) {
     failed: results.filter((item) => item.status === "failed").length,
     results,
   });
+}
+
+export async function GET(request: Request) {
+  const url = new URL(request.url);
+  return runSchedules(request, {
+    force: url.searchParams.get("force") === "1",
+    scheduleId: url.searchParams.get("scheduleId") || undefined,
+  });
+}
+
+export async function POST(request: Request) {
+  const body = (await request.json().catch(() => ({}))) as { force?: boolean; scheduleId?: string };
+  return runSchedules(request, body);
 }

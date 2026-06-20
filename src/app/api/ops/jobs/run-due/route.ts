@@ -39,7 +39,8 @@ function runSecret() {
 function authorizedBySecret(request: Request) {
   const secret = runSecret();
   if (!secret) return false;
-  return request.headers.get("authorization") === `Bearer ${secret}` || new URL(request.url).searchParams.get("secret") === secret;
+  const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
+  return token === secret || new URL(request.url).searchParams.get("secret") === secret;
 }
 
 async function authorize(request: Request): Promise<RunDueActor | null> {
@@ -101,10 +102,7 @@ async function runPickingWaveJob(plan: BatchOperationPlan, actorName: string, st
 
   return {
     ok: result.updated.length > 0,
-    message:
-      result.updated.length > 0
-        ? `已生成 ${result.waves.length} 个拣货波次，更新 ${result.updated.length} 个出库单。`
-        : "未能生成拣货波次，请检查出库单状态。",
+    message: result.updated.length > 0 ? `已生成 ${result.waves.length} 个拣货波次，更新 ${result.updated.length} 个出库单。` : "未能生成拣货波次，请检查出库单状态。",
     details: {
       selectedOrders: ids.length,
       updatedOrders: result.updated.length,
@@ -126,11 +124,7 @@ async function executePlan(plan: BatchOperationPlan, actorName: string, strategy
   });
 
   try {
-    const result =
-      plan.kind === "picking_wave"
-        ? await runPickingWaveJob(plan, actorName, strategy)
-        : { ok: false, message: missingPayloadMessage(plan), details: { templateName: plan.templateName ?? "", recordCount: plan.recordCount } };
-
+    const result = plan.kind === "picking_wave" ? await runPickingWaveJob(plan, actorName, strategy) : { ok: false, message: missingPayloadMessage(plan), details: { templateName: plan.templateName ?? "", recordCount: plan.recordCount } };
     const next = await updateBatchOperationStatus({
       id: plan.id,
       status: result.ok ? "completed" : "exception",

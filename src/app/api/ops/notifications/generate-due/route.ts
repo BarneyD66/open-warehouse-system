@@ -31,7 +31,8 @@ function generateSecret() {
 function authorizedBySecret(request: Request) {
   const secret = generateSecret();
   if (!secret) return false;
-  return request.headers.get("authorization") === `Bearer ${secret}` || new URL(request.url).searchParams.get("secret") === secret;
+  const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
+  return token === secret || new URL(request.url).searchParams.get("secret") === secret;
 }
 
 async function authorize(request: Request): Promise<GenerateActor | null> {
@@ -131,7 +132,7 @@ async function generateDueNotifications(request: Request, body?: GenerateBody) {
     systemAlerts: staffItems.filter((item) => item.source === "system").length,
     criticalSystemAlerts: staffItems.filter((item) => item.source === "system" && item.severity === "critical").length,
     financeReviewApprovals: staffItems.filter((item) => item.source === "approval" && (item.id.includes("finance-work-order") || item.id.includes("finance-adjustment"))).length,
-    financeReviewMissingAttachments: staffItems.filter((item) => item.source === "approval" && item.id.includes("finance-adjustment") && item.title.includes("attachment missing")).length,
+    financeReviewMissingAttachments: staffItems.filter((item) => item.source === "approval" && item.id.includes("finance-adjustment") && item.title.includes("附件")).length,
     financeReviewOverdue: staffItems.filter((item) => item.source === "approval" && (item.id.includes("finance-work-order") || item.id.includes("finance-adjustment")) && item.slaLevel === "overdue").length,
     generated: generatedDeliveries.length,
     queued: generatedDeliveries.filter((item) => item.status === "queued").length,
