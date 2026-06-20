@@ -793,7 +793,12 @@ function LaunchReadinessPanel({ readiness }: { readiness: LaunchReadiness }) {
             当前上线评分 {readiness.score}/100，环境 {readiness.environment}。这里专门盯数据持久化、域名、账号和关键业务闭环。
           </p>
         </div>
-        <div className="grid grid-cols-3 gap-2 text-center sm:min-w-[330px]">
+        <div className="flex flex-col gap-3 sm:min-w-[330px]">
+          <Link className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-cyan-200 bg-cyan-50 px-3 text-xs font-semibold text-cyan-800 hover:bg-cyan-100" href="/api/ops/launch-readiness?format=csv">
+            <Download size={14} />
+            导出体检表
+          </Link>
+          <div className="grid grid-cols-3 gap-2 text-center">
           <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
             <p className="text-xs font-semibold text-slate-500">客户</p>
             <p className="mt-1 text-lg font-semibold text-slate-950">{readiness.metrics.customers}</p>
@@ -813,6 +818,7 @@ function LaunchReadinessPanel({ readiness }: { readiness: LaunchReadiness }) {
           <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
             <p className="text-xs font-semibold text-slate-500">渠道</p>
             <p className="mt-1 text-lg font-semibold text-slate-950">{readiness.metrics.activeLogisticsChannels}</p>
+          </div>
           </div>
         </div>
       </div>
