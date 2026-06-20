@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import {
   AlertTriangle,
   ArrowRight,
@@ -21,16 +21,83 @@ import { buildInboundDocumentChecklist, getSubmissionsForCustomer, type InboundS
 import { getCustomerNotifications } from "@/lib/notificationStore";
 import { getOpsExpansionData } from "@/lib/opsExpansionStore";
 import { getOpsWorkbenchData, labelForOpsStatus } from "@/lib/opsStore";
-import { getWarehouseCoreDataForCustomer } from "@/lib/warehouseCoreStore";
+import { buildCustomerSelfServiceCenterData } from "@/lib/customerSelfServiceCenter";
+import { getWarehouseCoreDataForCustomer, outboundCustomerExceptionDecisionLabel, returnOrderStatusLabel, type CoreOutboundOrder } from "@/lib/warehouseCoreStore";
 import { PageShell } from "../components/MarketingShell";
 import { NotificationCenter } from "../components/NotificationCenter";
 import { LogoutButton } from "../components/LogoutButton";
 import { CustomerWorkOrderPanel } from "../components/CustomerWorkOrderPanel";
+import { CustomerExceptionDecisionActions } from "../components/CustomerExceptionDecisionActions";
+import { CustomerSelfServiceActionPanel } from "../components/CustomerSelfServiceActionPanel";
+import { CustomerSelfServiceSummaryPanel } from "../components/CustomerSelfServiceSummaryPanel";
+import { documentCategoryLabel, documentRefLabel, getDocumentsForCustomer, signDocumentToken, type DocumentRecord } from "@/lib/documentStore";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 type Tone = "slate" | "cyan" | "emerald" | "amber" | "rose" | "violet";
+
+type CustomerExceptionRow = {
+  key: string;
+  module: string;
+  sourceId: string;
+  title: string;
+  status: string;
+  tone: Tone;
+  nextAction: string;
+  occurredAt?: string;
+  orderId?: string;
+  exceptionId?: string;
+  redeliveryRequired?: boolean;
+  hasClaim?: boolean;
+  hasProof?: boolean;
+  currentDecision?: string;
+};
+
+type CustomerDownloadCategory = "资料索引" | "库存报表" | "出库物流" | "费用账单" | "异常售后";
+
+type CustomerDownloadCard = {
+  label: string;
+  kind: string;
+  category: CustomerDownloadCategory;
+  description: string;
+  href: string;
+  count: number;
+  status: string;
+  tone: Tone;
+};
+
+type CustomerFeeDifferenceRow = {
+  id: string;
+  channel: string;
+  trackingNumber: string;
+  estimatedFee: number;
+  actualFee: number;
+  difference: number;
+  note: string;
+  updatedAt?: string;
+};
+
+const customerDownloadDefinitions = [
+  { label: "资料包索引", kind: "self-service-index", category: "资料索引", tone: "slate", description: "汇总全部可下载报表、模板和工单服务入口。" },
+  { label: "自助操作清单", kind: "self-service-actions", category: "资料索引", tone: "amber", description: "汇总待确认、待付款、异常确认、可下载资料和工单下一步。" },
+  { label: "资料归档清单", kind: "documents", category: "资料索引", tone: "cyan", description: "导出已上传和运营归档的资料文件、业务单号、分类和下载入口。" },
+  { label: "库存报表", kind: "inventory", category: "库存报表", tone: "cyan", description: "查看 SKU 可用、占用、冻结、残次和在途库存。" },
+  { label: "库龄分析", kind: "inventory-aging", category: "库存报表", tone: "amber", description: "按库龄识别滞销、清仓和补货风险。" },
+  { label: "库存流水", kind: "inventory-movements", category: "库存报表", tone: "cyan", description: "追溯入库、出库、预占、释放和调整记录。" },
+  { label: "进销存报表", kind: "inventory-turnover", category: "库存报表", tone: "emerald", description: "查看期初估算、本期入库、本期出库和期末库存。" },
+  { label: "批次效期库存", kind: "inventory-lots", category: "库存报表", tone: "violet", description: "查看批次号、效期、库位和序列号明细。" },
+  { label: "出库明细", kind: "outbound", category: "出库物流", tone: "cyan", description: "查看出库单、SKU、收件信息、追踪号和轨迹。" },
+  { label: "出库复核状态", kind: "outbound-review", category: "出库物流", tone: "amber", description: "查看拣货、分拣、复核、截单、称重和异常进度。" },
+  { label: "面单列表", kind: "labels", category: "出库物流", tone: "violet", description: "查看已生成面单的出库单和面单下载入口。" },
+  { label: "签收证明", kind: "proofs", category: "出库物流", tone: "emerald", description: "查看已签收订单和签收证明入口。" },
+  { label: "物流证据包", kind: "logistics-evidence", category: "出库物流", tone: "cyan", description: "一表汇总面单、签收证明、轨迹、异常、赔付和运费差异说明。" },
+  { label: "费用明细", kind: "billing", category: "费用账单", tone: "amber", description: "查看仓租、操作费、物流费、退货费和账单状态。" },
+  { label: "付款核销记录", kind: "payment-reconciliation", category: "费用账单", tone: "emerald", description: "查看付款参考号、到账核销、驳回和争议处理记录。" },
+  { label: "我的异常中心", kind: "exceptions", category: "异常售后", tone: "rose", description: "汇总入库、库存、出库、物流、退货和账单异常。" },
+  { label: "物流异常与赔付", kind: "delivery-exceptions", category: "异常售后", tone: "rose", description: "查看派送失败、改派、签收证明、赔付和客户确认结果。" },
+  { label: "退货质检明细", kind: "returns", category: "异常售后", tone: "violet", description: "查看退货 RMA、质检结果、处理方式和售后工单。" },
+] as const satisfies ReadonlyArray<Omit<CustomerDownloadCard, "href" | "count" | "status">>;
 
 const toneClass: Record<Tone, string> = {
   slate: "border-slate-200 bg-slate-50 text-slate-700",
@@ -66,6 +133,16 @@ function displayText(value: string | undefined, fallback: string) {
 
 function pill(label: string, tone: Tone = "slate") {
   return <span className={`inline-flex rounded-md border px-2 py-1 text-xs font-semibold ${toneClass[tone]}`}>{label}</span>;
+}
+
+function dateText(value?: string) {
+  if (!value) return "-";
+  return new Intl.DateTimeFormat("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" }).format(new Date(value));
+}
+
+function signedDocumentDownloadHref(id: string) {
+  const token = signDocumentToken(id, Date.now() + 30 * 60 * 1000);
+  return `/api/documents/${encodeURIComponent(id)}/download?token=${encodeURIComponent(token)}`;
 }
 
 function inquiryStatus(item: InquirySubmission) {
@@ -110,6 +187,25 @@ function opsTone(kind: "logistics" | "outbound" | "inventory", status: string): 
   if (status === "low_stock" || status === "sync_issue") return "rose";
   if (status === "aging") return "amber";
   return "cyan";
+}
+
+function coreOutboundStatusMeta(status: CoreOutboundOrder["status"]): { label: string; tone: Tone } {
+  const labels: Record<CoreOutboundOrder["status"], { label: string; tone: Tone }> = {
+    pending_review: { label: "待审核", tone: "cyan" },
+    picking: { label: "拣货中", tone: "amber" },
+    label_pending: { label: "待生成面单", tone: "rose" },
+    packing_check: { label: "打包复核", tone: "violet" },
+    handover: { label: "待交运", tone: "violet" },
+    shipped: { label: "已发货", tone: "emerald" },
+    blocked: { label: "异常阻塞", tone: "rose" },
+  };
+  return labels[status] ?? labels.pending_review;
+}
+
+function returnTone(status: string): Tone {
+  if (status === "restocked" || status === "closed") return "emerald";
+  if (status === "exception" || status === "disposed") return "rose";
+  return "amber";
 }
 
 function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
@@ -176,25 +272,235 @@ function EmptyState({ text }: { text: string }) {
   );
 }
 
+function CustomerLogisticsFeeDifferencePanel({ rows }: { rows: CustomerFeeDifferenceRow[] }) {
+  if (rows.length === 0) return null;
+  const totalDifference = rows.reduce((sum, row) => sum + row.difference, 0);
+  const topRows = rows.slice(0, 5);
+
+  return (
+    <Panel className="p-0">
+      <SectionTitle
+        eyebrow="费用复核"
+        title="物流费用差异"
+        action={
+          <Link className="inline-flex min-h-9 items-center gap-2 rounded-md border border-cyan-100 bg-cyan-50 px-3 text-xs font-semibold text-cyan-800 hover:bg-cyan-100" href="/api/downloads?kind=logistics-evidence">
+            下载证据包
+            <Download size={14} />
+          </Link>
+        }
+      />
+      <div className="grid gap-4 p-5 lg:grid-cols-[0.85fr_1.15fr]">
+        <div className="rounded-md border border-amber-200 bg-amber-50 p-4">
+          <p className="text-xs font-semibold text-amber-800">待复核出库单</p>
+          <p className="mt-2 text-3xl font-semibold text-amber-950">{rows.length}</p>
+          <p className="mt-2 text-sm leading-6 text-amber-900">
+            合计差异 £{totalDifference.toFixed(2)}。如差异来自偏远费、燃油费、超尺寸或承运商复核重量，可下载证据包后在账单页或工单中继续确认。
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link className="inline-flex min-h-9 items-center gap-2 rounded-md bg-slate-950 px-3 text-xs font-semibold text-white hover:bg-slate-800" href="/billing">
+              查看账单
+            </Link>
+            <Link
+              className="inline-flex min-h-9 items-center gap-2 rounded-md border border-amber-200 bg-white px-3 text-xs font-semibold text-amber-800 hover:bg-amber-50"
+              href={`/portal?workOrderCategory=${encodeURIComponent("账单争议")}&workOrderTitle=${encodeURIComponent("物流费用差异复核")}&workOrderDescription=${encodeURIComponent("请协助复核以下出库单的物流费用差异，已下载物流证据包作为对账依据。")}#work-orders`}
+            >
+              提交复核工单
+            </Link>
+          </div>
+        </div>
+        <div className="divide-y divide-slate-100 rounded-md border border-slate-200 bg-white">
+          {topRows.map((row) => (
+            <div className="grid gap-3 p-3 sm:grid-cols-[1fr_auto]" key={row.id}>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {pill(row.difference >= 5 ? "严重差异" : "待复核", row.difference >= 5 ? "rose" : "amber")}
+                  <span className="font-mono text-xs font-semibold text-slate-500">{row.id}</span>
+                </div>
+                <p className="mt-2 text-sm font-semibold text-slate-950">{row.channel} / {row.trackingNumber || "追踪号待回传"}</p>
+                <p className="mt-1 text-xs leading-5 text-slate-500">{row.note || "暂无运营说明，请以物流证据包和月结账单复核为准。"}</p>
+              </div>
+              <div className="text-left sm:text-right">
+                <p className="text-sm font-semibold text-slate-950">£{row.estimatedFee.toFixed(2)} → £{row.actualFee.toFixed(2)}</p>
+                <p className={`mt-1 text-xs font-semibold ${row.difference >= 0 ? "text-rose-700" : "text-emerald-700"}`}>差异 £{row.difference.toFixed(2)}</p>
+                <p className="mt-1 text-xs text-slate-400">{dateText(row.updatedAt)}</p>
+              </div>
+            </div>
+          ))}
+          {rows.length > topRows.length ? <p className="p-3 text-xs font-semibold text-slate-500">还有 {rows.length - topRows.length} 条差异，请下载物流证据包查看完整列表。</p> : null}
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+function SelfServiceDownloadCenter({
+  downloadCards,
+  templates,
+  workOrderCategories,
+}: {
+  downloadCards: CustomerDownloadCard[];
+  templates: Array<{ id: string; name: string; description: string; href: string }>;
+  workOrderCategories: string[];
+}) {
+  const categories = Array.from(new Set(downloadCards.map((item) => item.category)));
+  const totalAvailable = downloadCards.reduce((sum, item) => sum + item.count, 0);
+
+  return (
+    <Panel className="p-0">
+      <SectionTitle eyebrow="自助服务" title="客户自助下载中心" action={<FileText size={18} className="text-slate-400" />} />
+      <div className="space-y-5 p-5">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs font-semibold text-slate-500">可下载报表</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-950">{downloadCards.length}</p>
+          </div>
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs font-semibold text-slate-500">当前关联数据</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-950">{totalAvailable}</p>
+          </div>
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs font-semibold text-slate-500">模板文件</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-950">{templates.length}</p>
+          </div>
+        </div>
+
+        {categories.map((category) => (
+          <div className="space-y-3" key={category}>
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold text-slate-950">{category}</h3>
+              <span className="text-xs text-slate-400">{downloadCards.filter((item) => item.category === category).length} 项</span>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2">
+              {downloadCards
+                .filter((item) => item.category === category)
+                .map((item) => (
+                  <Link className="group grid min-h-28 gap-3 rounded-md border border-slate-200 bg-white p-3 transition hover:border-cyan-200 hover:bg-cyan-50/40" href={item.href} key={item.kind}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="text-sm font-semibold text-slate-950">{item.label}</p>
+                          {pill(item.status, item.count > 0 ? item.tone : "slate")}
+                        </div>
+                        <p className="mt-2 text-xs leading-5 text-slate-500">{item.description}</p>
+                      </div>
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500 transition group-hover:bg-cyan-100 group-hover:text-cyan-800">
+                        <Download size={15} />
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+            </div>
+          </div>
+        ))}
+
+        <div className="grid gap-4 border-t border-slate-100 pt-5 lg:grid-cols-[1.1fr_0.9fr]">
+          <div>
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold text-slate-950">模板文件</h3>
+              <span className="text-xs text-slate-400">用于批量整理和提交资料</span>
+            </div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {templates.map((item) => (
+                <Link className="rounded-md border border-slate-200 bg-slate-50 p-3 transition hover:border-cyan-200 hover:bg-white" href={item.href} key={item.id}>
+                  <p className="text-sm font-semibold text-slate-950">{item.name}</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-500">{item.description}</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold text-slate-950">工单类型</h3>
+              <span className="text-xs text-slate-400">异常和售后可直接提交</span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">{workOrderCategories.map((item) => pill(item, "slate"))}</div>
+          </div>
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+function CustomerDocumentArchivePanel({ documents }: { documents: DocumentRecord[] }) {
+  const recentDocuments = documents
+    .filter((item) => item.scanStatus === "clean")
+    .sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())
+    .slice(0, 8);
+  const blockedCount = documents.filter((item) => item.scanStatus === "blocked").length;
+  const previewableCount = documents.filter((item) => item.previewAllowed && item.scanStatus === "clean").length;
+
+  return (
+    <Panel className="p-0">
+      <SectionTitle
+        eyebrow="资料归档"
+        title="我的业务资料"
+        action={<span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">{documents.length} 个文件</span>}
+      />
+      <div className="grid gap-4 p-5 lg:grid-cols-[0.8fr_1.2fr]">
+        <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs font-semibold text-slate-500">已归档资料</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-950">{documents.length}</p>
+          </div>
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs font-semibold text-slate-500">可在线预览</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-950">{previewableCount}</p>
+          </div>
+          <div className={`rounded-md border p-3 ${blockedCount > 0 ? "border-rose-200 bg-rose-50" : "border-emerald-200 bg-emerald-50"}`}>
+            <p className={`text-xs font-semibold ${blockedCount > 0 ? "text-rose-700" : "text-emerald-700"}`}>安全拦截</p>
+            <p className="mt-1 text-2xl font-semibold text-slate-950">{blockedCount}</p>
+          </div>
+        </div>
+        <div className="divide-y divide-slate-100 rounded-md border border-slate-100 bg-slate-50">
+          {recentDocuments.length > 0 ? (
+            recentDocuments.map((item) => (
+              <div className="grid gap-3 px-3 py-3 md:grid-cols-[1fr_auto]" key={item.id}>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {pill(documentRefLabel(item.refType), "slate")}
+                    {pill(documentCategoryLabel(item.category), "cyan")}
+                    <span className="font-mono text-xs font-semibold text-slate-500">{item.refId}</span>
+                  </div>
+                  <p className="mt-2 truncate text-sm font-semibold text-slate-950">{item.originalName}</p>
+                  <p className="mt-1 text-xs text-slate-500">上传时间 {dateText(item.uploadedAt)} / {item.uploadedByRole === "customer" ? "客户上传" : "运营上传"}</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                  {item.previewAllowed && item.scanStatus === "clean" ? (
+                    <Link className="inline-flex min-h-8 items-center rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50" href={`/api/documents/${item.id}/preview`} target="_blank">
+                      预览
+                    </Link>
+                  ) : null}
+                  <Link className="inline-flex min-h-8 items-center rounded-md border border-cyan-200 bg-cyan-50 px-2.5 text-xs font-semibold text-cyan-800 hover:bg-cyan-100" href={signedDocumentDownloadHref(item.id)}>
+                    下载
+                  </Link>
+                </div>
+              </div>
+            ))
+          ) : (
+            <EmptyState text="暂无已归档资料，提交需求、入库预报、退货或补资料后会自动沉淀到这里" />
+          )}
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
 function accountStatusMeta(status: CustomerAccountStatus | undefined): { label: string; tone: Tone; body: string } {
   if (status === "verified") return { label: "\u5df2\u8ba4\u8bc1", tone: "emerald", body: "\u8d26\u53f7\u5df2\u5b8c\u6210\u8ba4\u8bc1\uff0c\u53ef\u6309\u6b63\u5f0f\u5ba2\u6237\u6d41\u7a0b\u4f7f\u7528\u5165\u5e93\u3001\u5e93\u5b58\u3001\u51fa\u5e93\u3001\u7269\u6d41\u548c\u8d26\u5355\u80fd\u529b\u3002" };
   if (status === "paused") return { label: "\u6682\u505c", tone: "rose", body: "\u8d26\u53f7\u5df2\u6682\u505c\uff0c\u8bf7\u8054\u7cfb\u8fd0\u8425\u786e\u8ba4\u6062\u590d\u539f\u56e0\u548c\u4e0b\u4e00\u6b65\u5904\u7406\u3002" };
   return { label: "\u672a\u8ba4\u8bc1", tone: "amber", body: "\u8bf7\u5148\u5b8c\u5584\u516c\u53f8\u8d44\u6599\u3001VAT\u3001EORI \u548c\u5e73\u53f0\u5e97\u94fa\u4fe1\u606f\uff0c\u8fd0\u8425\u5ba1\u6838\u540e\u4f1a\u66f4\u65b0\u8ba4\u8bc1\u72b6\u6001\u3002" };
 }
 
-function downloadHref(label: string) {
-  if (label.includes("\u7269\u6d41") || label.includes("\u5f02\u5e38") || label.includes("\u8d54\u4ed8")) return "/api/downloads?kind=delivery-exceptions";
-  if (label.includes("\u5e93\u5b58")) return "/api/downloads?kind=inventory";
-  if (label.includes("\u51fa\u5e93")) return "/api/downloads?kind=outbound";
-  if (label.includes("\u8d39\u7528") || label.includes("\u8d26\u5355")) return "/api/downloads?kind=billing";
-  if (label.includes("\u9762\u5355")) return "/api/downloads?kind=labels";
-  if (label.includes("\u7b7e\u6536")) return "/api/downloads?kind=proofs";
-  return "/api/downloads?kind=inventory";
-}
-
 export default async function PortalPage() {
   const session = await requireCustomerSession();
-  const [submissions, opsData, coreData, expansionData, account] = await Promise.all([getSubmissionsForCustomer(session.customerCode), getOpsWorkbenchData(), getWarehouseCoreDataForCustomer(session.customerCode), getOpsExpansionData(), getCustomerAccountByCode(session.customerCode)]);
+  const [submissions, opsData, coreData, expansionData, account, documents] = await Promise.all([
+    getSubmissionsForCustomer(session.customerCode),
+    getOpsWorkbenchData(),
+    getWarehouseCoreDataForCustomer(session.customerCode),
+    getOpsExpansionData(),
+    getCustomerAccountByCode(session.customerCode),
+    getDocumentsForCustomer(session.customerCode),
+  ]);
   const inbounds = submissions.filter(isInbound);
   const inquiries = submissions.filter(isInquiry);
   const customerLogistics = opsData.logistics.filter((item) => item.customerCode === session.customerCode);
@@ -202,7 +508,6 @@ export default async function PortalPage() {
   const customerWorkOrders = expansionData.selfServiceWorkOrders.filter((item) => item.customerCode === session.customerCode);
   const customerCoreOutbound = coreData.outboundOrders;
   const customerReturns = coreData.returnOrders;
-  const selfServiceDownloads = Array.from(new Set([...expansionData.selfService.enabledDownloads, "\u7269\u6d41\u5f02\u5e38\u4e0e\u8d54\u4ed8"]));
   const skuNameMap = new Map(coreData.skus.map((item) => [item.skuCode, item.productName]));
   const formalInventory = coreData.inventoryBalances.map((item) => ({
     id: item.id,
@@ -239,8 +544,154 @@ export default async function PortalPage() {
   const quoteReady = inquiries.filter((item) => item.status === "quoted" || item.status === "waiting_customer" || item.quoteDraft).length;
   const logisticsOpen = customerLogistics.filter((item) => item.status !== "resolved").length;
   const inventoryRisk = customerInventory.filter((item) => item.status !== "normal").length;
-  const notifications = await getCustomerNotifications({ customerCode: session.customerCode, submissions, opsData, coreData });
-  const todoCount = notifications.length || docsMissing + trackingMissing + quoteReady + logisticsOpen + inventoryRisk;
+  const currentTimeMs = new Date().getTime();
+  const customerExceptionRows: CustomerExceptionRow[] = [
+    ...inbounds.flatMap((inbound) =>
+      (inbound.receivingExceptions ?? [])
+        .filter((exception) => exception.status === "open" || exception.status === "investigating")
+        .map((exception) => ({
+          key: exception.id,
+          module: "入库",
+          sourceId: inbound.id,
+          title: exception.message,
+          status: exception.status === "open" ? "待处理" : "处理中",
+          tone: exception.severity === "critical" ? "rose" as Tone : "amber" as Tone,
+          nextAction: "等待仓库/运营核对后反馈处理结果",
+          occurredAt: exception.createdAt,
+        })),
+    ),
+    ...inbounds
+      .filter((inbound) => inbound.exceptionNote && ["exception", "on_hold"].includes(inbound.status))
+      .map((inbound) => ({
+        key: `${inbound.id}-status`,
+        module: "入库",
+        sourceId: inbound.id,
+        title: inbound.exceptionNote || "入库状态异常",
+        status: inbound.status === "on_hold" ? "暂缓处理" : "异常处理中",
+        tone: "amber" as Tone,
+        nextAction: "等待运营确认资料、预约或差异处理方案",
+        occurredAt: inbound.updatedAt ?? inbound.createdAt,
+      })),
+    ...customerCoreOutbound.flatMap((order) =>
+      (order.exceptions ?? [])
+        .filter((exception) => exception.status === "open" || exception.status === "investigating")
+        .map((exception) => ({
+          key: exception.id,
+          module: exception.deliveryExceptionType ? "物流" : "出库",
+          sourceId: order.id,
+          title: exception.message,
+          status: exception.status === "open" ? "待处理" : "处理中",
+          tone: exception.severity === "critical" ? "rose" as Tone : "amber" as Tone,
+          nextAction: exception.redeliveryRequired ? "请留意改派确认" : exception.claimStatus && exception.claimStatus !== "not_required" ? "运营正在跟进赔付" : "运营正在处理",
+          occurredAt: exception.createdAt,
+          orderId: order.id,
+          exceptionId: exception.id,
+          redeliveryRequired: exception.redeliveryRequired,
+          hasClaim: Boolean(exception.claimAmount || (exception.claimStatus && exception.claimStatus !== "not_required")),
+          hasProof: Boolean(exception.proofUrl || exception.deliveryExceptionType === "proof_uploaded"),
+          currentDecision: exception.customerDecision ? outboundCustomerExceptionDecisionLabel[exception.customerDecision] : "",
+        })),
+    ),
+    ...customerReturns
+      .filter((item) => item.status === "exception" || (["received", "inspection", "repair"].includes(item.status) && !item.customerResolutionDecision))
+      .map((item) => ({
+        key: `${item.id}-${item.status}`,
+        module: "退货/RMA",
+        sourceId: item.id,
+        title: item.inspectionResult || item.returnReason,
+        status: item.status === "exception" ? "异常" : "待您确认",
+        tone: item.status === "exception" ? "rose" as Tone : "amber" as Tone,
+        nextAction: item.customerResolutionDecision ? "已确认处理方式" : "请确认重新上架、维修、报废或转寄",
+        occurredAt: item.updatedAt ?? item.createdAt,
+      })),
+    ...customerInventory
+      .filter((item) => item.status !== "normal" || item.frozen > 0 || item.defective > 0)
+      .map((item) => ({
+        key: `${item.id}-inventory-risk`,
+        module: "库存",
+        sourceId: item.sku,
+        title: [item.status === "low_stock" ? "低于预警库存" : "", item.status === "aging" ? `库龄 ${item.agingDays} 天` : "", item.frozen > 0 ? `冻结 ${item.frozen}` : "", item.defective > 0 ? `残次品 ${item.defective}` : ""].filter(Boolean).join("；"),
+        status: "待关注",
+        tone: item.status === "low_stock" ? "rose" as Tone : "amber" as Tone,
+        nextAction: "可联系运营确认补货、移库、盘点或残次品处理",
+        occurredAt: undefined,
+      })),
+    ...coreData.billingRecords
+      .filter((item) => item.dueDate && new Date(item.dueDate).getTime() < currentTimeMs && item.status !== "paid")
+      .map((item) => ({
+        key: `${item.id}-overdue`,
+        module: "费用/账单",
+        sourceId: item.id,
+        title: `账单逾期 £${item.amount.toFixed(2)}`,
+        status: "逾期",
+        tone: "rose" as Tone,
+        nextAction: "请确认付款、上传凭证或提交账单争议工单",
+        occurredAt: item.updatedAt ?? item.createdAt,
+      })),
+  ].sort((a, b) => new Date(b.occurredAt ?? 0).getTime() - new Date(a.occurredAt ?? 0).getTime());
+  const deliveryExceptionCount = customerCoreOutbound.reduce((sum, item) => sum + (item.exceptions?.filter((exception) => exception.deliveryExceptionType).length ?? 0), 0);
+  const logisticsFeeDifferenceRows: CustomerFeeDifferenceRow[] = customerCoreOutbound
+    .filter((order) => typeof order.shippingFee === "number" && typeof order.actualShippingFee === "number" && Math.abs(order.actualShippingFee - order.shippingFee) >= 1)
+    .map((order) => ({
+      id: order.id,
+      channel: order.carrierName ? `${order.carrierName} ${order.carrierServiceName ?? ""}`.trim() : order.channel,
+      trackingNumber: order.trackingNumber ?? "",
+      estimatedFee: order.shippingFee ?? 0,
+      actualFee: order.actualShippingFee ?? 0,
+      difference: Math.round(((order.actualShippingFee ?? 0) - (order.shippingFee ?? 0)) * 100) / 100,
+      note: order.shippingFeeNote ?? "",
+      updatedAt: order.shippingFeeCheckedAt ?? order.updatedAt ?? order.createdAt,
+    }))
+    .sort((a, b) => Math.abs(b.difference) - Math.abs(a.difference) || new Date(b.updatedAt ?? 0).getTime() - new Date(a.updatedAt ?? 0).getTime());
+  const selfServiceCenter = buildCustomerSelfServiceCenterData({
+    customerCode: session.customerCode,
+    submissions,
+    coreData,
+    documents,
+    workOrders: customerWorkOrders,
+  });
+  const customerDownloadCards: CustomerDownloadCard[] = customerDownloadDefinitions.map((item) => {
+    const count =
+      item.kind === "self-service-index"
+        ? customerDownloadDefinitions.length + expansionData.selfService.templates.length + expansionData.selfService.workOrderCategories.length
+        : item.kind === "self-service-actions"
+          ? selfServiceCenter.actions.length
+        : item.kind === "documents"
+          ? documents.length
+        : item.kind === "inventory" || item.kind === "inventory-aging" || item.kind === "inventory-turnover"
+          ? coreData.inventoryBalances.length
+          : item.kind === "inventory-movements"
+            ? coreData.inventoryMovements.length
+            : item.kind === "inventory-lots"
+              ? coreData.inventoryLots.length
+              : item.kind === "outbound" || item.kind === "outbound-review"
+                ? customerCoreOutbound.length
+                : item.kind === "labels"
+                  ? customerCoreOutbound.filter((order) => order.labelStatus === "generated").length
+                  : item.kind === "proofs"
+                    ? customerCoreOutbound.filter((order) => order.trackingEvents?.some((event) => event.status === "delivered") || order.exceptions?.some((exception) => exception.proofUrl)).length
+                    : item.kind === "logistics-evidence"
+                      ? customerCoreOutbound.filter((order) => order.labelStatus === "generated" || order.trackingNumber || order.trackingEvents?.length || order.exceptions?.length || typeof order.actualShippingFee === "number").length
+                    : item.kind === "billing"
+                      ? coreData.billingRecords.length
+                      : item.kind === "payment-reconciliation"
+                        ? coreData.billingRecords.filter((record) => record.paymentReference || record.statementPaymentReference || record.status === "paid" || record.status === "payment_submitted" || record.paymentRejectedAt || record.statementPaymentRejectedAt).length
+                      : item.kind === "delivery-exceptions"
+                        ? deliveryExceptionCount
+                        : item.kind === "returns"
+                          ? customerReturns.length
+                          : customerExceptionRows.length;
+
+    return {
+      ...item,
+      href: `/api/downloads?kind=${item.kind}`,
+      count,
+      status: count > 0 ? `${count} 条` : "空表",
+    };
+  });
+  const customerDownloadRecordCount = customerDownloadCards.reduce((sum, item) => sum + item.count, 0);
+  const notifications = await getCustomerNotifications({ customerCode: session.customerCode, submissions, opsData, coreData, documents, workOrders: customerWorkOrders });
+  const todoCount = notifications.length || docsMissing + trackingMissing + quoteReady + logisticsOpen + inventoryRisk + customerExceptionRows.length;
   const nextSteps = [
     account?.status !== "verified" ? { title: "\u5b8c\u5584\u8ba4\u8bc1\u8d44\u6599", body: "\u8865\u9f50\u516c\u53f8\u3001VAT\u3001EORI\u3001\u5e73\u53f0\u5e97\u94fa\u548c\u7ecf\u8425\u5730\u5740\uff0c\u65b9\u4fbf\u8fd0\u8425\u5ba1\u6838\u3002", href: "/account", tone: "amber" as Tone } : null,
     quoteReady > 0 ? { title: "\u786e\u8ba4\u62a5\u4ef7", body: "\u5df2\u6709\u62a5\u4ef7\u6216\u65b9\u6848\u7b49\u5f85\u60a8\u786e\u8ba4\u3002", href: "/billing", tone: "amber" as Tone } : null,
@@ -301,25 +752,83 @@ export default async function PortalPage() {
             <Metric caption="报价" icon={ReceiptText} label={"\u62a5\u4ef7\u5f85\u786e\u8ba4"} tone={quoteReady > 0 ? "amber" : "slate"} value={quoteReady} />
           </section>
 
+          <CustomerSelfServiceActionPanel data={selfServiceCenter} />
+
+          <CustomerSelfServiceSummaryPanel
+            availableRecordCount={customerDownloadRecordCount}
+            downloadReportCount={customerDownloadCards.length}
+            summary={selfServiceCenter.summary}
+            templateCount={expansionData.selfService.templates.length}
+          />
+
+          <CustomerLogisticsFeeDifferencePanel rows={logisticsFeeDifferenceRows} />
+
+          <Panel className="p-0">
+            <SectionTitle
+              eyebrow="异常中心"
+              title="我的异常中心"
+              action={
+                <Link className="inline-flex min-h-9 items-center gap-2 rounded-md border border-cyan-100 bg-cyan-50 px-3 text-xs font-semibold text-cyan-800 hover:bg-cyan-100" href="/api/downloads?kind=exceptions">
+                  下载明细
+                  <Download size={14} />
+                </Link>
+              }
+            />
+            <div className="divide-y divide-slate-100">
+              {customerExceptionRows.length > 0 ? (
+                customerExceptionRows.slice(0, 6).map((row) => (
+                  <div className="grid gap-3 px-5 py-4 md:grid-cols-[1fr_auto]" key={row.key}>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {pill(row.module, row.tone)}
+                        <span className="font-mono text-xs font-semibold text-slate-500">{row.sourceId}</span>
+                      </div>
+                      <h3 className="mt-2 text-sm font-semibold text-slate-950">{row.title || "异常待处理"}</h3>
+                      <p className="mt-1 text-xs leading-5 text-slate-500">下一步：{row.nextAction}</p>
+                      {row.orderId && row.exceptionId ? (
+                        <CustomerExceptionDecisionActions
+                          currentDecision={row.currentDecision}
+                          exceptionId={row.exceptionId}
+                          hasClaim={row.hasClaim}
+                          hasProof={row.hasProof}
+                          orderId={row.orderId}
+                          redeliveryRequired={row.redeliveryRequired}
+                        />
+                      ) : null}
+                    </div>
+                    <div className="text-left md:text-right">
+                      {pill(row.status, row.tone)}
+                      <p className="mt-2 text-xs text-slate-400">{dateText(row.occurredAt)}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <EmptyState text="当前没有需要您处理或关注的异常" />
+              )}
+            </div>
+          </Panel>
+
           <section className="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
             <div className="space-y-5">
               <Panel className="p-0"><SectionTitle eyebrow="下一步" title={"\u4e0b\u4e00\u6b65\u5efa\u8bae"} action={<Clock3 size={18} className="text-slate-400" />} /><div className="grid gap-3 p-5">{nextSteps.length > 0 ? nextSteps.map((item) => (<Link className="flex items-start justify-between gap-4 rounded-md border border-slate-200 bg-slate-50 p-3 transition hover:bg-white" href={item.href} key={item.title}><div><p className="text-sm font-semibold text-slate-950">{item.title}</p><p className="mt-1 text-sm leading-5 text-slate-600">{item.body}</p></div>{pill("\u53bb\u5904\u7406", item.tone)}</Link>)) : <EmptyState text={"\u5f53\u524d\u6ca1\u6709\u9700\u8981\u7acb\u5373\u5904\u7406\u7684\u4e8b\u9879"} />}</div></Panel>
               <NotificationCenter compact emptyText={"\u6682\u65e0\u5ba2\u6237\u5f85\u529e"} items={notifications} title={"\u6211\u7684\u5f85\u529e"} />
             </div>
-            <Panel className="p-0"><SectionTitle eyebrow="自助服务" title={"\u81ea\u52a9\u6a21\u677f\u4e0e\u670d\u52a1\u8d44\u6599"} action={<FileText size={18} className="text-slate-400" />} /><div className="grid gap-4 p-5 lg:grid-cols-[1.1fr_0.9fr]"><div><p className="text-sm leading-6 text-slate-600">{"\u4e0b\u8f7d\u6807\u51c6\u6a21\u677f\u540e\u53ef\u76f4\u63a5\u6574\u7406 SKU\u3001\u51fa\u5e93\u8ba2\u5355\u548c\u8d44\u6599\u660e\u7ec6\u3002\u5982\u9700\u5904\u7406\u5f02\u5e38\uff0c\u53ef\u6309\u53f3\u4fa7\u5de5\u5355\u7c7b\u578b\u63d0\u4ea4\u7ed9\u8fd0\u8425\u3002"}</p><div className="mt-4 grid gap-2 sm:grid-cols-2">{expansionData.selfService.templates.map((item) => (<Link className="rounded-md border border-slate-200 bg-slate-50 p-3 transition hover:bg-white" href={item.href} key={item.id}><p className="text-sm font-semibold text-slate-950">{item.name}</p><p className="mt-1 text-xs leading-5 text-slate-500">{item.description}</p></Link>))}</div></div><div className="grid gap-3 sm:grid-cols-2"><div className="rounded-md border border-slate-200 bg-slate-50 p-3"><p className="text-sm font-semibold text-slate-950">{"\u53ef\u4e0b\u8f7d\u5185\u5bb9"}</p><div className="mt-2 grid gap-2">{selfServiceDownloads.map((item) => (<Link className="inline-flex min-h-9 items-center justify-between gap-2 rounded-md border border-cyan-100 bg-white px-2 text-xs font-semibold text-cyan-800 transition hover:border-cyan-200 hover:bg-cyan-50" href={downloadHref(item)} key={item}><span>{item}</span><Download size={14} /></Link>))}</div></div><div className="rounded-md border border-slate-200 bg-slate-50 p-3"><p className="text-sm font-semibold text-slate-950">{"\u5de5\u5355\u7c7b\u578b"}</p><div className="mt-2 flex flex-wrap gap-2">{expansionData.selfService.workOrderCategories.map((item) => pill(item, "slate"))}</div></div></div></div></Panel>
+            <SelfServiceDownloadCenter downloadCards={customerDownloadCards} templates={expansionData.selfService.templates} workOrderCategories={expansionData.selfService.workOrderCategories} />
           </section>
+
+          <CustomerDocumentArchivePanel documents={documents} />
 
           <CustomerWorkOrderPanel categories={expansionData.selfService.workOrderCategories} workOrders={customerWorkOrders} />
 
           <section className="grid gap-5 xl:grid-cols-3">
             <Panel className="p-0"><SectionTitle eyebrow="需求报价" title={"\u9700\u6c42\u4e0e\u62a5\u4ef7"} action={<ReceiptText size={18} className="text-slate-400" />} /><div className="divide-y divide-slate-100">{inquiries.length > 0 ? inquiries.slice(0, 4).map((item) => { const status = inquiryStatus(item); return (<div className="px-5 py-4" key={item.id}><p className="font-mono text-xs font-semibold text-slate-500">{item.id}</p><h3 className="mt-1 text-sm font-semibold text-slate-950">{displayText(item.company, "\u672a\u547d\u540d\u9700\u6c42")}</h3><div className="mt-2">{pill(status.label, status.tone)}</div></div>); }) : <EmptyState text={"\u6682\u65e0\u9700\u6c42\u8bb0\u5f55"} />}</div></Panel>
             <Panel className="p-0"><SectionTitle eyebrow="入库" title={"\u5165\u5e93\u8d27\u4ef6"} action={<Link className="text-sm font-semibold text-cyan-700 hover:text-cyan-900" href="/inbound">{"\u65b0\u589e"}</Link>} /><div className="divide-y divide-slate-100">{inbounds.length > 0 ? inbounds.slice(0, 4).map((item) => { const status = inboundStatus(item); return (<div className="px-5 py-4" key={item.id}><p className="font-mono text-xs font-semibold text-slate-500">{item.id}</p><h3 className="mt-1 text-sm font-semibold text-slate-950">{displayText(item.productName, "\u5165\u5e93\u8d27\u4ef6")}</h3><p className="mt-2 text-sm text-slate-600">{item.cartons} {"\u7bb1"} / {item.skuCount} SKU / ETA {item.eta || "-"}</p><div className="mt-2">{pill(status.label, status.tone)}</div></div>); }) : <EmptyState text={"\u6682\u65e0\u5165\u5e93\u9884\u62a5"} />}</div></Panel>
-            <Panel className="p-0"><SectionTitle eyebrow="出库物流" title={"\u51fa\u5e93\u4e0e\u7269\u6d41"} action={<Link className="text-sm font-semibold text-cyan-700 hover:text-cyan-900" href="/outbound">{"\u521b\u5efa\u51fa\u5e93"}</Link>} /><div className="divide-y divide-slate-100">{customerCoreOutbound.length + customerOutbound.length > 0 ? (<>{customerCoreOutbound.slice(0, 4).map((item) => (<div className="px-5 py-4" key={item.id}><p className="font-mono text-xs font-semibold text-slate-500">{item.id}</p><h3 className="mt-1 text-sm font-semibold text-slate-950">{item.channel} / {item.orderCount} {"\u5355"}</h3><p className="mt-2 text-sm text-slate-600">{item.recipientName || "\u6536\u4ef6\u4eba\u5f85\u8865"}</p><div className="mt-2">{pill(item.status, item.status === "shipped" ? "emerald" : item.status === "blocked" ? "rose" : "amber")}</div></div>))}{customerOutbound.slice(0, Math.max(0, 4 - customerCoreOutbound.length)).map((item) => (<div className="px-5 py-4" key={item.id}><p className="font-mono text-xs font-semibold text-slate-500">{item.id}</p><h3 className="mt-1 text-sm font-semibold text-slate-950">{item.channel} / {item.orderCount} {"\u5355"}</h3><div className="mt-2">{pill(labelForOpsStatus("outbound", item.status), opsTone("outbound", item.status))}</div></div>))}</>) : <EmptyState text={"\u6682\u65e0\u51fa\u5e93\u7533\u8bf7"} />}</div></Panel>
+            <Panel className="p-0"><SectionTitle eyebrow="出库物流" title={"\u51fa\u5e93\u4e0e\u7269\u6d41"} action={<Link className="text-sm font-semibold text-cyan-700 hover:text-cyan-900" href="/outbound">{"\u521b\u5efa\u51fa\u5e93"}</Link>} /><div className="divide-y divide-slate-100">{customerCoreOutbound.length + customerOutbound.length > 0 ? (<>{customerCoreOutbound.slice(0, 4).map((item) => { const status = coreOutboundStatusMeta(item.status); return (<div className="px-5 py-4" key={item.id}><p className="font-mono text-xs font-semibold text-slate-500">{item.id}</p><h3 className="mt-1 text-sm font-semibold text-slate-950">{item.channel} / {item.orderCount} {"\u5355"}</h3><p className="mt-2 text-sm text-slate-600">{item.recipientName || "\u6536\u4ef6\u4eba\u5f85\u8865"}</p><div className="mt-2">{pill(status.label, status.tone)}</div></div>); })}{customerOutbound.slice(0, Math.max(0, 4 - customerCoreOutbound.length)).map((item) => (<div className="px-5 py-4" key={item.id}><p className="font-mono text-xs font-semibold text-slate-500">{item.id}</p><h3 className="mt-1 text-sm font-semibold text-slate-950">{item.channel} / {item.orderCount} {"\u5355"}</h3><div className="mt-2">{pill(labelForOpsStatus("outbound", item.status), opsTone("outbound", item.status))}</div></div>))}</>) : <EmptyState text={"\u6682\u65e0\u51fa\u5e93\u7533\u8bf7"} />}</div></Panel>
           </section>
 
           <section className="grid gap-5 xl:grid-cols-2">
             <Panel className="p-0"><SectionTitle eyebrow="库存" title={"\u5e93\u5b58\u89c2\u5bdf"} action={<Link className="text-sm font-semibold text-cyan-700 hover:text-cyan-900" href="/skus">{"\u7ba1\u7406 SKU"}</Link>} /><div className="divide-y divide-slate-100">{customerInventory.length > 0 ? customerInventory.slice(0, 6).map((item) => (<div className="grid gap-3 px-5 py-4 md:grid-cols-[1fr_auto]" key={item.id}><div><p className="font-mono text-xs font-semibold text-slate-500">{item.sku}</p><h3 className="mt-1 text-sm font-semibold text-slate-950">{item.product}</h3><p className="mt-2 text-sm text-slate-600">{"\u53ef\u7528"} {item.available} / {"\u5360\u7528"} {item.reserved} / {"\u51bb\u7ed3"} {item.frozen} / {"\u6b8b\u6b21"} {item.defective} / {"\u5e93\u9f84"} {item.agingDays} {"\u5929"}</p></div>{pill(labelForOpsStatus("inventory", item.status), opsTone("inventory", item.status))}</div>)) : <EmptyState text={"\u6682\u65e0\u5e93\u5b58\u8bb0\u5f55"} />}</div></Panel>
-            <Panel className="p-0"><SectionTitle eyebrow="退货" title={"\u9000\u8d27 / RMA"} action={<Link className="text-sm font-semibold text-cyan-700 hover:text-cyan-900" href="/returns">{"\u63d0\u4ea4\u9000\u8d27"}</Link>} /><div className="divide-y divide-slate-100">{customerReturns.length > 0 ? customerReturns.slice(0, 5).map((item) => (<div className="grid gap-3 px-5 py-4 md:grid-cols-[1fr_auto]" key={item.id}><div><p className="font-mono text-xs font-semibold text-slate-500">{item.id}</p><h3 className="mt-1 text-sm font-semibold text-slate-950">{item.platform} / {item.originalOrderNo || "\u8ba2\u5355\u53f7\u5f85\u8865"}</h3><p className="mt-2 text-sm text-slate-600">{item.skuLines.map((line) => `${line.skuCode} x ${line.quantity}`).join(" / ")}</p></div>{pill(item.status, item.status === "restocked" ? "emerald" : item.status === "exception" ? "rose" : "amber")}</div>)) : <EmptyState text={"\u6682\u65e0\u9000\u8d27\u9884\u62a5"} />}</div></Panel>
+            <Panel className="p-0"><SectionTitle eyebrow="退货" title={"\u9000\u8d27 / RMA"} action={<Link className="text-sm font-semibold text-cyan-700 hover:text-cyan-900" href="/returns">{"\u63d0\u4ea4\u9000\u8d27"}</Link>} /><div className="divide-y divide-slate-100">{customerReturns.length > 0 ? customerReturns.slice(0, 5).map((item) => (<div className="grid gap-3 px-5 py-4 md:grid-cols-[1fr_auto]" key={item.id}><div><p className="font-mono text-xs font-semibold text-slate-500">{item.id}</p><h3 className="mt-1 text-sm font-semibold text-slate-950">{item.platform} / {item.originalOrderNo || "\u8ba2\u5355\u53f7\u5f85\u8865"}</h3><p className="mt-2 text-sm text-slate-600">{item.skuLines.map((line) => `${line.skuCode} x ${line.quantity}`).join(" / ")}</p></div>{pill(returnOrderStatusLabel(item.status), returnTone(item.status))}</div>)) : <EmptyState text={"\u6682\u65e0\u9000\u8d27\u9884\u62a5"} />}</div></Panel>
           </section>
 
           <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-5"><p className="flex items-center gap-2 text-sm font-semibold text-emerald-950"><ShieldCheck size={16} />{"\u5ba2\u6237\u53ef\u89c1\u8303\u56f4"}</p><p className="mt-2 text-sm leading-6 text-emerald-900">{"\u8fd9\u91cc\u5c55\u793a\u7684\u662f\u5ba2\u6237\u53ef\u76f4\u63a5\u67e5\u770b\u548c\u64cd\u4f5c\u7684\u4e1a\u52a1\u4fe1\u606f\u3002\u5185\u90e8\u5ba1\u6279\u3001\u5458\u5de5\u5907\u6ce8\u3001\u6210\u672c\u89c4\u5219\u548c\u8c03\u62e8\u6765\u6e90\u4ecd\u4fdd\u7559\u5728\u8fd0\u8425\u540e\u53f0\u3002"}</p></section>

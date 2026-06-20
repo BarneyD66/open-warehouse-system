@@ -103,9 +103,41 @@ const refTypeLabels: Record<string, string> = {
   manual: "手工费用",
 };
 
+function adjustmentLabel(record: BillingRecord) {
+  if (record.adjustmentKind === "fee_adjustment") return "费用调账";
+  if (record.adjustmentKind === "compensation") return "赔付抵扣";
+  return "";
+}
+
+function adjustmentApprovalStatusLabel(record: BillingRecord) {
+  if (record.adjustmentApprovalStatus === "pending_approval") return "待审批";
+  if (record.adjustmentApprovalStatus === "approved") return "已审批";
+  if (record.adjustmentApprovalStatus === "posted") return "已入账";
+  if (record.adjustmentApprovalStatus === "rejected") return "已驳回/有争议";
+  if (record.adjustmentApprovalStatus === "paid") return "已核销";
+  if (record.status === "paid") return "已核销";
+  if (record.status === "confirmed") return "已入账";
+  if (record.status === "disputed") return "已驳回/有争议";
+  return record.adjustmentKind ? "已审批" : "";
+}
+
+function adjustmentAttachmentStatusLabel(record: BillingRecord) {
+  if (record.adjustmentAttachmentStatus === "archived") return "附件已归档";
+  if (record.adjustmentAttachmentStatus === "confirmed") return "附件已确认";
+  if (record.adjustmentAttachmentStatus === "missing") return "附件待补";
+  if (record.adjustmentAttachmentStatus === "not_required") return "无需附件";
+  return "";
+}
+
+function latestTimelineSummary(record: BillingRecord) {
+  const latest = [...(record.approvalTimeline ?? [])].sort((left, right) => new Date(right.occurredAt).getTime() - new Date(left.occurredAt).getTime())[0];
+  if (!latest) return "";
+  return `${latest.label} / ${latest.actor} / ${latest.occurredAt}${latest.note ? ` / ${latest.note}` : ""}`;
+}
+
 export function billingExportRows(records: BillingRecord[]) {
   return [
-    ["账单号", "客户编号", "月份", "月结状态", "月结单号", "开票状态", "业务类型", "关联单据", "标题", "状态", "币种", "金额", "到期日", "费用明细", "客户说明", "付款参考号", "运营备注", "创建时间"],
+    ["账单号", "客户编号", "月份", "月结状态", "月结单号", "开票状态", "业务类型", "关联单据", "调账/赔付类型", "调账/赔付状态", "审批规则", "审批规则说明", "附件状态", "来源工单", "来源账单", "标题", "状态", "币种", "金额", "到期日", "费用明细", "客户说明", "付款参考号", "运营备注", "最近处理进度", "创建时间"],
     ...records.map((record) => [
       record.id,
       record.customerCode,
@@ -115,6 +147,13 @@ export function billingExportRows(records: BillingRecord[]) {
       invoiceStatusLabels[record.invoiceStatus || "not_requested"] ?? record.invoiceStatus ?? "未申请",
       refTypeLabels[record.refType] ?? record.refType,
       record.refId,
+      adjustmentLabel(record),
+      adjustmentApprovalStatusLabel(record),
+      record.adjustmentApprovalRuleName || "",
+      record.adjustmentApprovalRuleNote || "",
+      adjustmentAttachmentStatusLabel(record),
+      record.workOrderId || "",
+      record.adjustmentSourceRecordId || "",
       record.title,
       billingStatusLabels[record.status] ?? record.status,
       record.currency,
@@ -124,6 +163,7 @@ export function billingExportRows(records: BillingRecord[]) {
       record.customerMessage || "",
       record.paymentReference || "",
       record.reviewNote || "",
+      latestTimelineSummary(record),
       record.createdAt,
     ]),
   ];

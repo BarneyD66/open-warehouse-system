@@ -83,6 +83,34 @@ export function CustomerWorkOrderPanel({ categories, workOrders }: Props) {
     });
   }
 
+  function reply(event: React.FormEvent<HTMLFormElement>, id: string) {
+    event.preventDefault();
+    setMessage("");
+    setError("");
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
+    const body = String(form.get("body") ?? "").trim();
+    if (!body) {
+      setError("请填写回复内容。");
+      return;
+    }
+    startTransition(async () => {
+      const response = await fetch("/api/work-orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "add_message", id, body }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        setError(payload.error || "回复失败，请稍后重试。");
+        return;
+      }
+      formElement.reset();
+      setMessage("回复已提交，运营会继续处理。");
+      router.refresh();
+    });
+  }
+
   const visibleOrders = workOrders.slice(0, 5);
 
   return (
@@ -155,6 +183,28 @@ export function CustomerWorkOrderPanel({ categories, workOrders }: Props) {
                   </div>
                   <p className="mt-2 text-sm leading-6 text-slate-600">{item.category}{item.referenceNo ? ` / ${item.referenceNo}` : ""}</p>
                   {item.internalNote ? <p className="mt-2 rounded-md bg-cyan-50 p-2 text-xs leading-5 text-cyan-900">运营备注：{item.internalNote}</p> : null}
+                  {(item.messages ?? []).filter((note) => note.visibleToCustomer).length > 0 ? (
+                    <div className="mt-3 grid gap-2">
+                      {(item.messages ?? [])
+                        .filter((note) => note.visibleToCustomer)
+                        .slice(-3)
+                        .map((note) => (
+                          <div className={`rounded-md border p-2 text-xs leading-5 ${note.authorRole === "customer" ? "border-slate-200 bg-slate-50 text-slate-600" : "border-cyan-100 bg-cyan-50 text-cyan-900"}`} key={note.id}>
+                            <p className="font-semibold">{note.authorRole === "customer" ? "我" : note.authorName} · {new Date(note.createdAt).toLocaleString("zh-CN")}</p>
+                            <p className="mt-1">{note.body}</p>
+                          </div>
+                        ))}
+                    </div>
+                  ) : null}
+                  {item.status !== "resolved" && item.status !== "cancelled" ? (
+                    <form className="mt-3 flex flex-col gap-2 sm:flex-row" onSubmit={(event) => reply(event, item.id)}>
+                      <input className={inputClass} name="body" placeholder="继续补充说明或回复运营" />
+                      <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-cyan-200 bg-white px-3 text-sm font-semibold text-cyan-800 hover:bg-cyan-50 disabled:opacity-60" disabled={isPending} type="submit">
+                        <Send size={15} />
+                        回复
+                      </button>
+                    </form>
+                  ) : null}
                 </article>
               ))
             ) : (

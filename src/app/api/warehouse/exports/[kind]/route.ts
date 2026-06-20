@@ -74,13 +74,6 @@ export async function GET(_request: Request, context: RouteContext) {
     ]);
   }
 
-  if (kind === "locations") {
-    return csvResponse("仓库库位.csv", [
-      ["库位编码", "仓库编号", "库区", "状态", "容量 CBM", "备注", "更新时间"],
-      ...data.locations.map((item) => [item.locationCode, item.warehouseCode, item.zone, item.status, item.capacityCbm ?? "", item.note ?? "", item.updatedAt]),
-    ]);
-  }
-
   if (kind === "inventory") {
     return csvResponse("仓库库存.csv", [
       ["客户编号", "SKU 编码", "仓库编号", "库位编码", "可用库存", "销售占用", "冻结库存", "残次品库存", "在途入库", "库存合计", "预警库存", "库龄天数", "更新时间"],
@@ -105,7 +98,7 @@ export async function GET(_request: Request, context: RouteContext) {
   if (kind === "outbound-template") {
     return csvResponse("出库订单导入模板.csv", [
       ["销售平台", "平台订单号", "客户编号", "SKU 编码", "数量", "物流渠道", "收件人", "收件地址", "要求发货日期", "备注"],
-      ["Shopify", "ORDER-001", "CUST-202605-0001", "SKU-001", 1, "Royal Mail 48", "张三", "10 Example Street, London, UK", "2026-05-26", "请按默认包材发货"],
+      ["Shopify", "平台订单-001", "CUST-202605-0001", "SKU-001", 1, "Royal Mail 48", "张三", "英国伦敦示例街10号", "2026-05-26", "请按默认包材发货"],
     ]);
   }
 

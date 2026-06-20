@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { recordAuditLog } from "@/lib/auditLogStore";
+import { hasDocumentForRef } from "@/lib/documentStore";
 import { canRequestInventoryAdjustment, canReviewInventoryAdjustment, requireStaffSession } from "@/lib/staffAuth";
+import { approvalRuleForTrigger, approvalRuleNote, getOpsExpansionData } from "@/lib/opsExpansionStore";
+import { secondConfirmationError } from "@/lib/staffPermissions";
 import { createInventoryAdjustmentRequest, getWarehouseCoreData, reviewInventoryAdjustmentRequest, validateLocationMove, type InventoryControlAction } from "@/lib/warehouseCoreStore";
 
 export const runtime = "nodejs";
@@ -18,6 +21,12 @@ function optionalNonNegative(value: unknown) {
   if (value === undefined || value === null || value === "") return undefined;
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : undefined;
+}
+
+function adjustmentQuantity(input: { availableDelta: number; reservedDelta: number; quantity: number; controlAction: InventoryControlAction }) {
+  if (input.quantity > 0) return input.quantity;
+  if (input.controlAction === "manual_adjust") return Math.abs(input.availableDelta) + Math.abs(input.reservedDelta);
+  return 0;
 }
 
 export async function POST(request: Request) {
@@ -57,6 +66,10 @@ export async function POST(request: Request) {
   if (controlAction === "manual_adjust" && availableDelta === 0 && reservedDelta === 0 && body.alertQty === undefined && body.agingDays === undefined) {
     return NextResponse.json({ error: "请填写要提交的库存变更内容" }, { status: 400 });
   }
+  const expansionData = await getOpsExpansionData();
+  const trigger = controlAction === "move_location" ? "manual_inbound_outbound" : "inventory_adjustment";
+  const approvalRule = approvalRuleForTrigger(expansionData, trigger, 0, adjustmentQuantity({ availableDelta, reservedDelta, quantity, controlAction }));
+  const approvalNote = approvalRuleNote(approvalRule);
 
   const adjustment = await createInventoryAdjustmentRequest({
     balanceId,
@@ -69,7 +82,7 @@ export async function POST(request: Request) {
     controlAction,
     quantity,
     nextLocationCode,
-    reason,
+    reason: `${reason} / ${approvalNote}`,
     requestedBy: staff.displayName || staff.username,
     requestedByRole: staff.role,
   });
@@ -102,6 +115,30 @@ export async function PATCH(request: Request) {
   if (!id) return NextResponse.json({ error: "缺少库存调整单号" }, { status: 400 });
   if (action !== "approve" && action !== "reject") return NextResponse.json({ error: "无效的审核操作" }, { status: 400 });
   if (action === "reject" && !reviewNote) return NextResponse.json({ error: "驳回时请填写原因" }, { status: 400 });
+  const [coreData, expansionData] = await Promise.all([getWarehouseCoreData(), getOpsExpansionData()]);
+  const currentAdjustment = coreData.inventoryAdjustments.find((item) => item.id === id);
+  if (!currentAdjustment) return NextResponse.json({ error: "未找到库存调整单" }, { status: 404 });
+  const trigger = currentAdjustment.controlAction === "move_location" ? "manual_inbound_outbound" : currentAdjustment.requestedByRole === "stocktake" ? "stocktake_difference" : "inventory_adjustment";
+  const approvalRule = approvalRuleForTrigger(
+    expansionData,
+    trigger,
+    0,
+    currentAdjustment.quantity ?? Math.abs(currentAdjustment.availableDelta) + Math.abs(currentAdjustment.reservedDelta) + Math.abs(currentAdjustment.frozenDelta ?? 0) + Math.abs(currentAdjustment.defectiveDelta ?? 0),
+  );
+  if (approvalRule && !approvalRule.approverRoles.includes(staff.role)) return NextResponse.json({ error: `当前审批规则要求 ${approvalRule.approverRoles.join("、")} 审批` }, { status: 403 });
+  if (action === "approve" && approvalRule?.requireReason && !reviewNote) return NextResponse.json({ error: "当前审批规则要求填写审批原因" }, { status: 400 });
+  const secondConfirmError = secondConfirmationError({
+    staff,
+    action: "库存调整审批",
+    confirmation: clean(body.confirmation),
+    expected: id,
+    data: expansionData,
+  });
+  if (secondConfirmError) return NextResponse.json({ error: secondConfirmError }, { status: 400 });
+  if (action === "approve" && approvalRule?.requireAttachment) {
+    const hasAttachment = await hasDocumentForRef({ customerCode: currentAdjustment.customerCode, refType: "approval", refId: currentAdjustment.id });
+    if (!hasAttachment) return NextResponse.json({ error: "当前审批规则要求先上传审批附件" }, { status: 400 });
+  }
 
   const result = await reviewInventoryAdjustmentRequest({
     id,

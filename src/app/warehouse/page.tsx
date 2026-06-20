@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Boxes, ClipboardCheck, PackageCheck, Truck, Warehouse, type LucideIcon } from "lucide-react";
+import { Boxes, ClipboardCheck, Download, PackageCheck, Truck, Warehouse, type LucideIcon } from "lucide-react";
 import { buildInboundDocumentChecklist, getSubmissions, inboundStatusLabel, type InboundSubmission } from "@/lib/localStore";
 import { requireStaffSession } from "@/lib/staffAuth";
-import { buildStocktakeCandidates, getWarehouseCoreData, outboundWorkModeLabel, type CoreOutboundOrder } from "@/lib/warehouseCoreStore";
+import { buildStocktakeCandidates, getWarehouseCoreData, outboundWorkModeLabel, returnOrderStatusLabel, suggestOutboundLotAllocations, type CoreOutboundOrder, type ReturnOrder } from "@/lib/warehouseCoreStore";
 import { InboundExceptionActions } from "../components/InboundExceptionActions";
 import { LogoutButton } from "../components/LogoutButton";
 import { OpsStocktakePanel, type StocktakeCandidate } from "../components/OpsStocktakePanel";
@@ -11,6 +11,7 @@ import { WarehouseInventoryMovePanel } from "../components/WarehouseInventoryMov
 import { OutboundExceptionActions } from "../components/OutboundExceptionActions";
 import { WarehouseLocationManager } from "../components/WarehouseLocationManager";
 import { WarehouseOutboundWorkflowActions } from "../components/WarehouseOutboundWorkflowActions";
+import { WarehousePickWaveBoard } from "../components/WarehousePickWaveBoard";
 import { WarehouseScanPanel } from "../components/WarehouseScanPanel";
 import { WarehouseTaskAction } from "../components/WarehouseTaskAction";
 
@@ -142,6 +143,13 @@ export default async function WarehousePage() {
   const outboundTasks = coreData.outboundOrders
     .filter((item) => item.status !== "shipped")
     .sort((a, b) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime());
+  const purchaseTasks = coreData.purchaseReceipts
+    .filter((item) => !["putaway_completed", "cancelled"].includes(item.status))
+    .sort((a, b) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime());
+  const returnTasks = coreData.returnOrders
+    .filter((item): item is ReturnOrder => !["closed", "disposed"].includes(item.status))
+    .sort((a, b) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime());
+  const openPurchaseDiscrepancyCount = purchaseTasks.reduce((sum, item) => sum + (item.discrepancyReports ?? []).filter((report) => report.status === "open" || report.status === "customer_pending").length, 0);
   const inboundExceptions = inboundTasks.filter((item) => item.status === "exception" || item.status === "on_hold").length;
   const openInboundExceptionCount = inboundTasks.reduce((sum, item) => sum + openInboundExceptions(item).length, 0);
   const outboundBlocked = outboundTasks.filter((item) => item.status === "blocked" || item.status === "label_pending").length;
@@ -160,6 +168,20 @@ export default async function WarehousePage() {
       title: `${item.channel} / ${item.orderCount} 单`,
       detail: `${item.customerCode} / ${outboundLabel(item.status)} / ${item.recipientName || "收件人待补"}`,
       tokens: [item.id, item.pickWaveNo, item.pickListNo, item.basketNo, item.trackingNumber, item.customerCode, item.channel, item.recipientName, ...(item.skuLines?.map((line) => line.skuCode) ?? [])].filter(Boolean) as string[],
+    })),
+    ...purchaseTasks.map((item) => ({
+      id: item.id,
+      type: "purchase" as const,
+      title: `${item.supplierName} / ${item.totalReceivedQty}/${item.totalExpectedQty} 件`,
+      detail: `${item.customerCode} / ${item.trackingNumber || "追踪号待补"} / ${item.status}`,
+      tokens: [item.id, item.customerCode, item.supplierName, item.trackingNumber, ...item.lines.map((line) => line.skuCode)].filter(Boolean) as string[],
+    })),
+    ...returnTasks.map((item) => ({
+      id: item.id,
+      type: "return" as const,
+      title: `${item.platform} / ${returnOrderStatusLabel(item.status)}`,
+      detail: `${item.customerCode} / ${item.buyerReturnTracking || item.originalOrderNo || "退货追踪号待补"}`,
+      tokens: [item.id, item.customerCode, item.platform, item.originalOrderNo, item.buyerReturnTracking, ...item.skuLines.map((line) => line.skuCode)].filter(Boolean) as string[],
     })),
     ...coreData.inventoryBalances.map((item) => ({
       id: item.skuCode,
@@ -195,6 +217,10 @@ export default async function WarehousePage() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
+                <Link className="inline-flex min-h-10 items-center gap-2 rounded-md border border-cyan-200 bg-cyan-50 px-3 text-sm font-semibold text-cyan-800 hover:bg-cyan-100" href="/api/ops/reports/scans">
+                  <Download size={16} />
+                  导出扫码留痕
+                </Link>
                 <Link className="inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50" href="/ops">
                   <ClipboardCheck size={16} />
                   运营后台
@@ -207,7 +233,8 @@ export default async function WarehousePage() {
           <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <WarehouseMetric icon={PackageCheck} label="入库作业" tone="cyan" value={inboundTasks.length} />
             <WarehouseMetric icon={Boxes} label="出库作业" tone="violet" value={outboundTasks.length} />
-            <WarehouseMetric icon={Warehouse} label="入库异常/暂缓" tone={inboundExceptions > 0 || openInboundExceptionCount > 0 ? "rose" : "emerald"} value={inboundExceptions + openInboundExceptionCount} />
+            <WarehouseMetric icon={Warehouse} label="采购到货" tone={purchaseTasks.length > 0 ? "amber" : "emerald"} value={purchaseTasks.length} />
+            <WarehouseMetric icon={PackageCheck} label="入库/采购差异" tone={inboundExceptions > 0 || openInboundExceptionCount > 0 || openPurchaseDiscrepancyCount > 0 ? "rose" : "emerald"} value={inboundExceptions + openInboundExceptionCount + openPurchaseDiscrepancyCount} />
             <WarehouseMetric icon={Truck} label="出库阻塞/面单" tone={outboundBlocked > 0 ? "amber" : "emerald"} value={outboundBlocked} />
           </section>
 
@@ -226,6 +253,42 @@ export default async function WarehousePage() {
               sortedQty: scannedQty(item.scanProgress?.sortedQtyBySku),
               packedQty: scannedQty(item.scanProgress?.packedQtyBySku),
               lastScans: item.scanProgress?.lastScans,
+            }))}
+            purchaseTasks={purchaseTasks.map((item) => ({
+              id: item.id,
+              label: `${item.supplierName} / ${item.totalExpectedQty} 件`,
+              status: item.status,
+              supplierName: item.supplierName,
+              customerCode: item.customerCode,
+              trackingNumber: item.trackingNumber,
+              totalExpectedQty: item.totalExpectedQty,
+              totalReceivedQty: item.totalReceivedQty,
+              totalPutawayQty: item.totalPutawayQty,
+              exceptionNote: item.exceptionNote,
+              lines: item.lines.map((line) => ({
+                skuCode: line.skuCode,
+                productName: line.productName,
+                expectedQty: line.expectedQty,
+                receivedQty: line.receivedQty,
+                putawayQty: line.putawayQty,
+                locationCode: line.locationCode,
+              })),
+              scanLogs: item.scanLogs,
+              discrepancyReports: item.discrepancyReports,
+            }))}
+            returnTasks={returnTasks.map((item) => ({
+              id: item.id,
+              label: `${item.platform} / ${returnOrderStatusLabel(item.status)}`,
+              status: returnOrderStatusLabel(item.status),
+              customerCode: item.customerCode,
+              platform: item.platform,
+              originalOrderNo: item.originalOrderNo,
+              buyerReturnTracking: item.buyerReturnTracking,
+              expectedArrivalDate: item.expectedArrivalDate,
+              locationCode: item.locationCode,
+              inspectionResult: item.inspectionResult,
+              skuLines: item.skuLines,
+              scanLogs: item.scanLogs,
             }))}
           />
 
@@ -321,6 +384,8 @@ export default async function WarehousePage() {
             </div>
           </WorkTable>
 
+          <WarehousePickWaveBoard orders={outboundTasks} />
+
           <WorkTable title="出库下架、拣货、打包与签出">
             <table className="w-full min-w-full table-fixed text-left text-sm lg:min-w-[1280px]">
               <thead className="bg-slate-50 text-xs font-semibold text-slate-500">
@@ -337,6 +402,7 @@ export default async function WarehousePage() {
               <tbody className="divide-y divide-slate-200">
                 {outboundTasks.slice(0, 20).map((item) => {
                   const progress = scanProgressLabel(item);
+                  const lotAllocationBySku = new Map(suggestOutboundLotAllocations(item, coreData.inventoryLots).map((allocation) => [allocation.skuCode, allocation]));
                   return (
                   <tr key={item.id}>
                     <td className="px-4 py-3">
@@ -356,11 +422,26 @@ export default async function WarehousePage() {
                     </td>
                     <td className="px-4 py-3 text-slate-600">
                       {item.skuLines?.length ? (
-                        item.skuLines.map((line) => (
-                          <p className="font-mono text-xs" key={`${item.id}-${line.skuCode}`}>
-                            {line.skuCode} x {line.quantity}
-                          </p>
-                        ))
+                        item.skuLines.map((line) => {
+                          const allocation = lotAllocationBySku.get(line.skuCode);
+                          return (
+                            <div className="mb-2 rounded-md border border-slate-100 bg-slate-50 p-2 last:mb-0" key={`${item.id}-${line.skuCode}`}>
+                              <p className="font-mono text-xs font-semibold text-slate-900">{line.skuCode} x {line.quantity}</p>
+                              {allocation?.lots.length ? (
+                                <div className="mt-1 grid gap-1">
+                                  {allocation.lots.slice(0, 3).map((lot) => (
+                                    <p className="text-[11px] leading-4 text-slate-600" key={lot.lotId}>
+                                      批次 {lot.lotNo} x {lot.quantity} / {lot.locationCode || "未设库位"} / {lot.expiryDate || "无效期"}
+                                    </p>
+                                  ))}
+                                  {allocation.shortageQty > 0 ? <p className="text-[11px] font-semibold text-rose-700">批次可用不足，缺 {allocation.shortageQty}</p> : null}
+                                </div>
+                              ) : (
+                                <p className="mt-1 text-[11px] font-semibold text-amber-700">暂无可用批次，需人工确认库存或批次台账。</p>
+                              )}
+                            </div>
+                          );
+                        })
                       ) : (
                         <p className="text-xs text-slate-400">待补 SKU 明细</p>
                       )}
@@ -378,7 +459,7 @@ export default async function WarehousePage() {
                           <Link className="inline-flex min-h-8 items-center rounded-md border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 hover:bg-slate-50" href={`/warehouse/print/pick-list/${encodeURIComponent(item.id)}`}>
                             拣货单
                           </Link>
-                          <Link className="inline-flex min-h-8 items-center rounded-md border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 hover:bg-slate-50" href={`/warehouse/print/label/${encodeURIComponent(item.id)}`}>
+                          <Link className="inline-flex min-h-8 items-center rounded-md border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 hover:bg-slate-50" href={`/api/outbounds/${encodeURIComponent(item.id)}/label`} target="_blank">
                             面单
                           </Link>
                         </div>

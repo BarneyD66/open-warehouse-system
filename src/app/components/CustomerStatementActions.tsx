@@ -22,6 +22,7 @@ export function CustomerStatementActions({ month, records }: Props) {
   const allPaid = records.every((record) => record.status === "paid");
   const hasPaymentSubmitted = records.some((record) => record.status === "payment_submitted");
   const hasDispute = records.some((record) => record.status === "disputed");
+  const paymentRejection = records.find((record) => record.paymentRejectionNote || record.statementPaymentRejectionNote);
   const canSubmitPayment = records.some((record) => ["confirmed", "pending_confirmation", "draft"].includes(record.status));
 
   function submit(action: StatementAction) {
@@ -71,8 +72,20 @@ export function CustomerStatementActions({ month, records }: Props) {
               有费用异议
             </span>
           ) : null}
+          {paymentRejection ? (
+            <span className="inline-flex min-h-10 items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-800">
+              <AlertCircle size={16} />
+              付款被驳回
+            </span>
+          ) : null}
         </div>
       </div>
+
+      {paymentRejection ? (
+        <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-900">
+          付款复核未通过：{paymentRejection.paymentRejectionNote || paymentRejection.statementPaymentRejectionNote}
+        </div>
+      ) : null}
 
       {!allPaid ? (
         <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_260px]">

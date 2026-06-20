@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireStaffSession } from "@/lib/staffAuth";
+import { approvalRuleForTrigger, approvalRuleNote, getOpsExpansionData } from "@/lib/opsExpansionStore";
 import { buildStocktakeCandidates, countStocktakeBatchItem, createStocktakeBatch, getWarehouseCoreData, submitStocktakeBatch } from "@/lib/warehouseCoreStore";
 
 export const runtime = "nodejs";
@@ -54,9 +55,15 @@ export async function POST(request: Request) {
 
   if (body.action === "submit_batch") {
     if (!body.batchId) return NextResponse.json({ error: "缺少盘点批次" }, { status: 400 });
+    const [coreData, expansionData] = await Promise.all([getWarehouseCoreData(), getOpsExpansionData()]);
+    const batch = coreData.stocktakeBatches.find((item) => item.id === body.batchId);
+    if (!batch) return NextResponse.json({ error: "未找到盘点批次" }, { status: 404 });
+    const differenceQty = batch.items.reduce((sum, item) => sum + Math.abs(item.differenceQty ?? 0), 0);
+    const approvalRule = approvalRuleForTrigger(expansionData, "stocktake_difference", 0, differenceQty);
     const result = await submitStocktakeBatch({
       batchId: body.batchId,
       submittedBy: operator,
+      approvalNote: approvalRuleNote(approvalRule),
     });
     if (!result.batch || result.error) return NextResponse.json({ error: result.error || "盘点批次提交失败" }, { status: 400 });
     return NextResponse.json(result);

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Download, FileSpreadsheet, ListFilter } from "lucide-react";
-import { ConfirmOrderImportDraftButton } from "@/app/components/ConfirmOrderImportDraftButton";
+import { CancelOrderImportDraftButton, ConfirmOrderImportDraftButton } from "@/app/components/ConfirmOrderImportDraftButton";
 import { PageShell } from "@/app/components/MarketingShell";
 import { getOrderImportBatchById, type ImportedOrderIssue, type ImportedOrderRow, type OrderImportBatch } from "@/lib/opsExpansionStore";
 import { requireStaffSession } from "@/lib/staffAuth";
@@ -35,6 +35,7 @@ function dateTimeLabel(value?: string) {
 }
 
 function batchStatusLabel(batch: OrderImportBatch) {
+  if (batch.status === "cancelled") return "已取消";
   if (batch.status === "draft") return "预检草稿";
   if (batch.skippedRows > 0 || batch.issues.some((issue) => issue.level === "error")) return "已创建，有异常";
   return "已创建";
@@ -136,12 +137,13 @@ export default async function OpsOrderImportDetailPage({ params, searchParams }:
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <span className={pillClass(batch.status === "draft" ? "amber" : errorCount > 0 ? "rose" : "emerald")}>{batchStatusLabel(batch)}</span>
+                <span className={pillClass(batch.status === "cancelled" ? "slate" : batch.status === "draft" ? "amber" : errorCount > 0 ? "rose" : "emerald")}>{batchStatusLabel(batch)}</span>
                 <Link className="inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50" href={`/api/ops/mabang-modules?batchId=${encodeURIComponent(batch.id)}&report=issues`}>
                   <Download size={16} />
                   下载异常报告
                 </Link>
                 {batch.status === "draft" ? <ConfirmOrderImportDraftButton batchId={batch.id} disabled={readyCount <= 0} /> : null}
+                {batch.status === "draft" ? <CancelOrderImportDraftButton batchId={batch.id} /> : null}
                 <Link className="inline-flex min-h-10 items-center gap-2 rounded-md bg-slate-950 px-3 text-sm font-semibold text-white hover:bg-slate-800" href="/ops?section=outbound">
                   <FileSpreadsheet size={16} />
                   重新上传修正版
@@ -149,6 +151,14 @@ export default async function OpsOrderImportDetailPage({ params, searchParams }:
               </div>
             </div>
           </section>
+
+          {batch.status === "cancelled" ? (
+            <section className="rounded-lg border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-600 shadow-sm">
+              <p className="font-semibold text-slate-950">该同步/导入草稿已取消</p>
+              <p className="mt-1">取消原因：{batch.cancelReason || "运营取消同步预检批次"}</p>
+              <p>取消人：{batch.cancelledBy || "-"} / 取消时间：{dateTimeLabel(batch.cancelledAt)}</p>
+            </section>
+          ) : null}
 
           <section className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
             {metric("总行数", batch.totalRows, "slate")}

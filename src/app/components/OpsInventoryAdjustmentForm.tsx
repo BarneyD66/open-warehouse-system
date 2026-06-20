@@ -3,12 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { CheckCircle2, Loader2, SlidersHorizontal, XCircle } from "lucide-react";
-import type { InventoryAdjustmentRequest, InventoryBalance, InventoryControlAction } from "@/lib/warehouseCoreStore";
+import type { DocumentRecord } from "@/lib/documentStore";
+import type { ApprovalTimelineEvent, InventoryAdjustmentRequest, InventoryBalance, InventoryControlAction } from "@/lib/warehouseCoreStore";
+import { DocumentUploadPanel } from "./DocumentUploadPanel";
 
 type Props = {
   balances: InventoryBalance[];
   adjustments: InventoryAdjustmentRequest[];
   canReview: boolean;
+  documents?: DocumentRecord[];
 };
 
 function formatDelta(value: number) {
@@ -21,6 +24,25 @@ function statusLabel(status: InventoryAdjustmentRequest["status"]) {
   return "待审批";
 }
 
+function ApprovalTimelineList({ events }: { events?: ApprovalTimelineEvent[] }) {
+  const latest = (events ?? []).slice(0, 3);
+  if (latest.length === 0) return null;
+  return (
+    <div className="mt-3 rounded-md border border-slate-200 bg-white px-3 py-2">
+      <p className="text-[11px] font-semibold text-slate-500">审批记录</p>
+      <div className="mt-2 grid gap-2">
+        {latest.map((event) => (
+          <div className="grid gap-1 border-l-2 border-cyan-500 pl-2 text-[11px] text-slate-600" key={event.id}>
+            <p className="font-semibold text-slate-900">{event.label} · {event.actor}</p>
+            <p>{new Date(event.occurredAt).toLocaleString("zh-CN", { hour12: false })}</p>
+            {event.note ? <p className="leading-4 text-slate-500">{event.note}</p> : null}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const controlActionLabels: Record<InventoryControlAction, string> = {
   manual_adjust: "手工调整",
   freeze: "冻结库存",
@@ -30,7 +52,7 @@ const controlActionLabels: Record<InventoryControlAction, string> = {
   move_location: "移库",
 };
 
-export function OpsInventoryAdjustmentForm({ balances, adjustments, canReview }: Props) {
+export function OpsInventoryAdjustmentForm({ balances, adjustments, canReview, documents = [] }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedId, setSelectedId] = useState(balances[0]?.id ?? "");
@@ -43,6 +65,7 @@ export function OpsInventoryAdjustmentForm({ balances, adjustments, canReview }:
   const [agingDays, setAgingDays] = useState("");
   const [note, setNote] = useState("");
   const [reviewNoteById, setReviewNoteById] = useState<Record<string, string>>({});
+  const [reviewConfirmationById, setReviewConfirmationById] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -115,7 +138,7 @@ export function OpsInventoryAdjustmentForm({ balances, adjustments, canReview }:
       const response = await fetch("/api/ops/inventory-adjustments", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id, action, reviewNote: reviewNoteById[id] ?? "" }),
+        body: JSON.stringify({ id, action, reviewNote: reviewNoteById[id] ?? "", confirmation: reviewConfirmationById[id] ?? "" }),
       });
       if (!response.ok) {
         const payload = (await response.json().catch(() => ({}))) as { error?: string };
@@ -124,6 +147,7 @@ export function OpsInventoryAdjustmentForm({ balances, adjustments, canReview }:
       }
       setMessage(action === "approve" ? "库存调整已审批通过，并写入库存流水。" : "库存调整申请已驳回。");
       setReviewNoteById((current) => ({ ...current, [id]: "" }));
+      setReviewConfirmationById((current) => ({ ...current, [id]: "" }));
       router.refresh();
     });
   }
@@ -221,13 +245,20 @@ export function OpsInventoryAdjustmentForm({ balances, adjustments, canReview }:
                 </div>
                 {item.nextLocationCode ? <p className="mt-2 rounded-md bg-cyan-50 p-2 text-xs font-semibold text-cyan-800">库位 {item.beforeLocationCode || "-"} {"->"} {item.nextLocationCode}</p> : null}
                 <p className="mt-2 text-sm leading-6 text-slate-700">{item.reason}</p>
+                <ApprovalTimelineList events={item.approvalTimeline} />
                 {canReview ? (
-                  <div className="mt-3 grid gap-2 md:grid-cols-[1fr_auto_auto]">
+                  <div className="mt-3 grid gap-2 md:grid-cols-[1fr_1fr_auto_auto]">
                     <input
                       className="min-h-9 rounded-md border border-slate-200 px-2 text-xs outline-none focus:border-cyan-500"
                       onChange={(event) => setReviewNoteById((current) => ({ ...current, [item.id]: event.target.value }))}
                       placeholder="审批备注，驳回时必填"
                       value={reviewNoteById[item.id] ?? ""}
+                    />
+                    <input
+                      className="min-h-9 rounded-md border border-slate-200 px-2 font-mono text-xs outline-none focus:border-cyan-500"
+                      onChange={(event) => setReviewConfirmationById((current) => ({ ...current, [item.id]: event.target.value }))}
+                      placeholder={`二次确认：${item.id}`}
+                      value={reviewConfirmationById[item.id] ?? ""}
                     />
                     <button className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md bg-emerald-700 px-3 text-xs font-semibold text-white hover:bg-emerald-800 disabled:opacity-60" disabled={isPending} onClick={() => review(item.id, "approve")} type="button">
                       <CheckCircle2 size={14} />
@@ -241,6 +272,17 @@ export function OpsInventoryAdjustmentForm({ balances, adjustments, canReview }:
                 ) : (
                   <p className="mt-3 rounded-md bg-slate-100 p-2 text-xs font-semibold text-slate-500">当前角色只能提交申请，审批需由管理员或运营处理。</p>
                 )}
+                {canReview ? (
+                  <DocumentUploadPanel
+                    category="other"
+                    customerCode={item.customerCode}
+                    documents={documents.filter((document) => document.refType === "approval" && document.refId === item.id)}
+                    refId={item.id}
+                    refType="approval"
+                    title="审批附件"
+                    uploadEndpoint="/api/ops/documents"
+                  />
+                ) : null}
               </div>
             ))
           ) : (
@@ -256,6 +298,7 @@ export function OpsInventoryAdjustmentForm({ balances, adjustments, canReview }:
                   <span className="font-mono font-semibold text-slate-900">{item.skuCode}</span>
                   <span>{controlActionLabels[item.controlAction ?? "manual_adjust"]} / 可用 {formatDelta(item.availableDelta)} / 冻结 {formatDelta(item.frozenDelta ?? 0)} / 残次 {formatDelta(item.defectiveDelta ?? 0)}</span>
                   <span>{statusLabel(item.status)}</span>
+                  {item.approvalTimeline?.[0] ? <span className="basis-full text-[11px] text-slate-500">最近审批：{item.approvalTimeline[0].label} / {item.approvalTimeline[0].actor}</span> : null}
                 </div>
               ))}
             </div>

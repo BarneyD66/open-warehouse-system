@@ -56,6 +56,12 @@ export function CustomerBillingActions({ record }: Props) {
         </div>
       ) : null}
 
+      {record.paymentRejectionNote && record.status !== "payment_submitted" ? (
+        <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm leading-6 text-amber-900">
+          上次付款被驳回：{record.paymentRejectionNote}
+        </div>
+      ) : null}
+
       {record.status === "confirmed" ? (
         <div className="grid gap-2">
           <label className="text-xs font-semibold text-slate-500" htmlFor={`payment-${record.id}`}>

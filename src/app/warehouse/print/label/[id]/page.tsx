@@ -9,6 +9,12 @@ type PageProps = {
   params: Promise<{ id: string }>;
 };
 
+function labelFormatText(format?: "pdf" | "zpl" | "internal") {
+  if (format === "pdf") return "承运商 PDF 面单";
+  if (format === "zpl") return "承运商 ZPL 面单";
+  return "系统内部面单";
+}
+
 export default async function ShippingLabelPage({ params }: PageProps) {
   await requireStaffSession();
   const { id } = await params;
@@ -50,11 +56,12 @@ export default async function ShippingLabelPage({ params }: PageProps) {
             <p>重量/件数：{order.packageWeightKg ?? "-"}kg / {order.packageCount ?? 1}</p>
             <p>费用：{typeof order.shippingFee === "number" ? `£${order.shippingFee.toFixed(2)}` : "-"}</p>
             <p>状态：{order.status}</p>
+            <p>格式：{labelFormatText(order.labelFormat)}</p>
           </div>
           <div className="mt-2 border border-slate-950 p-4 text-center">
             <p className="text-xs font-semibold text-slate-500">追踪号</p>
             <p className="mt-1 font-mono text-2xl font-bold tracking-widest">{order.trackingNumber || order.id}</p>
-            <p className="mt-2 text-xs text-slate-500">当前为系统面单预览；接入真实承运商后可替换为承运商 PDF/ZPL 面单。</p>
+            <p className="mt-2 text-xs text-slate-500">这是仓库内部预览页；真实 PDF/ZPL 面单请通过出库单里的“打印”按钮打开系统鉴权下载链接。</p>
           </div>
         </div>
       </section>

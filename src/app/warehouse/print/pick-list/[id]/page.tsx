@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireStaffSession } from "@/lib/staffAuth";
-import { getWarehouseCoreData, outboundWorkModeLabel } from "@/lib/warehouseCoreStore";
+import { getWarehouseCoreData, outboundWorkModeLabel, suggestOutboundLotAllocations } from "@/lib/warehouseCoreStore";
 import { PrintButton } from "../../../../components/PrintButton";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +20,8 @@ export default async function PickListPage({ params }: PageProps) {
   const data = await getWarehouseCoreData();
   const order = data.outboundOrders.find((item) => item.id === decodeURIComponent(id));
   if (!order) notFound();
+
+  const allocationBySku = new Map(suggestOutboundLotAllocations(order, data.inventoryLots).map((allocation) => [allocation.skuCode, allocation]));
 
   return (
     <main className="min-h-screen bg-white p-8 text-slate-950 print:p-4">
@@ -48,18 +50,29 @@ export default async function PickListPage({ params }: PageProps) {
         <thead>
           <tr className="border-b border-slate-950">
             <th className="py-2">SKU</th>
-            <th className="py-2">库位</th>
+            <th className="py-2">建议批次 / 库位</th>
             <th className="py-2">数量</th>
             <th className="py-2">复核</th>
           </tr>
         </thead>
         <tbody>
           {order.skuLines?.map((line) => {
-            const balance = data.inventoryBalances.find((item) => item.customerCode === order.customerCode && item.skuCode === line.skuCode);
+            const allocation = allocationBySku.get(line.skuCode);
             return (
               <tr className="border-b border-slate-200" key={line.skuCode}>
                 <td className="py-3 font-mono font-semibold">{line.skuCode}</td>
-                <td className="py-3">{balance?.locationCode || "未指定"}</td>
+                <td className="py-3">
+                  {allocation?.lots.length ? (
+                    allocation.lots.map((lot) => (
+                      <p className="text-xs leading-5" key={lot.lotId}>
+                        {lot.lotNo} x {lot.quantity} / {lot.locationCode || "未设库位"} / {lot.expiryDate || "无效期"}
+                      </p>
+                    ))
+                  ) : (
+                    <span className="text-xs font-semibold text-amber-700">暂无可用批次</span>
+                  )}
+                  {allocation?.shortageQty ? <p className="text-xs font-semibold text-rose-700">缺口 {allocation.shortageQty}</p> : null}
+                </td>
                 <td className="py-3 text-lg font-semibold">{line.quantity}</td>
                 <td className="py-3">□ 已拣货　□ 已复核</td>
               </tr>

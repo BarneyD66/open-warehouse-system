@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { findDemoCustomer, serializeCustomerSession } from "@/lib/customerAuth";
 import { findRegisteredCustomer } from "@/lib/customerAccountStore";
+import { checkRateLimit, rateLimitKey } from "@/lib/rateLimitStore";
 
 export async function POST(request: Request) {
+  const rate = checkRateLimit(rateLimitKey(request, "customer-login"), 12, 60_000);
+  if (!rate.ok) return NextResponse.json({ ok: false, message: "登录尝试过于频繁，请稍后再试" }, { status: 429 });
+
   const contentType = request.headers.get("content-type") ?? "";
   const isFormPost = contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data");
   const body = isFormPost

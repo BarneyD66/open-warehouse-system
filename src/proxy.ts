@@ -45,6 +45,11 @@ function startsWithAny(pathname: string, prefixes: string[]) {
 }
 
 function targetUrl(request: NextRequest, surface: Surface, path: string) {
+  const hostname = request.headers.get("host")?.split(":")[0].toLowerCase() ?? "";
+  if (hostname === "localhost" || hostname === "127.0.0.1" || hostname.endsWith(".localhost")) {
+    return new URL(path, request.url);
+  }
+
   const envUrl =
     surface === "admin"
       ? process.env.NEXT_PUBLIC_ADMIN_URL

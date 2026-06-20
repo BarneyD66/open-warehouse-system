@@ -37,6 +37,12 @@ function csvResponse(filename: string, rows: unknown[][]) {
   });
 }
 
+const skuStatusLabel: Record<string, string> = {
+  active: "启用",
+  paused: "暂停",
+  archived: "已归档",
+};
+
 export async function GET(request: Request) {
   const session = sessionFromRequest(request);
   if (!session) return NextResponse.json({ error: "请先登录客户工作台" }, { status: 401 });
@@ -61,7 +67,7 @@ export async function GET(request: Request) {
           item.productName,
           item.barcode ?? "",
           item.category ?? "",
-          item.status,
+          skuStatusLabel[item.status] ?? item.status,
           balance?.availableQty ?? 0,
           balance?.reservedQty ?? 0,
           balance?.frozenQty ?? 0,

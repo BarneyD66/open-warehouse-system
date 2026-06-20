@@ -231,7 +231,7 @@ export function CustomerSkuBulkTools() {
   );
 }
 
-export function CustomerOutboundBulkTools() {
+export function CustomerOutboundBulkTools({ disabledReason }: { disabledReason?: string } = {}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState("");
@@ -340,12 +340,13 @@ export function CustomerOutboundBulkTools() {
             <Upload size={16} />
             保存草稿
           </button>
-          <button className="inline-flex min-h-10 items-center gap-2 rounded-md bg-cyan-900 px-3 text-sm font-semibold text-white hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-50" disabled={isPending || !preview || preview.readyOrders === 0} onClick={confirmImport} type="button">
+          <button className="inline-flex min-h-10 items-center gap-2 rounded-md bg-cyan-900 px-3 text-sm font-semibold text-white hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-50" disabled={isPending || !preview || preview.readyOrders === 0 || Boolean(disabledReason)} onClick={confirmImport} type="button">
             <Upload size={16} />
             确认创建
           </button>
         </div>
       </div>
+      {disabledReason ? <p className="mt-3 rounded-md bg-rose-50 p-3 text-sm font-semibold text-rose-800">{disabledReason}</p> : null}
       {preview ? (
         <div className="mt-3 rounded-lg border border-cyan-200 bg-cyan-50 p-3 text-sm text-cyan-950">
           <div className="flex flex-wrap gap-2">
@@ -398,7 +399,7 @@ export function CustomerOutboundBulkTools() {
   );
 }
 
-export function CustomerOutboundForm() {
+export function CustomerOutboundForm({ disabledReason }: { disabledReason?: string } = {}) {
   const router = useRouter();
   const [form, setForm] = useState(outboundInitialState);
   const [isPending, startTransition] = useTransition();
@@ -472,10 +473,11 @@ export function CustomerOutboundForm() {
           <input className={inputClass} onChange={(event) => update("note", event.target.value)} placeholder="可选，例如需要拍照、合单、FBA 中转" value={form.note} />
         </Field>
       </div>
-      <button className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-md bg-slate-950 px-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60" disabled={isPending} type="submit">
+      <button className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-md bg-slate-950 px-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60" disabled={isPending || Boolean(disabledReason)} type="submit">
         <Send size={16} />
         提交出库申请
       </button>
+      {disabledReason ? <p className="mt-3 rounded-md bg-rose-50 p-3 text-sm font-semibold text-rose-800">{disabledReason}</p> : null}
       {message ? <p className="mt-3 rounded-md bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">{message}</p> : null}
       {error ? <p className="mt-3 rounded-md bg-rose-50 p-3 text-sm font-semibold text-rose-800">{error}</p> : null}
     </form>

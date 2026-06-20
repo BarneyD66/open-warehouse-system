@@ -33,6 +33,21 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (!before) return NextResponse.json({ error: "未找到入库任务" }, { status: 404 });
 
     const taskNote = [location ? `库位：${location}` : "", note].filter(Boolean).join("；");
+    const putawayResult =
+      status === "putaway_completed" && before.status !== "putaway_completed"
+        ? await putawayInboundInventory({
+            customerCode: before.customerCode ?? "",
+            inboundId: before.id,
+            skuLines: before.skuLines ?? [],
+            locationCode: location,
+            operator,
+            note: taskNote,
+          })
+        : null;
+    if (putawayResult?.errors?.length) {
+      return NextResponse.json({ error: putawayResult.errors.join("；"), errors: putawayResult.errors }, { status: 400 });
+    }
+
     const updated = await updateInboundWorkflow({
       id,
       status: status as InboundStatus,
@@ -42,14 +57,6 @@ export async function PATCH(request: Request, context: RouteContext) {
     if (!updated) return NextResponse.json({ error: "未找到入库任务" }, { status: 404 });
 
     if (status === "putaway_completed" && before.status !== "putaway_completed") {
-      const result = await putawayInboundInventory({
-        customerCode: updated.customerCode ?? "",
-        inboundId: updated.id,
-        skuLines: updated.skuLines ?? [],
-        locationCode: location,
-        operator,
-        note: taskNote,
-      });
       await recordAuditLog({
         action: "inbound_putaway",
         actorRole: "staff",
@@ -57,10 +64,10 @@ export async function PATCH(request: Request, context: RouteContext) {
         targetType: "inbound",
         targetId: updated.id,
         customerCode: updated.customerCode,
-        summary: `入库上架完成，写入 ${result.movementCount} 条库存流水`,
+        summary: `入库上架完成，写入 ${putawayResult?.movementCount ?? 0} 条库存流水`,
         note: taskNote,
         before: { status: before.status },
-        after: { status: updated.status, movementCount: result.movementCount },
+        after: { status: updated.status, movementCount: putawayResult?.movementCount ?? 0 },
       });
     } else {
       await recordAuditLog({

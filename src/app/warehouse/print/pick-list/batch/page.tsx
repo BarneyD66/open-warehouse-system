@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireStaffSession } from "@/lib/staffAuth";
-import { getWarehouseCoreData, outboundWorkModeLabel } from "@/lib/warehouseCoreStore";
+import { getWarehouseCoreData, outboundWorkModeLabel, suggestOutboundLotAllocations } from "@/lib/warehouseCoreStore";
 import { PrintButton } from "../../../../components/PrintButton";
 
 export const dynamic = "force-dynamic";
@@ -27,9 +27,10 @@ export default async function BatchPickListPage({ searchParams }: PageProps) {
   const orders = data.outboundOrders.filter((order) => requestedIds.includes(order.id));
   if (orders.length === 0) notFound();
 
-  const lines = orders.flatMap((order) =>
-    (order.skuLines ?? []).map((line) => {
-      const balance = data.inventoryBalances.find((item) => item.customerCode === order.customerCode && item.skuCode === line.skuCode);
+  const lines = orders.flatMap((order) => {
+    const allocationBySku = new Map(suggestOutboundLotAllocations(order, data.inventoryLots).map((allocation) => [allocation.skuCode, allocation]));
+    return (order.skuLines ?? []).map((line) => {
+      const allocation = allocationBySku.get(line.skuCode);
       return {
         orderId: order.id,
         customerCode: order.customerCode,
@@ -39,10 +40,13 @@ export default async function BatchPickListPage({ searchParams }: PageProps) {
         basketNo: order.basketNo || "-",
         skuCode: line.skuCode,
         quantity: line.quantity,
-        locationCode: balance?.locationCode || "未指定",
+        lotSummary: allocation?.lots.length
+          ? allocation.lots.map((lot) => `${lot.lotNo} x ${lot.quantity} / ${lot.locationCode || "未设库位"} / ${lot.expiryDate || "无效期"}`).join("；")
+          : "暂无可用批次",
+        shortageQty: allocation?.shortageQty ?? 0,
       };
-    }),
-  );
+    });
+  });
 
   return (
     <main className="min-h-screen bg-white p-8 text-slate-950 print:p-4">
@@ -68,7 +72,7 @@ export default async function BatchPickListPage({ searchParams }: PageProps) {
             <th className="py-2">模式/波次</th>
             <th className="py-2">渠道</th>
             <th className="py-2">SKU</th>
-            <th className="py-2">库位</th>
+            <th className="py-2">建议批次 / 库位</th>
             <th className="py-2">篮号</th>
             <th className="py-2">数量</th>
             <th className="py-2">复核</th>
@@ -82,7 +86,10 @@ export default async function BatchPickListPage({ searchParams }: PageProps) {
               <td className="py-3">{line.workMode}<br /><span className="font-mono text-xs">{line.pickWaveNo}</span></td>
               <td className="py-3">{line.channel}</td>
               <td className="py-3 font-mono font-semibold">{line.skuCode}</td>
-              <td className="py-3">{line.locationCode}</td>
+              <td className="py-3 text-xs leading-5">
+                {line.lotSummary}
+                {line.shortageQty > 0 ? <p className="font-semibold text-rose-700">缺口 {line.shortageQty}</p> : null}
+              </td>
               <td className="py-3">{line.basketNo}</td>
               <td className="py-3 text-lg font-semibold">{line.quantity}</td>
               <td className="py-3">□ 已拣货　□ 已复核</td>

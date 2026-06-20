@@ -3,8 +3,10 @@
 import { useMemo, useState, useTransition } from "react";
 import { Calculator, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
+import type { DocumentRecord } from "@/lib/documentStore";
 import type { InboundSubmission } from "@/lib/localStore";
 import type { BillingFeeCode, BillingRefType, CoreOutboundOrder, CustomerProfile, ReturnOrder } from "@/lib/warehouseCoreStore";
+import { DocumentUploadPanel } from "./DocumentUploadPanel";
 
 type FeeRuleView = {
   feeCode: BillingFeeCode;
@@ -26,6 +28,7 @@ type Props = {
   inboundSubmissions: InboundSubmission[];
   outboundOrders: CoreOutboundOrder[];
   returnOrders: ReturnOrder[];
+  documents?: DocumentRecord[];
 };
 
 const feeRules: FeeRuleView[] = [
@@ -43,7 +46,7 @@ function money(value: number) {
   return value.toLocaleString("en-GB", { maximumFractionDigits: 2, minimumFractionDigits: 2 });
 }
 
-export function OpsBillingGenerator({ customers, inboundSubmissions, outboundOrders, returnOrders }: Props) {
+export function OpsBillingGenerator({ customers, inboundSubmissions, outboundOrders, returnOrders, documents = [] }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [customerCode, setCustomerCode] = useState(customers[0]?.customerCode ?? "");
@@ -76,7 +79,16 @@ export function OpsBillingGenerator({ customers, inboundSubmissions, outboundOrd
     if (currentRule.refType === "return") {
       return returnOrders
         .filter((item) => !customerCode || item.customerCode === customerCode)
-        .map((item) => ({ id: item.id, label: `${item.id} / ${item.platform} / ${item.status}`, quantity: item.skuLines.reduce((sum, line) => sum + line.quantity, 0) || 1 }));
+        .filter((item) => {
+          if (currentRule.feeCode === "return_restock") return item.status === "restocked" || item.resolution === "restock";
+          if (currentRule.feeCode === "return_disposal") return item.status === "disposed" || item.resolution === "dispose";
+          return ["received", "inspection", "restocked", "repair", "disposed", "closed", "exception"].includes(item.status);
+        })
+        .map((item) => ({
+          id: item.id,
+          label: `${item.id} / ${item.platform} / ${item.inspectionResult || item.status}`,
+          quantity: item.skuLines.reduce((sum, line) => sum + line.quantity, 0) || 1,
+        }));
     }
 
     return [];
@@ -117,6 +129,23 @@ export function OpsBillingGenerator({ customers, inboundSubmissions, outboundOrd
     });
   }
 
+  function autoGenerate() {
+    setError("");
+    startTransition(async () => {
+      const response = await fetch("/api/ops/billing/auto-generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerCode }),
+      });
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+        setError(payload.error || "自动生成费用失败，请稍后重试。");
+        return;
+      }
+      router.refresh();
+    });
+  }
+
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -131,6 +160,12 @@ export function OpsBillingGenerator({ customers, inboundSubmissions, outboundOrd
           <p className="text-xs font-semibold text-cyan-800">预计金额</p>
           <p className="font-mono text-lg font-semibold text-slate-950">£{money(Number.isFinite(amount) ? amount : 0)}</p>
         </div>
+      </div>
+      <div className="mt-3">
+        <button className="inline-flex min-h-9 items-center gap-2 rounded-md border border-cyan-200 bg-cyan-50 px-3 text-xs font-semibold text-cyan-800 hover:bg-cyan-100 disabled:opacity-60" disabled={isPending || !customerCode} onClick={autoGenerate} type="button">
+          <Calculator size={14} />
+          自动生成出库费和仓租
+        </button>
       </div>
 
       <div className="mt-4 grid gap-3 lg:grid-cols-4">
@@ -197,6 +232,17 @@ export function OpsBillingGenerator({ customers, inboundSubmissions, outboundOrd
         </button>
       </div>
       {error ? <p className="mt-3 text-sm font-semibold text-rose-700">{error}</p> : null}
+      {feeCode === "manual_service" ? (
+        <DocumentUploadPanel
+          category="other"
+          customerCode={customerCode}
+          documents={documents.filter((document) => document.refType === "approval" && document.refId === `manual-fee:${customerCode}`)}
+          refId={`manual-fee:${customerCode}`}
+          refType="approval"
+          title="手工费用审批附件"
+          uploadEndpoint="/api/ops/documents"
+        />
+      ) : null}
     </section>
   );
 }

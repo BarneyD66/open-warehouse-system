@@ -2,13 +2,16 @@ import type { ReactNode } from "react";
 import {
   AlertTriangle,
   Boxes,
+  Cable,
   ClipboardCheck,
   Download,
+  Eye,
   FileText,
   Flame,
   LayoutDashboard,
   PackageCheck,
   ReceiptText,
+  RadioTower,
   RotateCcw,
   ScanLine,
   Search,
@@ -20,8 +23,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { buildInboundDocumentChecklist, getSubmissions, type InboundSubmission, type InquirySubmission } from "@/lib/localStore";
-import { documentCategoryLabel, documentRefLabel, getDocuments, type DocumentRecord } from "@/lib/documentStore";
-import { getStaffNotifications } from "@/lib/notificationStore";
+import { documentCategoryLabel, documentRefLabel, documentScanStatusLabel, documentStorageProviderLabel, getDocuments, signDocumentToken, type DocumentRecord } from "@/lib/documentStore";
+import { getNotificationDeliveries, getNotificationProviderHealth, getStaffNotifications } from "@/lib/notificationStore";
 import {
   getOpsWorkbenchData,
   labelForOpsStatus,
@@ -34,20 +37,40 @@ import { OpsInboundWorkflow } from "../components/OpsInboundWorkflow";
 import { OpsInquiryWorkflow } from "../components/OpsInquiryWorkflow";
 import { OpsItemWorkflow } from "../components/OpsItemWorkflow";
 import { OpsLogisticsControlPanel, type LogisticsControlRow } from "../components/OpsLogisticsControlPanel";
+import { OpsCarrierHealthPanel } from "../components/OpsCarrierHealthPanel";
 import { OpsReplenishmentPlanner } from "../components/OpsReplenishmentPlanner";
+import { OpsSlaReportPanel } from "../components/OpsSlaReportPanel";
+import { OpsSlaEscalationPanel } from "../components/OpsSlaEscalationPanel";
+import { OpsCustomerSelfServicePanel } from "../components/OpsCustomerSelfServicePanel";
+import { OpsReportCenterPanel } from "../components/OpsReportCenterPanel";
 import { OpsStocktakePanel, type StocktakeCandidate } from "../components/OpsStocktakePanel";
 import { OpsTransferLifecyclePanel } from "../components/OpsTransferLifecyclePanel";
 import { OpsBillingWorkflow } from "../components/OpsBillingWorkflow";
 import { OpsBillingGenerator } from "../components/OpsBillingGenerator";
 import { OpsBillingStatementLockPanel } from "../components/OpsBillingStatementLockPanel";
+import { OpsBillingDisputePanel } from "../components/OpsBillingDisputePanel";
+import { OpsFinanceControlPanel } from "../components/OpsFinanceControlPanel";
 import { OpsCoreOutboundWorkflow } from "../components/OpsCoreOutboundWorkflow";
 import { OpsInvoiceWorkflow } from "../components/OpsInvoiceWorkflow";
 import { OpsOutboundBatchPanel } from "../components/OpsOutboundBatchPanel";
+import { OpsPlatformSyncHealthPanel } from "../components/OpsPlatformSyncHealthPanel";
 import { OpsShipmentPanel } from "../components/OpsShipmentPanel";
 import { OpsInventoryAdjustmentForm } from "../components/OpsInventoryAdjustmentForm";
 import { OpsInventoryLotPanel } from "../components/OpsInventoryLotPanel";
+import { OpsWmsRuleCompliancePanel } from "../components/OpsWmsRuleCompliancePanel";
 import { OpsMabangModulePanel } from "../components/OpsMabangModulePanel";
+import { OpsAuditLogPanel } from "../components/OpsAuditLogPanel";
+import { OpsBackupRestorePanel } from "../components/OpsBackupRestorePanel";
+import { OpsSystemLogPanel } from "../components/OpsSystemLogPanel";
+import { OpsLaunchGuardPanel } from "../components/OpsLaunchGuardPanel";
+import { OpsApiIntegrationLedgerPanel } from "../components/OpsApiIntegrationLedgerPanel";
 import { OpsReturnWorkflow } from "../components/OpsReturnWorkflow";
+import { OpsReturnTrackingUploadButton } from "../components/OpsReturnTrackingUploadButton";
+import { IntegrationProbeButton } from "../components/IntegrationProbeButton";
+import { StaffPasswordChangeForm } from "../components/StaffPasswordChangeForm";
+import { DocumentUploadPanel } from "../components/DocumentUploadPanel";
+import { OpsDocumentSecurityHealthPanel } from "../components/OpsDocumentSecurityHealthPanel";
+import { DocumentSecurityActions } from "../components/DocumentSecurityActions";
 import { WarehouseInventoryMovePanel } from "../components/WarehouseInventoryMovePanel";
 import { PageShell } from "../components/MarketingShell";
 import { NotificationCenter } from "../components/NotificationCenter";
@@ -55,15 +78,32 @@ import { InboundExceptionActions } from "../components/InboundExceptionActions";
 import { LogoutButton } from "../components/LogoutButton";
 import { OutboundExceptionActions } from "../components/OutboundExceptionActions";
 import { OpsCustomerStatusWorkflow } from "../components/OpsCustomerStatusWorkflow";
+import { SystemAlertActions } from "../components/SystemAlertActions";
+import { getAutomationRuns } from "@/lib/automationRunStore";
 import { getAuditLogs, type AuditLogRecord } from "@/lib/auditLogStore";
 import { billingMonthLabel, summarizeBillingMonths } from "@/lib/billingUtils";
 import { getCustomerAccounts, type CustomerAccountStatus, type CustomerAccountView } from "@/lib/customerAccountStore";
 import { evaluateLaunchReadiness, type LaunchCheckStatus, type LaunchReadiness } from "@/lib/launchReadiness";
-import { canReviewInventoryAdjustment, requireStaffSession } from "@/lib/staffAuth";
+import { canReviewInventoryAdjustment, getStaffWhitelistView, requireStaffSession } from "@/lib/staffAuth";
+import { canAccessOpsModule } from "@/lib/staffPermissions";
+import { getManagedStaffAccounts } from "@/lib/staffAccountStore";
+import { getSlaNotificationRules } from "@/lib/slaRuleStore";
 import { getOpsExpansionData } from "@/lib/opsExpansionStore";
-import { billingInvoiceStatusLabel, billingStatusLabel, buildReplenishmentSuggestions, buildStocktakeCandidates, getWarehouseCoreData, outboundWorkModeLabel, returnOrderStatusLabel, suggestCarrierServiceForOutbound, type BillingRecord, type CoreOutboundOrder, type CustomerProfile, type InventoryAdjustmentRequest, type InventoryBalance, type InventoryLot, type InventoryMovement, type ReturnOrder, type WarehouseLocation } from "@/lib/warehouseCoreStore";
+import { getLatestIntegrationProbeMap, type IntegrationProbeRecord, type IntegrationProbeStatus } from "@/lib/integrationProbeStore";
+import { evaluateOpsSystemHealth, type OpsSystemHealth, type OpsSystemHealthStatus } from "@/lib/opsSystemHealth";
+import { evaluateProductionIntegrationReadiness, type IntegrationReadinessStatus, type ProductionIntegrationReadiness } from "@/lib/productionIntegrationReadiness";
+import { buildCustomerSelfServiceOpsReport } from "@/lib/customerSelfServiceOpsReport";
+import { buildReportCenterData } from "@/lib/reportCenter";
+import { getSystemAlerts, type SystemAlert, type SystemAlertSeverity } from "@/lib/systemAlertStore";
+import { billingInvoiceStatusLabel, billingStatusLabel, buildReplenishmentSuggestions, buildStocktakeCandidates, getLocationUtilization, getWarehouseCoreData, outboundWorkModeLabel, returnOrderStatusLabel, returnResolutionLabel, suggestCarrierServiceForOutbound, warehouseLocationStatusLabel, warehouseLocationZoneTypeLabel, type BillingRecord, type CoreOutboundOrder, type CustomerProfile, type InventoryAdjustmentRequest, type InventoryBalance, type InventoryLot, type InventoryMovement, type ReturnOrder, type WarehouseLocation } from "@/lib/warehouseCoreStore";
+import { getWebhookEvents, type WebhookEventRecord, type WebhookEventStatus } from "@/lib/webhookEventStore";
 
 export const dynamic = "force-dynamic";
+
+function signedDocumentDownloadHref(id: string) {
+  const token = signDocumentToken(id, Date.now() + 30 * 60 * 1000);
+  return `/api/documents/${encodeURIComponent(id)}/download?token=${encodeURIComponent(token)}`;
+}
 
 type Tone = "slate" | "cyan" | "emerald" | "amber" | "rose" | "violet";
 
@@ -84,6 +124,7 @@ const domainNav = [
   { id: "outbound", label: "出库", icon: Boxes },
   { id: "logistics", label: "物流", icon: Truck },
   { id: "billing", label: "账单", icon: ReceiptText },
+  { id: "permissions", label: "审计", icon: ShieldCheck },
 ];
 
 const logisticsOptions = [
@@ -125,6 +166,47 @@ function statusPill(label: string, tone: Tone = "slate") {
   return <span className={`inline-flex items-center rounded-md border px-2 py-1 text-xs font-semibold ${toneClasses[tone].pill}`}>{label}</span>;
 }
 
+function documentScanTone(status?: DocumentRecord["scanStatus"]): Tone {
+  if (status === "blocked") return "rose";
+  if (status === "clean") return "emerald";
+  return "amber";
+}
+
+function DocumentQuickLinks({ documents, emptyText = "暂无资料" }: { documents: DocumentRecord[]; emptyText?: string }) {
+  if (documents.length === 0) {
+    return <p className="mt-3 text-sm text-slate-500">{emptyText}</p>;
+  }
+
+  return (
+    <div className="mt-3 space-y-2">
+      {documents.slice(0, 3).map((document) => (
+        <div className="flex flex-col gap-2 text-sm sm:flex-row sm:items-center sm:justify-between" key={document.id}>
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-slate-800">{document.originalName}</p>
+            <p className="mt-0.5 text-xs text-slate-500">
+              {documentCategoryLabel(document.category)} / {documentScanStatusLabel(document.scanStatus)}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {document.previewAllowed && document.scanStatus === "clean" ? (
+              <Link className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50" href={`/api/documents/${encodeURIComponent(document.id)}/preview`} target="_blank">
+                <Eye size={13} />
+                预览
+              </Link>
+            ) : null}
+            {document.scanStatus === "clean" ? (
+              <Link className="inline-flex min-h-8 items-center gap-1.5 rounded-md border border-cyan-200 bg-cyan-50 px-2.5 text-xs font-semibold text-cyan-800 hover:bg-cyan-100" href={signedDocumentDownloadHref(document.id)}>
+                <Download size={13} />
+                下载
+              </Link>
+            ) : null}
+          </div>
+        </div>
+      ))}
+      {documents.length > 3 ? <p className="text-xs font-semibold text-slate-500">还有 {documents.length - 3} 个资料，可在资料中心继续查看。</p> : null}
+    </div>
+  );
+}
 function displayText(value: string | undefined, fallback: string) {
   const text = value?.trim();
   if (!text || text.includes("?") || text.includes("？")) return fallback;
@@ -330,6 +412,146 @@ function QueueColumn({ title, icon: Icon, rows }: { title: string; icon: LucideI
   );
 }
 
+function OpsExceptionCenterPanel({
+  inbounds,
+  outbounds,
+  returns,
+  balances,
+  billingRecords,
+  nowMs,
+}: {
+  inbounds: InboundSubmission[];
+  outbounds: CoreOutboundOrder[];
+  returns: ReturnOrder[];
+  balances: InventoryBalance[];
+  billingRecords: BillingRecord[];
+  nowMs: number;
+}) {
+  const rows = [
+    ...openInboundReceivingExceptionRows(inbounds).map(({ task, exception }) => ({
+      key: exception.id,
+      module: "入库",
+      sourceId: task.id,
+      customerCode: task.customerCode || task.customer || "",
+      title: exception.message,
+      status: exception.status === "open" ? "待处理" : exception.status === "investigating" ? "处理中" : "已处理",
+      tone: exception.severity === "critical" ? "rose" as Tone : "amber" as Tone,
+      nextAction: "核对实收、照片和客户资料",
+      occurredAt: exception.createdAt,
+    })),
+    ...inbounds
+      .filter((item) => item.exceptionNote && ["exception", "on_hold"].includes(item.status))
+      .map((item) => ({
+        key: `${item.id}-status`,
+        module: "入库",
+        sourceId: item.id,
+        customerCode: item.customerCode || item.customer || "",
+        title: item.exceptionNote || "入库状态异常",
+        status: item.status === "on_hold" ? "暂缓处理" : "异常处理中",
+        tone: "amber" as Tone,
+        nextAction: "确认资料、预约或差异处理方案",
+        occurredAt: item.updatedAt ?? item.createdAt,
+      })),
+    ...outbounds.flatMap((order) =>
+      (order.exceptions ?? [])
+        .filter((exception) => exception.status === "open" || exception.status === "investigating")
+        .map((exception) => ({
+          key: exception.id,
+          module: exception.deliveryExceptionType ? "物流" : "出库",
+          sourceId: order.id,
+          customerCode: order.customerCode,
+          title: exception.message,
+          status: exception.status === "open" ? "待处理" : "处理中",
+          tone: exception.severity === "critical" ? "rose" as Tone : "amber" as Tone,
+          nextAction: exception.redeliveryRequired ? "等待改派确认" : exception.claimStatus && exception.claimStatus !== "not_required" ? "跟进赔付" : "继续处理异常",
+          occurredAt: exception.createdAt,
+        })),
+    ),
+    ...returns
+      .filter((item) => item.status === "exception" || (["received", "inspection", "repair"].includes(item.status) && !item.customerResolutionDecision))
+      .map((item) => ({
+        key: `${item.id}-${item.status}`,
+        module: "退货/RMA",
+        sourceId: item.id,
+        customerCode: item.customerCode,
+        title: item.inspectionResult || item.returnReason,
+        status: item.status === "exception" ? "异常" : "客户待确认",
+        tone: item.status === "exception" ? "rose" as Tone : "amber" as Tone,
+        nextAction: "确认重新上架、维修、报废或转寄",
+        occurredAt: item.updatedAt ?? item.createdAt,
+      })),
+    ...balances
+      .filter((item) => item.availableQty < item.alertQty || item.frozenQty > 0 || item.defectiveQty > 0 || item.agingDays >= 120)
+      .map((item) => ({
+        key: `${item.customerCode}-${item.skuCode}-${item.locationCode || item.warehouseCode}`,
+        module: "库存",
+        sourceId: item.skuCode,
+        customerCode: item.customerCode,
+        title: [item.availableQty < item.alertQty ? "低于预警库存" : "", item.frozenQty > 0 ? `冻结 ${item.frozenQty}` : "", item.defectiveQty > 0 ? `残次品 ${item.defectiveQty}` : "", item.agingDays >= 120 ? `库龄 ${item.agingDays} 天` : ""].filter(Boolean).join("；"),
+        status: "待处理",
+        tone: item.availableQty < 0 || item.agingDays >= 365 ? "rose" as Tone : "amber" as Tone,
+        nextAction: "补货、移库、盘点或残次处理",
+        occurredAt: item.updatedAt,
+      })),
+    ...billingRecords
+      .filter((item) => item.dueDate && new Date(item.dueDate).getTime() < nowMs && item.status !== "paid")
+      .map((item) => ({
+        key: `${item.id}-overdue`,
+        module: "费用/账单",
+        sourceId: item.id,
+        customerCode: item.customerCode,
+        title: `账单逾期 £${item.amount.toFixed(2)}`,
+        status: "逾期",
+        tone: "rose" as Tone,
+        nextAction: "确认付款、争议或核销",
+        occurredAt: item.updatedAt ?? item.createdAt,
+      })),
+  ].sort((a, b) => new Date(b.occurredAt ?? 0).getTime() - new Date(a.occurredAt ?? 0).getTime());
+
+  const criticalCount = rows.filter((row) => row.tone === "rose").length;
+
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="flex flex-col gap-3 border-b border-slate-100 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h2 className="flex items-center gap-2 text-base font-semibold text-slate-950">
+            <AlertTriangle size={18} className="text-rose-700" />
+            异常中心
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-slate-600">入库、出库、物流、退货、库存和账单风险集中查看，先处理严重异常。</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {statusPill(`${rows.length} 条异常`, rows.length > 0 ? "amber" : "emerald")}
+          {statusPill(`${criticalCount} 条严重`, criticalCount > 0 ? "rose" : "emerald")}
+          <Link className="inline-flex min-h-9 items-center rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50" href="/api/ops/reports/exceptions">
+            导出异常中心
+          </Link>
+        </div>
+      </div>
+      <div className="divide-y divide-slate-100">
+        {rows.slice(0, 8).map((row) => (
+          <div className="grid gap-3 px-4 py-3 md:grid-cols-[1fr_auto]" key={row.key}>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                {statusPill(row.module, row.tone)}
+                <span className="font-mono text-xs font-semibold text-slate-500">{row.sourceId}</span>
+                <span className="text-xs text-slate-500">{row.customerCode || "未绑定客户"}</span>
+              </div>
+              <p className="mt-2 text-sm font-semibold text-slate-950">{row.title}</p>
+              <p className="mt-1 text-xs leading-5 text-slate-500">下一步：{row.nextAction}</p>
+            </div>
+            <div className="text-left md:text-right">
+              {statusPill(row.status, row.tone)}
+              <p className="mt-2 text-xs text-slate-400">{row.occurredAt ? formatDateTime(row.occurredAt) : "-"}</p>
+            </div>
+          </div>
+        ))}
+        {rows.length === 0 ? <div className="px-4 py-10 text-center text-sm text-slate-500">暂无跨模块异常</div> : null}
+      </div>
+    </section>
+  );
+}
+
 function DomainHeading({ eyebrow, title, body, icon: Icon }: { eyebrow: string; title: string; body: string; icon: LucideIcon }) {
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm md:flex-row md:items-center md:justify-between">
@@ -371,6 +593,188 @@ const launchStatusLabel: Record<LaunchCheckStatus, string> = {
   fail: "阻塞",
 };
 
+const integrationStatusTone: Record<IntegrationReadinessStatus, Tone> = {
+  ready: "emerald",
+  partial: "amber",
+  blocked: "rose",
+};
+
+const integrationStatusLabel: Record<IntegrationReadinessStatus, string> = {
+  ready: "可上线",
+  partial: "待补齐",
+  blocked: "阻塞",
+};
+
+const integrationProbeTone: Record<IntegrationProbeStatus, Tone> = {
+  passed: "emerald",
+  failed: "rose",
+  blocked: "amber",
+};
+
+const integrationProbeLabel: Record<IntegrationProbeStatus, string> = {
+  passed: "探测通过",
+  failed: "探测失败",
+  blocked: "无法探测",
+};
+
+const opsSystemHealthTone: Record<OpsSystemHealthStatus, Tone> = {
+  healthy: "emerald",
+  degraded: "amber",
+  critical: "rose",
+};
+
+const opsSystemHealthLabel: Record<OpsSystemHealthStatus, string> = {
+  healthy: "健康",
+  degraded: "需关注",
+  critical: "严重",
+};
+
+const systemAlertTone: Record<SystemAlertSeverity, Tone> = {
+  critical: "rose",
+  warning: "amber",
+  info: "slate",
+};
+
+const systemAlertLabel: Record<SystemAlertSeverity, string> = {
+  critical: "严重",
+  warning: "提醒",
+  info: "信息",
+};
+
+const systemAlertHandlingLabel: Record<SystemAlert["handlingStatus"], string> = {
+  open: "待处理",
+  acknowledged: "已确认",
+  snoozed: "已搁置",
+  resolved: "已关闭",
+};
+
+function systemAlertHandlingTone(status: SystemAlert["handlingStatus"]): Tone {
+  if (status === "acknowledged") return "cyan";
+  if (status === "snoozed") return "amber";
+  if (status === "resolved") return "emerald";
+  return "slate";
+}
+
+function SystemAlertPanel({ alerts }: { alerts: SystemAlert[] }) {
+  const critical = alerts.filter((item) => item.severity === "critical").length;
+  const warning = alerts.filter((item) => item.severity === "warning").length;
+
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h2 className="flex items-center gap-2 text-base font-semibold text-slate-950">
+            <AlertTriangle size={18} className="text-[#0E7490]" />
+            系统告警中心
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">集中查看上线体检、任务队列、平台同步、面单回传、账单争议、库位容量和文件安全异常。</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link className="inline-flex min-h-8 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50" href="/api/ops/system/logs?format=csv&limit=500">
+            <Download size={14} />
+            导出生产日志
+          </Link>
+          {statusPill(`严重 ${critical}`, critical > 0 ? "rose" : "emerald")}
+          {statusPill(`提醒 ${warning}`, warning > 0 ? "amber" : "emerald")}
+        </div>
+      </div>
+      <div className="mt-4 grid gap-2 lg:grid-cols-2">
+        {alerts.length > 0 ? (
+          alerts.slice(0, 8).map((alert) => (
+            <div className="rounded-md border border-slate-200 bg-slate-50 p-3" key={alert.id}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-slate-950">{alert.title}</p>
+                <div className="flex flex-wrap gap-2">
+                  {statusPill(`${systemAlertLabel[alert.severity]} / ${alert.source}`, systemAlertTone[alert.severity])}
+                  {statusPill(systemAlertHandlingLabel[alert.handlingStatus], systemAlertHandlingTone(alert.handlingStatus))}
+                </div>
+              </div>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{alert.detail}</p>
+              {alert.handlingNote ? <p className="mt-2 rounded-md bg-white p-2 text-xs leading-5 text-slate-500">处理备注：{alert.handlingNote}</p> : null}
+              {alert.snoozedUntil ? <p className="mt-1 text-xs font-semibold text-amber-700">搁置到：{new Date(alert.snoozedUntil).toLocaleString("zh-CN", { hour12: false })}</p> : null}
+              {alert.actionHref ? (
+                <Link className="mt-2 inline-flex text-xs font-semibold text-cyan-800 hover:text-cyan-950" href={alert.actionHref}>
+                  去处理
+                </Link>
+              ) : null}
+              <SystemAlertActions alert={alert} />
+            </div>
+          ))
+        ) : (
+          <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">当前没有系统级告警。</div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function OpsSystemHealthPanel({ health }: { health: OpsSystemHealth }) {
+  const priorityChecks = [...health.checks].sort((a, b) => {
+    const rank: Record<OpsSystemHealthStatus, number> = { critical: 0, degraded: 1, healthy: 2 };
+    return rank[a.status] - rank[b.status] || a.label.localeCompare(b.label);
+  });
+
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-950">
+              <ShieldCheck size={18} className="text-[#0E7490]" />
+              生产健康检查
+            </h2>
+            {statusPill(opsSystemHealthLabel[health.status], opsSystemHealthTone[health.status])}
+          </div>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            汇总数据库、外部集成、文件安全、任务队列、员工账号、审计日志和系统告警，适合发版前或每天开工前巡检。
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link className="inline-flex min-h-8 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50" href="/api/ops/system/health?format=csv">
+            <Download size={14} />
+            导出健康检查
+          </Link>
+          {statusPill(`评分 ${health.score}`, opsSystemHealthTone[health.status])}
+          {statusPill(`严重 ${health.summary.critical}`, health.summary.critical > 0 ? "rose" : "emerald")}
+          {statusPill(`关注 ${health.summary.degraded}`, health.summary.degraded > 0 ? "amber" : "emerald")}
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+        {[
+          ["客户", health.metrics.customers],
+          ["出库单", health.metrics.outboundOrders],
+          ["开放告警", health.metrics.openAlerts],
+          ["生产错误", health.metrics.openProductionErrors],
+          ["集成风险", health.metrics.failedIntegrationProbes],
+        ].map(([label, value]) => (
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3" key={label}>
+            <p className="text-xs font-semibold text-slate-500">{label}</p>
+            <p className="mt-1 text-xl font-semibold text-slate-950">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-4 grid gap-2 lg:grid-cols-2">
+        {priorityChecks.slice(0, 6).map((check) => (
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3" key={check.id}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-slate-950">{check.label}</p>
+              {statusPill(`${check.owner} / ${opsSystemHealthLabel[check.status]}`, opsSystemHealthTone[check.status])}
+            </div>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{check.detail}</p>
+            {check.actionHref ? (
+              <Link className="mt-2 inline-flex text-xs font-semibold text-cyan-800 hover:text-cyan-950" href={check.actionHref}>
+                去处理
+              </Link>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function LaunchReadinessPanel({ readiness }: { readiness: LaunchReadiness }) {
   const blockingChecks = readiness.checks.filter((check) => check.status !== "pass");
 
@@ -402,6 +806,14 @@ function LaunchReadinessPanel({ readiness }: { readiness: LaunchReadiness }) {
             <p className="text-xs font-semibold text-slate-500">资料</p>
             <p className="mt-1 text-lg font-semibold text-slate-950">{readiness.metrics.documents}</p>
           </div>
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs font-semibold text-slate-500">库位</p>
+            <p className="mt-1 text-lg font-semibold text-slate-950">{readiness.metrics.locations}</p>
+          </div>
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs font-semibold text-slate-500">渠道</p>
+            <p className="mt-1 text-lg font-semibold text-slate-950">{readiness.metrics.activeLogisticsChannels}</p>
+          </div>
         </div>
       </div>
 
@@ -415,6 +827,188 @@ function LaunchReadinessPanel({ readiness }: { readiness: LaunchReadiness }) {
             <p className="mt-2 text-sm leading-6 text-slate-600">{check.detail}</p>
           </div>
         ))}
+      </div>
+    </section>
+  );
+}
+
+const integrationGroupLabel: Record<ProductionIntegrationReadiness["items"][number]["group"], string> = {
+  carrier: "承运商 API",
+  platform: "平台订单 API",
+  storage: "文件存储",
+  notification: "消息通知",
+  reporting: "报表投递",
+  security: "安全运维",
+};
+
+function ProductionIntegrationPanel({ readiness, probeMap }: { readiness: ProductionIntegrationReadiness; probeMap: Map<string, IntegrationProbeRecord> }) {
+  const priorityItems = [...readiness.items].sort((a, b) => {
+    const rank: Record<IntegrationReadinessStatus, number> = { blocked: 0, partial: 1, ready: 2 };
+    return rank[a.status] - rank[b.status] || a.group.localeCompare(b.group);
+  });
+
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-slate-950">
+              <Cable size={18} className="text-[#0E7490]" />
+              生产集成配置向导
+            </h2>
+            {statusPill(integrationStatusLabel[readiness.status], integrationStatusTone[readiness.status])}
+          </div>
+          <p className="mt-2 max-w-4xl text-sm leading-6 text-slate-600">
+            把承运商、平台、对象存储、外部通知、定时报表和安全密钥拆成可检查项。页面只展示变量名和是否已配置，不展示密钥内容。
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link className="inline-flex min-h-9 items-center gap-2 rounded-md border border-cyan-200 bg-cyan-50 px-3 text-xs font-semibold text-cyan-800 hover:bg-cyan-100" href="/api/ops/integrations/readiness?format=csv">
+              <Download size={14} />
+              导出配置清单
+            </Link>
+            <Link className="inline-flex min-h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50" href="/api/ops/integrations/readiness" target="_blank">
+              查看 JSON
+            </Link>
+          </div>
+        </div>
+        <div className="grid grid-cols-4 gap-2 text-center sm:min-w-[360px]">
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+            <p className="text-xs font-semibold text-slate-500">评分</p>
+            <p className="mt-1 text-lg font-semibold text-slate-950">{readiness.score}</p>
+          </div>
+          <div className="rounded-md border border-emerald-200 bg-emerald-50 p-3">
+            <p className="text-xs font-semibold text-emerald-700">可上线</p>
+            <p className="mt-1 text-lg font-semibold text-emerald-900">{readiness.summary.ready}</p>
+          </div>
+          <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+            <p className="text-xs font-semibold text-amber-700">待补齐</p>
+            <p className="mt-1 text-lg font-semibold text-amber-900">{readiness.summary.partial}</p>
+          </div>
+          <div className="rounded-md border border-rose-200 bg-rose-50 p-3">
+            <p className="text-xs font-semibold text-rose-700">阻塞</p>
+            <p className="mt-1 text-lg font-semibold text-rose-900">{readiness.summary.blocked}</p>
+          </div>
+        </div>
+      </div>
+      <div className="mt-4 grid gap-3 xl:grid-cols-2">
+        {priorityItems.slice(0, 10).map((item) => {
+          const missingEnv = item.env.filter((env) => !env.present);
+          const latestProbe = probeMap.get(item.id);
+          return (
+            <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm" key={item.id}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600">{integrationGroupLabel[item.group]}</span>
+                  {item.mode ? <span className="rounded-md border border-cyan-200 bg-cyan-50 px-2 py-1 text-xs font-semibold text-cyan-800">{item.mode}</span> : null}
+                  <p className="font-semibold text-slate-950">{item.name}</p>
+                </div>
+                {statusPill(integrationStatusLabel[item.status], integrationStatusTone[item.status])}
+              </div>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{item.summary}</p>
+              {missingEnv.length > 0 ? (
+                <div className="mt-2 rounded-md border border-amber-200 bg-white p-2">
+                  <p className="text-xs font-semibold text-amber-900">待配置变量</p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {missingEnv.slice(0, 6).map((env) => (
+                      <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 font-mono text-xs text-slate-600" key={`${item.id}-${env.name}`}>
+                        {env.name || "无变量"}{env.required ? "" : "（建议）"}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              <div className="mt-2 rounded-md border border-slate-200 bg-white p-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-xs font-semibold text-slate-500">最近联调</p>
+                      {latestProbe ? statusPill(integrationProbeLabel[latestProbe.status], integrationProbeTone[latestProbe.status]) : statusPill("未探测", "slate")}
+                    </div>
+                    {latestProbe ? (
+                      <>
+                        <p className="mt-1 text-xs leading-5 text-slate-600">{latestProbe.message}</p>
+                        <p className="mt-1 text-xs text-slate-400">
+                          {new Date(latestProbe.finishedAt).toLocaleString("zh-CN", { hour12: false })} / {latestProbe.checkedBy}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="mt-1 text-xs leading-5 text-slate-500">配置补齐后可执行 dry-run 探测，结果会留痕并写入审计。</p>
+                    )}
+                  </div>
+                  <IntegrationProbeButton itemId={item.id} disabled={item.id.endsWith(":none")} />
+                </div>
+              </div>
+              {item.nextActions.length > 0 ? <p className="mt-2 text-xs leading-5 text-slate-500">下一步：{item.nextActions.slice(0, 3).join("；")}</p> : null}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+const webhookEventStatusTone: Record<WebhookEventStatus, Tone> = {
+  processing: "amber",
+  processed: "emerald",
+  ignored: "slate",
+  failed: "rose",
+};
+
+const webhookEventStatusLabel: Record<WebhookEventStatus, string> = {
+  processing: "处理中",
+  processed: "已处理",
+  ignored: "已忽略",
+  failed: "失败",
+};
+
+function WebhookEventPanel({ events }: { events: WebhookEventRecord[] }) {
+  const counts = {
+    processed: events.filter((event) => event.status === "processed").length,
+    failed: events.filter((event) => event.status === "failed").length,
+    ignored: events.filter((event) => event.status === "ignored").length,
+    processing: events.filter((event) => event.status === "processing").length,
+  };
+
+  return (
+    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+        <div>
+          <h2 className="flex items-center gap-2 text-base font-semibold text-slate-950">
+            <RadioTower size={18} className="text-[#0E7490]" />
+            Webhook 回调台账
+          </h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            记录承运商轨迹/POD 回传和平台取消订单回传的幂等处理结果，避免重复回调造成重复截单、重复异常或重复轨迹。
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {statusPill(`已处理 ${counts.processed}`, counts.processed > 0 ? "emerald" : "slate")}
+          {statusPill(`失败 ${counts.failed}`, counts.failed > 0 ? "rose" : "emerald")}
+          {statusPill(`处理中 ${counts.processing}`, counts.processing > 0 ? "amber" : "slate")}
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-2 lg:grid-cols-2">
+        {events.length > 0 ? (
+          events.slice(0, 8).map((event) => (
+            <div className="rounded-md border border-slate-200 bg-slate-50 p-3" key={event.id}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  {statusPill(event.kind === "carrier" ? "承运商" : "平台", event.kind === "carrier" ? "cyan" : "violet")}
+                  {statusPill(webhookEventStatusLabel[event.status], webhookEventStatusTone[event.status])}
+                </div>
+                <span className="text-xs text-slate-400">{new Date(event.updatedAt).toLocaleString("zh-CN", { hour12: false })}</span>
+              </div>
+              <p className="mt-2 text-sm font-semibold text-slate-950">{event.provider} / {event.targetId || "未匹配目标"}</p>
+              <p className="mt-1 break-all font-mono text-xs text-slate-500">{event.eventId}</p>
+              {event.summary ? <p className="mt-2 text-xs leading-5 text-slate-600">{event.summary}</p> : null}
+              {event.error ? <p className="mt-2 rounded-md border border-rose-200 bg-white p-2 text-xs font-semibold text-rose-700">{event.error}</p> : null}
+            </div>
+          ))
+        ) : (
+          <div className="rounded-md border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-sm text-slate-500 lg:col-span-2">
+            暂无承运商或平台 webhook 回调记录。
+          </div>
+        )}
       </div>
     </section>
   );
@@ -630,7 +1224,7 @@ function InventoryTable({ rows }: { rows: InventoryWatch[] }) {
   );
 }
 
-function CoreInventoryTable({ balances, lots, movements, adjustments, locations, canReviewAdjustments }: { balances: InventoryBalance[]; lots: InventoryLot[]; movements: InventoryMovement[]; adjustments: InventoryAdjustmentRequest[]; locations: WarehouseLocation[]; canReviewAdjustments: boolean }) {
+function CoreInventoryTable({ balances, lots, movements, adjustments, locations, documents, canReviewAdjustments }: { balances: InventoryBalance[]; lots: InventoryLot[]; movements: InventoryMovement[]; adjustments: InventoryAdjustmentRequest[]; locations: WarehouseLocation[]; documents: DocumentRecord[]; canReviewAdjustments: boolean }) {
   const frozenTotal = balances.reduce((sum, item) => sum + (item.frozenQty ?? 0), 0);
   const defectiveTotal = balances.reduce((sum, item) => sum + (item.defectiveQty ?? 0), 0);
   const reservedTotal = balances.reduce((sum, item) => sum + item.reservedQty, 0);
@@ -638,7 +1232,7 @@ function CoreInventoryTable({ balances, lots, movements, adjustments, locations,
 
   return (
     <section className="grid gap-4">
-      <OpsInventoryAdjustmentForm adjustments={adjustments} balances={balances} canReview={canReviewAdjustments} />
+      <OpsInventoryAdjustmentForm adjustments={adjustments} balances={balances} canReview={canReviewAdjustments} documents={documents} />
       <OpsInventoryLotPanel balances={balances} lots={lots} />
       <WarehouseInventoryMovePanel adjustments={adjustments} balances={balances} canReview={canReviewAdjustments} locations={locations} />
       <section className="grid gap-3 md:grid-cols-4">
@@ -723,6 +1317,87 @@ function CoreInventoryTable({ balances, lots, movements, adjustments, locations,
         </table>
       </WorkbenchTable>
     </section>
+  );
+}
+
+function LocationUtilizationPanel({ balances, locations }: { balances: InventoryBalance[]; locations: WarehouseLocation[] }) {
+  const data = { inventoryBalances: balances, locations };
+  const rows = locations
+    .map((location) => {
+      const utilization = getLocationUtilization(data, location.locationCode);
+      const occupancyRate = utilization.occupancyRate ?? 0;
+      const risks = [
+        location.status !== "active" ? warehouseLocationStatusLabel(location.status) : "",
+        typeof location.capacityQty !== "number" || location.capacityQty <= 0 ? "未设容量" : "",
+        typeof location.capacityQty === "number" && location.capacityQty > 0 && utilization.usedQty > location.capacityQty ? "已超容量" : "",
+        occupancyRate >= 0.9 && utilization.usedQty <= (location.capacityQty ?? Number.POSITIVE_INFINITY) ? "接近满仓" : "",
+        location.allowMixedSku === false && utilization.skuCount > 1 ? "混 SKU 风险" : "",
+        location.status === "active" && utilization.usedQty === 0 ? "空库位" : "",
+      ].filter(Boolean);
+      const tone: Tone = risks.some((risk) => ["已超容量", "混 SKU 风险", "停用"].includes(risk)) ? "rose" : risks.length ? "amber" : "emerald";
+      return { location, utilization, occupancyRate, risks: risks.length ? risks : ["正常"], tone };
+    })
+    .sort((a, b) => b.occupancyRate - a.occupancyRate || b.utilization.usedQty - a.utilization.usedQty);
+  const fullCount = rows.filter((row) => row.risks.includes("接近满仓") || row.risks.includes("已超容量")).length;
+  const emptyCount = rows.filter((row) => row.risks.includes("空库位")).length;
+  const noCapacityCount = rows.filter((row) => row.risks.includes("未设容量")).length;
+  const mixedRiskCount = rows.filter((row) => row.risks.includes("混 SKU 风险")).length;
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="flex items-center gap-2 text-base font-semibold text-slate-950">
+            <Warehouse size={18} className="text-cyan-700" />
+            库位利用率
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-slate-500">按库位查看容量、占用、空位和混放风险，适合做移库、补货和盘点前检查。</p>
+        </div>
+        <Link className="inline-flex min-h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50" href="/api/ops/reports/locations">
+          <Download size={14} />
+          导出报表
+        </Link>
+      </div>
+      <div className="mt-4 grid gap-3 md:grid-cols-4">
+        {[
+          ["接近满仓", fullCount, "amber" as Tone],
+          ["空库位", emptyCount, "cyan" as Tone],
+          ["未设容量", noCapacityCount, "rose" as Tone],
+          ["混放风险", mixedRiskCount, "rose" as Tone],
+        ].map(([label, value, tone]) => (
+          <div className="rounded-md border border-slate-200 bg-slate-50 p-3" key={label}>
+            <p className="text-xs font-semibold text-slate-500">{label}</p>
+            <p className={`mt-2 text-2xl font-semibold ${toneClasses[tone as Tone].text}`}>{value}</p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 grid gap-2">
+        {rows.slice(0, 8).map(({ location, utilization, occupancyRate, risks, tone }) => (
+          <div className="grid gap-3 rounded-md border border-slate-200 bg-white p-3 text-sm lg:grid-cols-[1.1fr_1fr_1fr_auto]" key={location.locationCode}>
+            <div>
+              <p className="font-mono text-xs font-semibold text-slate-950">{location.locationCode}</p>
+              <p className="mt-1 text-xs text-slate-500">{location.zone} / {warehouseLocationZoneTypeLabel(location.zoneType)}</p>
+            </div>
+            <div className="text-slate-600">
+              <p>已占用 {utilization.usedQty}{typeof utilization.capacityQty === "number" ? ` / ${utilization.capacityQty} 件` : " 件"}</p>
+              <p className="mt-1 text-xs text-slate-500">SKU {utilization.skuCount} 个，剩余 {utilization.remainingQty ?? "-"} 件</p>
+            </div>
+            <div>
+              <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                <div className={`h-full rounded-full ${occupancyRate >= 1 ? "bg-rose-500" : occupancyRate >= 0.9 ? "bg-amber-500" : "bg-cyan-500"}`} style={{ width: `${Math.min(100, Math.round(occupancyRate * 100))}%` }} />
+              </div>
+              <p className="mt-2 text-xs text-slate-500">利用率 {typeof utilization.occupancyRate === "number" ? `${Math.round(utilization.occupancyRate * 1000) / 10}%` : "未配置容量"}</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+              {risks.map((risk) => (
+                <span className={`rounded-md border px-2 py-1 text-xs font-semibold ${toneClasses[tone].pill}`} key={risk}>{risk}</span>
+              ))}
+            </div>
+          </div>
+        ))}
+        {rows.length === 0 ? <EmptyState text="暂无库位数据。可先到仓库工作台维护库区、货架和库位容量。" /> : null}
+      </div>
+    </div>
   );
 }
 
@@ -839,6 +1514,13 @@ function BillingStatementPanel({ rows, customers }: { rows: BillingRecord[]; cus
   );
 }
 
+function billingOverdueDays(row: BillingRecord) {
+  if (!row.dueDate || row.status === "paid") return 0;
+  const dueMs = new Date(row.dueDate).getTime();
+  if (!Number.isFinite(dueMs)) return 0;
+  return Math.max(0, Math.ceil((Date.now() - dueMs) / (24 * 60 * 60 * 1000)));
+}
+
 function BillingReviewTable({ rows }: { rows: BillingRecord[] }) {
   return (
     <WorkbenchTable icon={ReceiptText} title="账单复核">
@@ -876,14 +1558,16 @@ function BillingReviewTable({ rows }: { rows: BillingRecord[] }) {
               <td className="px-4 py-3 text-slate-600">
                 <p className="font-semibold text-slate-950">£{row.amount.toLocaleString("en-GB", { maximumFractionDigits: 2 })}</p>
                 <p className="mt-1 text-xs text-slate-500">到期 {row.dueDate || "-"}</p>
+                {billingOverdueDays(row) > 0 ? <p className="mt-1 text-xs font-semibold text-rose-700">逾期 {billingOverdueDays(row)} 天</p> : null}
               </td>
               <td className="px-4 py-3 text-slate-600">
                 {row.customerMessage ? <p className="max-w-xs leading-6">{row.customerMessage}</p> : <p className="text-slate-400">暂无说明</p>}
                 {row.paymentReference ? <p className="mt-2 font-mono text-xs font-semibold text-cyan-800">付款参考 {row.paymentReference}</p> : null}
                 {row.paymentNote ? <p className="mt-1 text-xs leading-5 text-slate-500">{row.paymentNote}</p> : null}
+                {row.paymentRejectionNote ? <p className="mt-2 rounded-md bg-amber-50 p-2 text-xs leading-5 text-amber-900">付款驳回：{row.paymentRejectionNote}</p> : null}
               </td>
               <td className="px-4 py-3">
-                <OpsBillingWorkflow id={row.id} reviewNote={row.reviewNote} status={row.status} />
+                <OpsBillingWorkflow id={row.id} paymentReference={row.paymentReference} reviewNote={row.reviewNote} status={row.status} />
                 <OpsInvoiceWorkflow id={row.id} invoiceNote={row.invoiceNote} invoiceStatus={row.invoiceStatus} />
               </td>
             </tr>
@@ -909,9 +1593,74 @@ function returnStatusTone(status: ReturnOrder["status"]): Tone {
   return "slate";
 }
 
-function ReturnOrdersTable({ rows }: { rows: ReturnOrder[] }) {
+function ReturnOrdersTable({ rows, documents, activeFilter = "all", keyword = "" }: { rows: ReturnOrder[]; documents: DocumentRecord[]; activeFilter?: string; keyword?: string }) {
+  const query = keyword.trim().toLowerCase();
+  const visibleRows = rows.filter((row) => {
+    if (activeFilter === "missing-tracking") return !row.buyerReturnTracking && !["closed", "disposed", "restocked"].includes(row.status);
+    if (activeFilter === "awaiting") return ["requested", "label_sent", "in_transit"].includes(row.status);
+    if (activeFilter === "inspection") return row.status === "received" || row.status === "inspection";
+    if (activeFilter === "needs-decision") return ["received", "inspection", "repair", "exception"].includes(row.status) && !row.customerResolutionDecision;
+    if (activeFilter === "confirmed") return Boolean(row.customerResolutionDecision);
+    if (activeFilter === "open") return !["closed", "disposed", "restocked"].includes(row.status);
+    return true;
+  }).filter((row) => {
+    if (!query) return true;
+    return [row.id, row.customerCode, row.platform, row.originalOrderNo, row.buyerReturnTracking, row.returnReason, ...row.skuLines.map((line) => line.skuCode)]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(query));
+  });
+  const printableIds = rows
+    .filter((row) => !["closed", "disposed", "restocked"].includes(row.status))
+    .slice(0, 50)
+    .map((row) => encodeURIComponent(row.id))
+    .join(",");
+  const exportParams = new URLSearchParams();
+  if (activeFilter !== "all") exportParams.set("returnStatus", activeFilter);
+  if (keyword.trim()) exportParams.set("returnQuery", keyword.trim());
+  const returnsExportHref = `/api/ops/reports/returns${exportParams.toString() ? `?${exportParams.toString()}` : ""}`;
+  const summaryItems = [
+    { label: "未补追踪", filter: "missing-tracking", value: rows.filter((row) => !row.buyerReturnTracking && !["closed", "disposed", "restocked"].includes(row.status)).length, tone: "amber" as Tone },
+    { label: "待到仓", filter: "awaiting", value: rows.filter((row) => ["requested", "label_sent", "in_transit"].includes(row.status)).length, tone: "cyan" as Tone },
+    { label: "质检中", filter: "inspection", value: rows.filter((row) => row.status === "received" || row.status === "inspection").length, tone: "violet" as Tone },
+    { label: "客户待确认", filter: "needs-decision", value: rows.filter((row) => ["received", "inspection", "repair", "exception"].includes(row.status) && !row.customerResolutionDecision).length, tone: "rose" as Tone },
+    { label: "客户已确认", filter: "confirmed", value: rows.filter((row) => row.customerResolutionDecision).length, tone: "emerald" as Tone },
+    { label: "待结束", filter: "open", value: rows.filter((row) => !["closed", "disposed", "restocked"].includes(row.status)).length, tone: "slate" as Tone },
+  ];
+
   return (
     <WorkbenchTable icon={RotateCcw} title="退货 / RMA 处理">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
+        <p className="text-xs font-semibold text-slate-500">到仓、质检和客户确认后的退货处理集中在这里。</p>
+        <div className="flex flex-wrap gap-2">
+          <OpsReturnTrackingUploadButton />
+          <Link className="inline-flex min-h-9 items-center gap-1 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50" href={returnsExportHref}>
+            <Download size={14} />
+            导出当前筛选
+          </Link>
+          {printableIds ? (
+            <Link className="inline-flex min-h-9 items-center rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50" href={`/warehouse/print/return-rma/batch?ids=${printableIds}`}>
+              批量打印 RMA 标签
+            </Link>
+          ) : null}
+        </div>
+      </div>
+      <div className="grid gap-2 border-b border-slate-100 p-4 sm:grid-cols-3 xl:grid-cols-6">
+        {summaryItems.map((item) => (
+          <Link className={`rounded-md border px-3 py-2 transition hover:bg-white ${toneClasses[item.tone].pill} ${activeFilter === item.filter ? "ring-2 ring-cyan-300" : ""}`} href={`/ops?section=outbound&returnStatus=${item.filter}`} key={item.label}>
+            <p className="text-[11px] font-semibold">{item.label}</p>
+            <p className="mt-1 text-xl font-semibold">{item.value}</p>
+          </Link>
+        ))}
+      </div>
+      <form className="flex flex-col gap-2 border-b border-slate-100 p-4 sm:flex-row" action="/ops">
+        <input name="section" type="hidden" value="outbound" />
+        {activeFilter !== "all" ? <input name="returnStatus" type="hidden" value={activeFilter} /> : null}
+        <label className="flex min-h-10 flex-1 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 focus-within:border-cyan-500">
+          <Search size={16} className="text-slate-400" />
+          <input className="min-h-8 flex-1 bg-transparent text-sm outline-none" defaultValue={keyword} name="returnQuery" placeholder="搜索 RMA、客户、追踪号、原订单号或 SKU" />
+        </label>
+        <button className="inline-flex min-h-10 items-center justify-center rounded-md bg-slate-950 px-4 text-sm font-semibold text-white hover:bg-slate-800" type="submit">搜索</button>
+      </form>
       <table className="min-w-[1040px] w-full text-left text-sm">
         <thead className="bg-slate-50 text-xs font-semibold text-slate-500">
           <tr>
@@ -923,12 +1672,16 @@ function ReturnOrdersTable({ rows }: { rows: ReturnOrder[] }) {
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-200">
-          {rows.map((row) => (
+          {visibleRows.map((row) => (
             <tr key={row.id}>
               <td className="px-4 py-3">
                 <p className="font-mono text-xs font-semibold text-slate-950">{row.id}</p>
                 <div className="mt-2">{statusPill(returnOrderStatusLabel(row.status), returnStatusTone(row.status))}</div>
                 <p className="mt-2 text-xs text-slate-500">预计到仓 {row.expectedArrivalDate || "-"}</p>
+                {row.workOrderId ? <p className="mt-2 font-mono text-xs font-semibold text-cyan-700">客户工单：{row.workOrderId}</p> : null}
+                <Link className="mt-2 inline-flex min-h-8 items-center rounded-md border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 hover:bg-slate-50" href={`/warehouse/print/return-rma/${encodeURIComponent(row.id)}`}>
+                  打印 RMA 标签
+                </Link>
               </td>
               <td className="px-4 py-3 text-slate-600">
                 <p>{row.customerCode}</p>
@@ -945,16 +1698,32 @@ function ReturnOrdersTable({ rows }: { rows: ReturnOrder[] }) {
                 <p className="max-w-xs leading-6">{row.inspectionResult || "待质检"}</p>
                 {row.customerNote ? <p className="mt-2 max-w-xs text-xs leading-5 text-slate-500">客户偏好：{row.customerNote}</p> : null}
                 {row.locationCode ? <p className="mt-2 font-mono text-xs text-cyan-800">库位 {row.locationCode}</p> : null}
+                {row.resolution ? <p className="mt-2 text-xs font-semibold text-slate-700">处理方式：{returnResolutionLabel(row.resolution)}</p> : null}
+                {row.customerResolutionDecision ? (
+                  <p className="mt-2 rounded-md bg-emerald-50 p-2 text-xs font-semibold leading-5 text-emerald-800">
+                    客户确认：{returnResolutionLabel(row.customerResolutionDecision)}
+                    {row.customerResolutionNote ? `；${row.customerResolutionNote}` : ""}
+                  </p>
+                ) : null}
               </td>
               <td className="px-4 py-3">
                 <OpsReturnWorkflow id={row.id} inspectionResult={row.inspectionResult} locationCode={row.locationCode} opsNote={row.opsNote} resolution={row.resolution} status={row.status} />
+                <DocumentUploadPanel
+                  category="exception_photo"
+                  customerCode={row.customerCode}
+                  documents={documents.filter((document) => document.refType === "return" && document.refId === row.id)}
+                  refId={row.id}
+                  refType="return"
+                  title="退货质检照片/附件"
+                  uploadEndpoint="/api/ops/documents"
+                />
               </td>
             </tr>
           ))}
-          {rows.length === 0 ? (
+          {visibleRows.length === 0 ? (
             <tr>
               <td className="px-4 py-8 text-center text-slate-500" colSpan={5}>
-                暂无退货预报
+                当前筛选下暂无退货预报
               </td>
             </tr>
           ) : null}
@@ -1178,14 +1947,35 @@ function OutboundScanOperationsPanel({ rows }: { rows: CoreOutboundOrder[] }) {
 }
 
 function DocumentReviewTable({ rows }: { rows: DocumentRecord[] }) {
+  const cleanCount = rows.filter((row) => row.scanStatus === "clean").length;
+  const blockedCount = rows.filter((row) => row.scanStatus === "blocked").length;
+  const pendingCount = rows.filter((row) => !row.scanStatus || row.scanStatus === "pending").length;
+  const objectCount = rows.filter((row) => row.storageProvider === "object").length;
+
   return (
     <WorkbenchTable icon={FileText} title="资料中心">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-slate-50 px-4 py-3">
+        <div className="flex flex-wrap gap-2">
+          {statusPill(`已通过 ${cleanCount}`, "emerald")}
+          {statusPill(`待扫描 ${pendingCount}`, pendingCount > 0 ? "amber" : "slate")}
+          {statusPill(`已拦截 ${blockedCount}`, blockedCount > 0 ? "rose" : "slate")}
+          {statusPill(`对象存储 ${objectCount}`, "cyan")}
+        </div>
+        <Link
+          className="inline-flex min-h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+          href="/api/ops/reports/documents-security"
+        >
+          <Download size={14} />
+          导出文件安全台账
+        </Link>
+      </div>
       <table className="min-w-[940px] w-full text-left text-sm">
         <thead className="bg-slate-50 text-xs font-semibold text-slate-500">
           <tr>
             <th className="px-4 py-3">文件</th>
             <th className="px-4 py-3">客户 / 关联业务</th>
             <th className="px-4 py-3">类型</th>
+            <th className="px-4 py-3">安全 / 存储</th>
             <th className="px-4 py-3">上传</th>
             <th className="px-4 py-3">操作</th>
           </tr>
@@ -1203,24 +1993,49 @@ function DocumentReviewTable({ rows }: { rows: DocumentRecord[] }) {
                 <p className="mt-1 font-mono text-xs text-slate-500">{documentRefLabel(row.refType)} / {row.refId}</p>
               </td>
               <td className="px-4 py-3">{statusPill(documentCategoryLabel(row.category), row.category === "payment_proof" ? "emerald" : "cyan")}</td>
+              <td className="px-4 py-3">
+                <div className="flex flex-wrap gap-1.5">
+                  {statusPill(documentScanStatusLabel(row.scanStatus), documentScanTone(row.scanStatus))}
+                  {statusPill(documentStorageProviderLabel(row.storageProvider), row.storageProvider === "object" ? "cyan" : "slate")}
+                  {row.previewAllowed ? statusPill("可预览", "emerald") : statusPill("仅下载", "slate")}
+                </div>
+                {row.scanStatus === "blocked" && row.scanNote ? <p className="mt-2 max-w-xs text-xs font-semibold leading-5 text-rose-700">{row.scanNote}</p> : null}
+              </td>
               <td className="px-4 py-3 text-slate-600">
                 <p>{row.uploadedByRole === "customer" ? "客户" : "员工"} / {row.uploadedBy}</p>
                 <p className="mt-1 text-xs text-slate-500">{formatDateTime(row.uploadedAt)}</p>
               </td>
               <td className="px-4 py-3">
-                <Link
-                  className="inline-flex min-h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                  href={`/api/documents/${row.id}/download`}
-                >
-                  <Download size={14} />
-                  下载
-                </Link>
+                <div className="flex flex-wrap gap-2">
+                  {row.previewAllowed && row.scanStatus === "clean" ? (
+                    <Link
+                      className="inline-flex min-h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      href={`/api/documents/${encodeURIComponent(row.id)}/preview`}
+                      target="_blank"
+                    >
+                      <Eye size={14} />
+                      预览
+                    </Link>
+                  ) : null}
+                  {row.scanStatus === "clean" ? (
+                    <Link
+                      className="inline-flex min-h-9 items-center gap-2 rounded-md border border-cyan-200 bg-cyan-50 px-3 text-xs font-semibold text-cyan-800 hover:bg-cyan-100"
+                      href={signedDocumentDownloadHref(row.id)}
+                    >
+                      <Download size={14} />
+                      下载
+                    </Link>
+                  ) : (
+                    <span className="inline-flex min-h-9 items-center rounded-md border border-amber-200 bg-amber-50 px-3 text-xs font-semibold text-amber-800">待安全放行</span>
+                  )}
+                  <DocumentSecurityActions documentId={row.id} scanStatus={row.scanStatus} />
+                </div>
               </td>
             </tr>
           ))}
           {rows.length === 0 ? (
             <tr>
-              <td className="px-4 py-8 text-center text-slate-500" colSpan={5}>
+              <td className="px-4 py-8 text-center text-slate-500" colSpan={6}>
                 暂无上传资料
               </td>
             </tr>
@@ -1231,7 +2046,7 @@ function DocumentReviewTable({ rows }: { rows: DocumentRecord[] }) {
   );
 }
 
-function CustomerReviewTable({ accounts, auditLogs }: { accounts: CustomerAccountView[]; auditLogs: AuditLogRecord[] }) {
+function CustomerReviewTable({ accounts, auditLogs, documents, customerProfiles }: { accounts: CustomerAccountView[]; auditLogs: AuditLogRecord[]; documents: DocumentRecord[]; customerProfiles: CustomerProfile[] }) {
   const sortedAccounts = [...accounts].sort((a, b) => {
     const statusScore = (item: CustomerAccountView) => (item.status === "unverified" ? 3 : item.status === "paused" ? 2 : 1);
     return statusScore(b) - statusScore(a) || new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime();
@@ -1271,7 +2086,14 @@ function CustomerReviewTable({ accounts, auditLogs }: { accounts: CustomerAccoun
                 </td>
                 <td className="px-4 py-3">{statusPill(customerStatusLabels[account.status], customerStatusTones[account.status])}</td>
                 <td className="px-4 py-3">
-                  <OpsCustomerStatusWorkflow customerCode={account.customerCode} status={account.status} />
+                  <OpsCustomerStatusWorkflow
+                    billingCycle={customerProfiles.find((item) => item.customerCode === account.customerCode)?.billingCycle}
+                    creditLimit={customerProfiles.find((item) => item.customerCode === account.customerCode)?.creditLimit}
+                    customerCode={account.customerCode}
+                    documents={documents}
+                    paymentTermDays={customerProfiles.find((item) => item.customerCode === account.customerCode)?.paymentTermDays}
+                    status={account.status}
+                  />
                 </td>
               </tr>
             ))}
@@ -1312,10 +2134,11 @@ function CustomerReviewTable({ accounts, auditLogs }: { accounts: CustomerAccoun
   );
 }
 
-function InquiryCard({ item }: { item: InquirySubmission }) {
+function InquiryCard({ item, documents }: { item: InquirySubmission; documents: DocumentRecord[] }) {
   const status = inquiryStatus(item);
   const segment = inquirySegment(item);
   const event = latestEvent(item);
+  const inquiryDocuments = documents.filter((document) => document.refType === "inquiry" && document.refId === item.id);
 
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
@@ -1331,6 +2154,7 @@ function InquiryCard({ item }: { item: InquirySubmission }) {
           {statusPill(segment.label, segment.tone)}
           {statusPill(`优先级：${segment.priority}`, segment.priority === "高" ? "rose" : "slate")}
           {statusPill(status.label, status.tone)}
+          {inquiryDocuments.length > 0 ? statusPill(`资料 ${inquiryDocuments.length}`, "cyan") : null}
           {isDueFollowUp(item) ? statusPill("今日跟进", "rose") : null}
         </div>
       </div>
@@ -1353,6 +2177,8 @@ function InquiryCard({ item }: { item: InquirySubmission }) {
       {item.note ? <p className="mt-3 rounded-md bg-slate-50 p-3 text-sm leading-6 text-slate-600">{item.note}</p> : null}
       {item.followUpNote ? <p className="mt-3 rounded-md bg-amber-50 p-3 text-sm leading-6 text-amber-900">客服备注：{item.followUpNote}</p> : null}
 
+      <DocumentQuickLinks documents={inquiryDocuments} emptyText="该询盘暂无上传资料" />
+
       <OpsInquiryWorkflow
         id={item.id}
         status={item.status}
@@ -1366,10 +2192,11 @@ function InquiryCard({ item }: { item: InquirySubmission }) {
   );
 }
 
-function InboundCard({ item }: { item: InboundSubmission }) {
+function InboundCard({ item, documents }: { item: InboundSubmission; documents: DocumentRecord[] }) {
   const status = inboundStatus(item);
   const event = latestEvent(item);
   const checklist = buildInboundDocumentChecklist(item);
+  const inboundDocuments = documents.filter((document) => document.refType === "inbound" && document.refId === item.id);
 
   return (
     <article className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
@@ -1412,6 +2239,8 @@ function InboundCard({ item }: { item: InboundSubmission }) {
       {item.exceptionNote ? <p className="mt-3 rounded-md bg-rose-50 p-3 text-sm leading-6 text-rose-900">异常说明：{item.exceptionNote}</p> : null}
       {item.opsNote ? <p className="mt-3 rounded-md bg-slate-50 p-3 text-sm leading-6 text-slate-700">运营备注：{item.opsNote}</p> : null}
 
+      <DocumentQuickLinks documents={inboundDocuments} emptyText="该入库预报暂无上传资料" />
+
       <OpsInboundWorkflow
         appointmentAt={item.appointmentAt}
         exceptionNote={item.exceptionNote}
@@ -1429,27 +2258,38 @@ function EmptyState({ text }: { text: string }) {
 }
 
 type OpsPageProps = {
-  searchParams?: Promise<{ section?: string | string[] }>;
+  searchParams?: Promise<{ section?: string | string[]; returnStatus?: string | string[]; returnQuery?: string | string[] }>;
 };
 
 export default async function OpsPage({ searchParams }: OpsPageProps) {
   const params = await searchParams;
   const sectionParam = Array.isArray(params?.section) ? params?.section[0] : params?.section;
-  const activeSection = domainNav.some((item) => item.id === sectionParam) ? sectionParam ?? "overview" : "overview";
-  const activeDomain = domainNav.find((item) => item.id === activeSection) ?? domainNav[0];
+  const returnStatusParam = Array.isArray(params?.returnStatus) ? params?.returnStatus[0] : params?.returnStatus;
+  const returnQuery = Array.isArray(params?.returnQuery) ? params?.returnQuery[0] ?? "" : params?.returnQuery ?? "";
+  const requestedSection = domainNav.some((item) => item.id === sectionParam) ? sectionParam ?? "overview" : "overview";
+  const activeReturnStatus = ["missing-tracking", "awaiting", "inspection", "needs-decision", "confirmed", "open"].includes(returnStatusParam ?? "") ? returnStatusParam : "all";
 
-  const [staff, submissions, opsData, coreData, documents, customerAccounts, auditLogs, launchReadiness, expansionData] = await Promise.all([
+  const [staff, submissions, opsData, coreData, documents, customerAccounts, auditLogs, launchReadiness, expansionData, systemAlerts, managedStaffAccounts, automationRuns, webhookEvents, slaRules] = await Promise.all([
     requireStaffSession(),
     getSubmissions(),
     getOpsWorkbenchData(),
     getWarehouseCoreData(),
     getDocuments(),
     getCustomerAccounts(),
-    getAuditLogs({ limit: 80 }),
+    getAuditLogs({ limit: 300 }),
     evaluateLaunchReadiness(),
     getOpsExpansionData(),
+    getSystemAlerts(),
+    getManagedStaffAccounts(),
+    getAutomationRuns({ limit: 20 }),
+    getWebhookEvents(50),
+    getSlaNotificationRules(),
   ]);
   const inquiries = submissions.filter((item): item is InquirySubmission => item.type === "inquiry");
+  const staffWhitelist = getStaffWhitelistView();
+  const permittedDomainNav = domainNav.filter((item) => canAccessOpsModule(staff, item.id as Parameters<typeof canAccessOpsModule>[1], expansionData));
+  const activeSection = permittedDomainNav.some((item) => item.id === requestedSection) ? requestedSection : "overview";
+  const activeDomain = permittedDomainNav.find((item) => item.id === activeSection) ?? permittedDomainNav[0] ?? domainNav[0];
   const inbounds = submissions.filter((item): item is InboundSubmission => item.type === "inbound");
 
   const missingDocs = inbounds.filter((item) => buildInboundDocumentChecklist(item).missingRequired.length > 0).length;
@@ -1463,7 +2303,19 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
   const openScanExceptions = openOutboundScanExceptions(coreData.outboundOrders);
   const inventoryRisks = opsData.inventory.filter((item) => item.status !== "normal").length;
   const unverifiedCustomers = customerAccounts.filter((item) => item.status === "unverified").length;
-  const staffNotifications = await getStaffNotifications({ submissions, opsData, coreData, documents });
+  const staffNotifications = await getStaffNotifications({ submissions, opsData, coreData, documents, expansionData, workOrders: expansionData.selfServiceWorkOrders, systemAlerts });
+  const notificationDeliveries = await getNotificationDeliveries(100);
+  const notificationProviderHealth = getNotificationProviderHealth();
+  const productionIntegrationReadiness = await evaluateProductionIntegrationReadiness();
+  const integrationProbeMap = await getLatestIntegrationProbeMap();
+  const opsSystemHealth = await evaluateOpsSystemHealth();
+  const customerSelfServiceOpsReport = buildCustomerSelfServiceOpsReport({
+    submissions,
+    coreData,
+    documents,
+    workOrders: expansionData.selfServiceWorkOrders,
+  });
+  const reportCenterData = buildReportCenterData({ expansionData, auditLogs, coreData, notificationDeliveries, automationRuns, customerSelfServiceReport: customerSelfServiceOpsReport, documents });
   const todoCount = staffNotifications.length || openInquiries + missingDocs + missingTracking + openInboundReceivingExceptions.length + openLogistics + openOutbound + openScanExceptions.length + inventoryRisks + unverifiedCustomers;
   const pendingBilling = coreData.billingRecords.filter((item) => item.status === "draft" || item.status === "pending_confirmation").length;
   const lowStockBalances = coreData.inventoryBalances.filter((item) => item.availableQty < item.alertQty).length;
@@ -1471,13 +2323,15 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
   const logisticsControlRows = buildLogisticsControlRows([...coreData.outboundOrders].sort((a, b) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime()));
   const replenishmentSuggestions = buildReplenishmentSuggestions(coreData);
   const stocktakeCandidates = buildStocktakeCandidates(coreData) as StocktakeCandidate[];
+  const now = new Date();
+  const nowMs = now.getTime();
   const nowLabel = new Intl.DateTimeFormat("zh-CN", {
     month: "2-digit",
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
     timeZone: "Europe/London",
-  }).format(new Date());
+  }).format(now);
 
   const sortedInquiries = [...inquiries].sort((a, b) => {
     const score = (item: InquirySubmission) => (isHotInquiry(item) ? 4 : 0) + (isDueFollowUp(item) ? 3 : 0) + (item.status === "new" ? 2 : 0);
@@ -1491,7 +2345,7 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
         <div className="mx-auto flex max-w-7xl gap-5 px-4 py-6 sm:px-6 lg:px-8">
           <aside className="hidden w-20 shrink-0 lg:block">
             <nav className="sticky top-28 grid gap-1 rounded-lg border border-slate-200 bg-white p-2 shadow-sm" aria-label="运营模块导航">
-              {domainNav.map(({ id, label, icon: Icon }) => (
+              {permittedDomainNav.map(({ id, label, icon: Icon }) => (
                 <Link
                   aria-current={activeSection === id ? "page" : undefined}
                   className={`flex h-14 flex-col items-center justify-center gap-1 rounded-md text-[11px] font-semibold transition ${
@@ -1529,6 +2383,7 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
                       <Warehouse size={16} />
                       仓库作业台
                     </Link>
+                    <StaffPasswordChangeForm />
                     <LogoutButton nextPath="/ops-login" />
                   </div>
                 </div>
@@ -1542,7 +2397,7 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
             </section>
 
             <nav className="ops-mobile-domain-nav sticky top-[6.8rem] z-30 flex gap-2 overflow-x-auto rounded-lg border border-slate-200 bg-white/95 p-2 shadow-sm backdrop-blur lg:hidden" aria-label="运营模块导航">
-              {domainNav.map(({ id, label, icon: Icon }) => (
+              {permittedDomainNav.map(({ id, label, icon: Icon }) => (
                 <Link
                   aria-current={activeSection === id ? "page" : undefined}
                   className={`flex min-h-12 min-w-[4.25rem] flex-col items-center justify-center gap-1 rounded-md px-2 text-[11px] font-semibold transition ${
@@ -1568,13 +2423,39 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
               <MetricTile caption="扫码" icon={ScanLine} label="扫码异常" tone={openScanExceptions.length > 0 ? "rose" : "emerald"} value={openScanExceptions.length} />
             </section>
 
+            <OpsLaunchGuardPanel alerts={systemAlerts} integrationReadiness={productionIntegrationReadiness} launchReadiness={launchReadiness} systemHealth={opsSystemHealth} />
+
+            <OpsSlaReportPanel billingRecords={coreData.billingRecords} inbounds={inbounds} nowMs={new Date().getTime()} outbounds={coreData.outboundOrders} workOrders={expansionData.selfServiceWorkOrders} />
+
+            <OpsCustomerSelfServicePanel report={customerSelfServiceOpsReport} />
+
+            <OpsReportCenterPanel data={reportCenterData} />
+
+            <OpsExceptionCenterPanel balances={coreData.inventoryBalances} billingRecords={coreData.billingRecords} inbounds={inbounds} nowMs={nowMs} outbounds={coreData.outboundOrders} returns={coreData.returnOrders} />
+
+            <OpsSlaEscalationPanel items={staffNotifications} />
+
             <NotificationCenter emptyText="暂无运营待办" items={staffNotifications} title="运营待办中心" />
 
               <OutboundScanOperationsPanel rows={coreData.outboundOrders} />
 
+              <SystemAlertPanel alerts={systemAlerts} />
+
+              <OpsSystemLogPanel />
+
+              <OpsSystemHealthPanel health={opsSystemHealth} />
+
+              <OpsBackupRestorePanel recentLogs={auditLogs} />
+
               <LaunchReadinessPanel readiness={launchReadiness} />
 
-              <OpsMabangModulePanel data={expansionData} module="overview" />
+              <ProductionIntegrationPanel readiness={productionIntegrationReadiness} probeMap={integrationProbeMap} />
+
+              <WebhookEventPanel events={webhookEvents} />
+
+              <OpsApiIntegrationLedgerPanel webhookEvents={webhookEvents} auditLogs={auditLogs} />
+
+              <OpsMabangModulePanel automationRuns={automationRuns} data={expansionData} module="overview" />
 
             <section className="grid gap-4 xl:grid-cols-4">
               <QueueColumn
@@ -1644,7 +2525,7 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
             {activeSection === "inquiry" ? (
             <section id="inquiry" className="scroll-mt-28 space-y-4">
               <DomainHeading eyebrow="Leads" title="询盘与客户" body="新客户认证、报价线索和跟进记录集中处理，运营可以先确认客户资料，再推进合作需求。" icon={FileText} />
-              <CustomerReviewTable accounts={customerAccounts} auditLogs={auditLogs} />
+              <CustomerReviewTable accounts={customerAccounts} auditLogs={auditLogs} customerProfiles={coreData.customers} documents={documents} />
               <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <h2 className="flex items-center gap-2 text-base font-semibold text-slate-950">
@@ -1654,7 +2535,7 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
                   {statusPill(`${openInquiries} 条未关闭`, "cyan")}
                 </div>
                 <div className="grid gap-4">
-                  {sortedInquiries.length > 0 ? sortedInquiries.slice(0, 5).map((item) => <InquiryCard item={item} key={item.id} />) : <EmptyState text="暂无合作询盘" />}
+                  {sortedInquiries.length > 0 ? sortedInquiries.slice(0, 5).map((item) => <InquiryCard documents={documents} item={item} key={item.id} />) : <EmptyState text="暂无合作询盘" />}
                 </div>
               </div>
             </section>
@@ -1663,7 +2544,7 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
             {activeSection === "inbound" ? (
             <section id="inbound" className="scroll-mt-28 space-y-4">
               <DomainHeading eyebrow="入库" title="入库管理" body="入库预报、资料补齐、追踪号、预约到仓和验收异常统一在这里处理。" icon={PackageCheck} />
-              <OpsMabangModulePanel data={expansionData} module="inbound" />
+              <OpsMabangModulePanel data={expansionData} module="inbound" purchaseReceipts={[...coreData.purchaseReceipts].sort((a, b) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime())} />
               <InboundQueueTable inbounds={inbounds} />
               <InboundReceivingExceptionPanel inbounds={inbounds} />
               <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
@@ -1675,7 +2556,7 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
                   {statusPill(`${inbounds.length} 条 ASN`, "amber")}
                 </div>
                 <div className="grid gap-4">
-                  {inbounds.length > 0 ? inbounds.slice(0, 5).map((item) => <InboundCard item={item} key={item.id} />) : <EmptyState text="暂无入库预报" />}
+                  {inbounds.length > 0 ? inbounds.slice(0, 5).map((item) => <InboundCard documents={documents} item={item} key={item.id} />) : <EmptyState text="暂无入库预报" />}
                 </div>
               </div>
             </section>
@@ -1685,14 +2566,17 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
             <section id="inventory" className="scroll-mt-28 space-y-4">
               <DomainHeading eyebrow="库存" title="库存与库内作业" body="库位库存、安全库存、补货调拨、盘点和库存调整集中管理，方便仓库按异常优先级处理。" icon={Warehouse} />
               <OpsMabangModulePanel data={expansionData} module="inventory" />
+              <OpsWmsRuleCompliancePanel balances={coreData.inventoryBalances} locations={coreData.locations} lots={coreData.inventoryLots} outboundOrders={coreData.outboundOrders} policies={expansionData.wmsPolicies} />
               <OpsReplenishmentPlanner plans={coreData.replenishmentPlans} suggestions={replenishmentSuggestions} transferOrders={coreData.transferOrders} />
-              <OpsTransferLifecyclePanel rows={[...coreData.transferOrders].sort((a, b) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime())} />
+              <OpsTransferLifecyclePanel documents={documents} rows={[...coreData.transferOrders].sort((a, b) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime())} />
               <OpsStocktakePanel batches={coreData.stocktakeBatches} candidates={stocktakeCandidates} />
+              <LocationUtilizationPanel balances={coreData.inventoryBalances} locations={coreData.locations} />
               <InventoryTable rows={opsData.inventory} />
               <CoreInventoryTable
                 adjustments={[...coreData.inventoryAdjustments].sort((a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime())}
                 balances={coreData.inventoryBalances}
                 canReviewAdjustments={canReviewInventoryAdjustment(staff.role)}
+                documents={documents}
                 locations={coreData.locations}
                 lots={coreData.inventoryLots}
                 movements={[...coreData.inventoryMovements].sort((a, b) => new Date(b.occurredAt).getTime() - new Date(a.occurredAt).getTime())}
@@ -1704,11 +2588,12 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
             <section id="outbound" className="scroll-mt-28 space-y-4">
               <DomainHeading eyebrow="出库" title="出库作业" body="出库审核、批量拣货、面单打印、交运和退货入库按作业链路分组，避免订单散落在不同页面。" icon={Boxes} />
               <OpsMabangModulePanel data={expansionData} module="outbound" />
+              <OpsPlatformSyncHealthPanel data={expansionData} outbounds={coreData.outboundOrders} probeRecords={Array.from(integrationProbeMap.values()).filter((probe) => probe.group === "platform")} />
               <OutboundScanOperationsPanel rows={coreData.outboundOrders} />
               <OutboundTable rows={opsData.outbound} />
               <OpsOutboundBatchPanel rows={coreData.outboundOrders.map(({ id, customerCode, channel, orderCount, status }) => ({ id, customerCode, channel, orderCount, status }))} />
               <CoreOutboundRequestsTable rows={[...coreData.outboundOrders].sort((a, b) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime())} />
-              <ReturnOrdersTable rows={[...coreData.returnOrders].sort((a, b) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime())} />
+              <ReturnOrdersTable activeFilter={activeReturnStatus} documents={documents} keyword={returnQuery} rows={[...coreData.returnOrders].sort((a, b) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime())} />
             </section>
             ) : null}
 
@@ -1716,8 +2601,9 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
             <section id="logistics" className="scroll-mt-28 space-y-4">
               <DomainHeading eyebrow="Logistics" title="物流与承运商" body="物流异常、承运商匹配、运费估算和追踪回传集中处理，便于运营持续闭环。" icon={Truck} />
               <OpsMabangModulePanel data={expansionData} module="logistics" />
+              <OpsCarrierHealthPanel channels={expansionData.logisticsChannels} outbounds={coreData.outboundOrders} />
               <LogisticsTable rows={opsData.logistics} />
-              <OpsLogisticsControlPanel rows={logisticsControlRows} />
+              <OpsLogisticsControlPanel documents={documents} rows={logisticsControlRows} />
             </section>
             ) : null}
 
@@ -1726,9 +2612,20 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
               <DomainHeading eyebrow="Billing" title="账单与资料审核" body="客户账单、费用生成、账单复核和资料审核放在同一组，方便财务和运营协作确认。" icon={ReceiptText} />
               <OpsMabangModulePanel data={expansionData} module="billing" />
               <BillingStatementPanel customers={coreData.customers} rows={coreData.billingRecords} />
-              <OpsBillingGenerator customers={coreData.customers} inboundSubmissions={inbounds} outboundOrders={coreData.outboundOrders} returnOrders={coreData.returnOrders} />
+              <OpsFinanceControlPanel customers={coreData.customers} records={coreData.billingRecords} workOrders={expansionData.selfServiceWorkOrders} />
+              <OpsBillingDisputePanel customers={coreData.customers} documents={documents} records={coreData.billingRecords} workOrders={expansionData.selfServiceWorkOrders} />
+              <OpsBillingGenerator customers={coreData.customers} documents={documents} inboundSubmissions={inbounds} outboundOrders={coreData.outboundOrders} returnOrders={coreData.returnOrders} />
               <BillingReviewTable rows={[...coreData.billingRecords].sort((a, b) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime())} />
+              <OpsDocumentSecurityHealthPanel documents={documents} auditLogs={auditLogs} />
               <DocumentReviewTable rows={[...documents].sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime())} />
+            </section>
+            ) : null}
+
+            {activeSection === "permissions" ? (
+            <section id="permissions" className="scroll-mt-28 space-y-4">
+              <DomainHeading eyebrow="Audit" title="权限与操作审计" body="关键账号、库存、仓库、物流和出库动作集中留痕，支持按操作人、客户、单号和业务类型快速追溯。" icon={ShieldCheck} />
+              <OpsMabangModulePanel data={expansionData} managedStaffAccounts={managedStaffAccounts} module="permissions" notificationDeliveries={notificationDeliveries} notificationProviderHealth={notificationProviderHealth} slaRules={slaRules} staffWhitelist={staffWhitelist} />
+              <OpsAuditLogPanel logs={auditLogs} />
             </section>
             ) : null}
 

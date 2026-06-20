@@ -2,9 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { FileCheck2, FileX2, RotateCcw, Save } from "lucide-react";
+import { CheckCircle2, FileCheck2, FileX2, RotateCcw, Save, XCircle } from "lucide-react";
 
-type OpsStatementAction = "mark_paid" | "issue_invoice" | "void_invoice" | "reopen";
+type OpsStatementAction = "mark_paid" | "issue_invoice" | "void_invoice" | "reopen" | "resolve_dispute" | "reject_payment";
 
 type Props = {
   customerCode: string;
@@ -44,7 +44,7 @@ export function OpsStatementActions({ customerCode, month }: Props) {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h2 className="text-base font-semibold text-slate-950">月结单运营处理</h2>
-          <p className="mt-1 text-sm leading-6 text-slate-600">按整月登记收款、批量开票或撤回付款状态，适合月末对账和财务复核。</p>
+          <p className="mt-1 text-sm leading-6 text-slate-600">按整月复核争议、登记收款、批量开票或撤回付款状态，适合月末对账和财务复核。</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-slate-950 px-3 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60" disabled={isPending} onClick={() => submit("mark_paid")} type="button">
@@ -54,6 +54,10 @@ export function OpsStatementActions({ customerCode, month }: Props) {
           <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-cyan-200 bg-cyan-50 px-3 text-sm font-semibold text-cyan-800 hover:bg-cyan-100 disabled:opacity-60" disabled={isPending} onClick={() => submit("issue_invoice")} type="button">
             <FileCheck2 size={16} />
             批量已开票
+          </button>
+          <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-100 disabled:opacity-60" disabled={isPending} onClick={() => submit("resolve_dispute")} type="button">
+            <CheckCircle2 size={16} />
+            争议复核通过
           </button>
         </div>
       </div>
@@ -79,6 +83,10 @@ export function OpsStatementActions({ customerCode, month }: Props) {
           <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-rose-200 bg-white px-3 text-sm font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-60" disabled={isPending} onClick={() => submit("void_invoice")} type="button">
             <FileX2 size={16} />
             作废开票
+          </button>
+          <button className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-amber-200 bg-white px-3 text-sm font-semibold text-amber-800 hover:bg-amber-50 disabled:opacity-60" disabled={isPending} onClick={() => submit("reject_payment")} type="button">
+            <XCircle size={16} />
+            驳回付款
           </button>
         </div>
       </div>

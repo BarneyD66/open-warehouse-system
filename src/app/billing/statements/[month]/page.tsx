@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, FileSpreadsheet, ReceiptText } from "lucide-react";
 import { CustomerStatementActions } from "@/app/components/CustomerStatementActions";
+import { BillingTimeline } from "@/app/components/BillingTimeline";
 import { DocumentUploadPanel } from "@/app/components/DocumentUploadPanel";
 import { PrintButton } from "@/app/components/PrintButton";
 import { PageShell } from "@/app/components/MarketingShell";
@@ -31,6 +32,32 @@ function statementStatus(records: BillingRecord[]) {
   return "待锁账";
 }
 
+function adjustmentLabel(record: BillingRecord) {
+  if (record.adjustmentKind === "fee_adjustment") return "费用调账";
+  if (record.adjustmentKind === "compensation") return "赔付抵扣";
+  return "";
+}
+
+function adjustmentApprovalStatusLabel(record: BillingRecord) {
+  if (record.adjustmentApprovalStatus === "pending_approval") return "待审批";
+  if (record.adjustmentApprovalStatus === "approved") return "已审批";
+  if (record.adjustmentApprovalStatus === "posted") return "已入账";
+  if (record.adjustmentApprovalStatus === "rejected") return "有争议";
+  if (record.adjustmentApprovalStatus === "paid") return "已核销";
+  if (record.status === "paid") return "已核销";
+  if (record.status === "confirmed") return "已入账";
+  if (record.status === "disputed") return "有争议";
+  return "已审批";
+}
+
+function adjustmentAttachmentStatusLabel(record: BillingRecord) {
+  if (record.adjustmentAttachmentStatus === "archived") return "附件已归档";
+  if (record.adjustmentAttachmentStatus === "confirmed") return "附件已确认";
+  if (record.adjustmentAttachmentStatus === "missing") return "附件待补";
+  if (record.adjustmentAttachmentStatus === "not_required") return "无需附件";
+  return "";
+}
+
 export default async function CustomerBillingStatementPage({ params }: PageProps) {
   const [{ month }, session] = await Promise.all([params, requireCustomerSession()]);
   if (!/^\d{4}-\d{2}$/.test(month)) notFound();
@@ -46,11 +73,18 @@ export default async function CustomerBillingStatementPage({ params }: PageProps
   const totalAmount = records.reduce((sum, record) => sum + record.amount, 0);
   const paidAmount = records.filter((record) => record.status === "paid").reduce((sum, record) => sum + record.amount, 0);
   const payableAmount = records.filter((record) => ["draft", "pending_confirmation", "confirmed", "payment_submitted"].includes(record.status)).reduce((sum, record) => sum + record.amount, 0);
+  const adjustmentRecords = records.filter((record) => record.adjustmentKind);
+  const adjustmentAmount = adjustmentRecords.reduce((sum, record) => sum + record.amount, 0);
   const issuedInvoices = records.filter((record) => record.invoiceStatus === "issued").length;
   const statementId = records.find((record) => record.statementId)?.statementId || `STMT-${session.customerCode}-${month}`;
   const statementDocuments = documents.filter((document) => document.refType === "billing" && document.refId === statementId);
   const confirmedAt = records.find((record) => record.statementCustomerConfirmedAt)?.statementCustomerConfirmedAt;
   const paymentSubmittedAt = records.find((record) => record.statementPaymentSubmittedAt)?.statementPaymentSubmittedAt;
+  const statementTimeline = records
+    .flatMap((record) => record.approvalTimeline ?? [])
+    .filter((event, index, events) => events.findIndex((item) => item.id === event.id) === index)
+    .sort((left, right) => new Date(right.occurredAt).getTime() - new Date(left.occurredAt).getTime())
+    .slice(0, 12);
 
   return (
     <PageShell surface="customer">
@@ -90,11 +124,12 @@ export default async function CustomerBillingStatementPage({ params }: PageProps
               ))}
             </div>
 
-            <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
               {[
                 ["总金额", money(totalAmount), "text-slate-950"],
                 ["待结算", money(payableAmount), "text-amber-800"],
                 ["已支付", money(paidAmount), "text-emerald-800"],
+                ["调账/赔付", adjustmentRecords.length > 0 ? money(adjustmentAmount) : "暂无", adjustmentAmount < 0 ? "text-emerald-800" : "text-slate-950"],
               ].map(([label, value, color]) => (
                 <div className="rounded-md border border-slate-200 bg-white p-4" key={label}>
                   <p className="text-xs font-semibold text-slate-500">{label}</p>
@@ -105,6 +140,36 @@ export default async function CustomerBillingStatementPage({ params }: PageProps
           </section>
 
           <CustomerStatementActions month={month} records={records} />
+
+          <BillingTimeline emptyText="该月结单暂无处理进度记录" events={statementTimeline} title="月结处理进度" />
+
+          {adjustmentRecords.length > 0 ? (
+            <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
+              <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <h2 className="text-base font-semibold text-emerald-950">本月调账/赔付</h2>
+                  <p className="mt-1 text-sm leading-6 text-emerald-900">以下记录来自财务复核，已计入本月月结金额。</p>
+                </div>
+                <p className="text-lg font-semibold text-emerald-950">{money(adjustmentAmount)}</p>
+              </div>
+              <div className="mt-3 grid gap-2">
+                {adjustmentRecords.map((record) => (
+                  <div className="rounded-md border border-emerald-200 bg-white p-3 text-sm leading-6 text-emerald-950" key={record.id}>
+                    <p className="font-semibold">
+                      {adjustmentLabel(record)}：{money(record.amount)} / {record.id} / {adjustmentApprovalStatusLabel(record)}
+                    </p>
+                    <p>
+                      {record.workOrderId ? `来源工单 ${record.workOrderId}` : "来源工单未记录"}
+                      {record.adjustmentSourceRecordId ? ` / 原账单 ${record.adjustmentSourceRecordId}` : ""}
+                      {record.adjustmentApprovalRuleName ? ` / 审批规则 ${record.adjustmentApprovalRuleName}` : ""}
+                      {record.adjustmentAttachmentStatus ? ` / ${adjustmentAttachmentStatusLabel(record)}` : ""}
+                    </p>
+                    {record.note ? <p className="text-emerald-800">{record.note}</p> : null}
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
           <section className="grid gap-5 lg:grid-cols-[1fr_0.9fr] print:hidden">
             <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
@@ -165,6 +230,15 @@ export default async function CustomerBillingStatementPage({ params }: PageProps
                       <td className="px-4 py-3 text-slate-600">
                         <p>{record.refType}</p>
                         <p className="mt-1 font-mono text-xs text-slate-500">{record.refId}</p>
+                        {record.adjustmentKind ? (
+                          <p className="mt-2 rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800">
+                            {adjustmentLabel(record)}
+                            {` / ${adjustmentApprovalStatusLabel(record)}`}
+                            {record.adjustmentAttachmentStatus ? ` / ${adjustmentAttachmentStatusLabel(record)}` : ""}
+                            {record.adjustmentSourceRecordId ? ` / 原账单 ${record.adjustmentSourceRecordId}` : ""}
+                          </p>
+                        ) : null}
+                        {record.workOrderId ? <p className="mt-1 text-xs text-slate-500">来源工单 {record.workOrderId}</p> : null}
                       </td>
                       <td className="px-4 py-3 text-slate-600">
                         {record.feeLines?.length ? record.feeLines.map((line) => (

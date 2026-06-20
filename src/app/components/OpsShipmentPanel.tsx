@@ -19,6 +19,20 @@ type Props = {
     | "shippingFeeCheckedAt"
     | "shippingFeeNote"
     | "labelStatus"
+    | "labelFailureReason"
+    | "labelRetryCount"
+    | "labelLastTriedAt"
+    | "labelLastTriedBy"
+    | "labelNextRetryAt"
+    | "labelFallbackNote"
+    | "carrierGatewayMode"
+    | "carrierProvider"
+    | "platform"
+    | "platformOrderNo"
+    | "platformStoreName"
+    | "platformFulfillmentStatus"
+    | "platformFulfillmentSyncedAt"
+    | "platformFulfillmentError"
     | "trackingNumber"
     | "trackingEvents"
   >;
@@ -41,6 +55,20 @@ const trackingOptions: Array<{ value: OutboundTrackingEvent["status"]; label: st
   { value: "exception", label: "物流异常" },
 ];
 
+function labelStatusText(status: CoreOutboundOrder["labelStatus"]) {
+  if (status === "generated") return "已生成";
+  if (status === "failed") return "生成失败";
+  if (status === "rated") return "已试算";
+  return "未生成";
+}
+
+function fulfillmentStatusText(status: CoreOutboundOrder["platformFulfillmentStatus"]) {
+  if (status === "synced") return "已回传";
+  if (status === "failed") return "回传失败";
+  if (status === "not_required") return "无需回传";
+  return "待回传";
+}
+
 export function OpsShipmentPanel({ order }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -54,22 +82,35 @@ export function OpsShipmentPanel({ order }: Props) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  function postShipping(action: "rate" | "generate_label") {
+  function postShipping(action: "rate" | "generate_label" | "cancel_label" | "manual_label" | "retry_fulfillment" | "sync_tracking") {
     setMessage("");
     setError("");
     startTransition(async () => {
       const response = await fetch(`/api/ops/outbounds/${encodeURIComponent(order.id)}/shipping`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, serviceCode, packageWeightKg, packageCount }),
+        body: JSON.stringify({ action, serviceCode, packageWeightKg, packageCount, note: shippingFeeNote }),
       });
-      const payload = (await response.json().catch(() => ({}))) as { rate?: { amount?: number; carrierName?: string; serviceName?: string; warning?: string }; error?: string };
+      const payload = (await response.json().catch(() => ({}))) as {
+        rate?: { amount?: number; carrierName?: string; serviceName?: string; warning?: string };
+        error?: string;
+      };
       if (!response.ok) {
         setError(payload.error || "物流处理失败，请稍后重试。");
         return;
       }
       const rateText = payload.rate ? `£${Number(payload.rate.amount ?? 0).toFixed(2)} / ${payload.rate.carrierName} ${payload.rate.serviceName}` : "已更新";
-      setMessage(action === "generate_label" ? `面单已生成：${rateText}` : `运费已试算：${rateText}${payload.rate?.warning ? `，${payload.rate.warning}` : ""}`);
+      setMessage(
+        action === "cancel_label"
+          ? "面单已取消，可重新试算或生成。"
+          : action === "manual_label"
+            ? "已转为内部/人工面单，仓库可继续打印处理。"
+            : action === "generate_label"
+              ? `面单已生成：${rateText}`
+              : `运费已试算：${rateText}${payload.rate?.warning ? `；${payload.rate.warning}` : ""}`,
+      );
+      if (action === "retry_fulfillment") setMessage("平台发货追踪号已重新回传。");
+      if (action === "sync_tracking") setMessage("承运商轨迹/POD 已同步，客户侧物流进度会同步更新。");
       router.refresh();
     });
   }
@@ -81,7 +122,7 @@ export function OpsShipmentPanel({ order }: Props) {
       const response = await fetch(`/api/ops/outbounds/${encodeURIComponent(order.id)}/tracking`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: trackingStatus, detail: trackingDetail, location: "Sheffield Warehouse" }),
+        body: JSON.stringify({ status: trackingStatus, detail: trackingDetail, location: "谢菲尔德仓库" }),
       });
       const payload = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) {
@@ -134,9 +175,26 @@ export function OpsShipmentPanel({ order }: Props) {
         </button>
         <button className="inline-flex min-h-8 items-center gap-1 rounded-md bg-slate-950 px-2 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-60" disabled={isPending} onClick={() => postShipping("generate_label")} type="button">
           <FileText size={13} />
-          生成面单
+          {order.labelStatus === "failed" ? "重试面单" : "生成面单"}
         </button>
-        <a className={`inline-flex min-h-8 items-center rounded-md border px-2 text-xs font-semibold ${order.labelStatus === "generated" ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50" : "pointer-events-none border-slate-100 bg-white text-slate-300"}`} href={`/warehouse/print/label/${encodeURIComponent(order.id)}`}>
+        {order.labelStatus === "failed" ? (
+          <button className="inline-flex min-h-8 items-center gap-1 rounded-md border border-amber-200 bg-white px-2 text-xs font-semibold text-amber-800 hover:bg-amber-50 disabled:opacity-60" disabled={isPending} onClick={() => postShipping("manual_label")} type="button">
+            内部面单
+          </button>
+        ) : null}
+        <button className="inline-flex min-h-8 items-center gap-1 rounded-md border border-rose-200 bg-white px-2 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-60" disabled={isPending || order.labelStatus !== "generated"} onClick={() => postShipping("cancel_label")} type="button">
+          取消面单
+        </button>
+        {order.platformOrderNo ? (
+          <button className="inline-flex min-h-8 items-center gap-1 rounded-md border border-cyan-200 bg-white px-2 text-xs font-semibold text-cyan-800 hover:bg-cyan-50 disabled:opacity-60" disabled={isPending || !order.trackingNumber} onClick={() => postShipping("retry_fulfillment")} type="button">
+            重试平台回传
+          </button>
+        ) : null}
+        <button className="inline-flex min-h-8 items-center gap-1 rounded-md border border-cyan-200 bg-white px-2 text-xs font-semibold text-cyan-800 hover:bg-cyan-50 disabled:opacity-60" disabled={isPending || !order.trackingNumber} onClick={() => postShipping("sync_tracking")} type="button">
+          <RadioTower size={13} />
+          同步轨迹/POD
+        </button>
+        <a className={`inline-flex min-h-8 items-center rounded-md border px-2 text-xs font-semibold ${order.labelStatus === "generated" ? "border-slate-200 bg-white text-slate-700 hover:bg-slate-50" : "pointer-events-none border-slate-100 bg-white text-slate-300"}`} href={`/api/outbounds/${encodeURIComponent(order.id)}/label`} target="_blank">
           打印
         </a>
       </div>
@@ -155,11 +213,26 @@ export function OpsShipmentPanel({ order }: Props) {
         </button>
       </div>
       <div className="text-xs leading-5 text-slate-500">
-        <p>面单：{order.labelStatus ?? "not_requested"} / {order.trackingNumber ?? "未生成追踪号"}</p>
+        <p>面单：{labelStatusText(order.labelStatus)} / {order.trackingNumber ?? "未生成追踪号"}</p>
+        {order.carrierGatewayMode ? <p>接口：{order.carrierGatewayMode} / {order.carrierProvider || "manual"}</p> : null}
+        {order.labelFailureReason ? (
+          <p className="rounded-md border border-rose-200 bg-rose-50 p-2 font-semibold text-rose-800">
+            面单失败：{order.labelFailureReason}；已尝试 {order.labelRetryCount ?? 0} 次
+            {order.labelNextRetryAt ? `；建议 ${new Date(order.labelNextRetryAt).toLocaleString("zh-CN", { hour12: false })} 后重试` : ""}
+          </p>
+        ) : null}
+        {order.labelFallbackNote ? <p className="rounded-md border border-amber-200 bg-amber-50 p-2 font-semibold text-amber-800">人工面单说明：{order.labelFallbackNote}</p> : null}
         {typeof order.shippingFee === "number" ? <p>运费：£{order.shippingFee.toFixed(2)} / {order.carrierName} {order.carrierServiceName}</p> : null}
         {typeof order.actualShippingFee === "number" ? <p>实收/实付：£{order.actualShippingFee.toFixed(2)}{feeDiff !== null ? ` / 差异 £${feeDiff.toFixed(2)}` : ""}</p> : null}
         {order.trackingEvents?.[0] ? <p>最新：{order.trackingEvents[0].label}</p> : null}
       </div>
+      {order.platformOrderNo ? (
+        <p className={`rounded-md border p-2 text-xs font-semibold ${order.platformFulfillmentStatus === "synced" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : order.platformFulfillmentStatus === "failed" ? "border-rose-200 bg-rose-50 text-rose-800" : "border-amber-200 bg-amber-50 text-amber-800"}`}>
+          平台回传：{order.platform} / {order.platformStoreName || "默认店铺"} / {order.platformOrderNo} / {fulfillmentStatusText(order.platformFulfillmentStatus)}
+          {order.platformFulfillmentSyncedAt ? `；${new Date(order.platformFulfillmentSyncedAt).toLocaleString("zh-CN", { hour12: false })}` : ""}
+          {order.platformFulfillmentError ? `；${order.platformFulfillmentError}` : ""}
+        </p>
+      ) : null}
       <div className="grid gap-2 sm:grid-cols-[90px_1fr_auto]">
         <input className="h-9 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700 outline-none focus:border-cyan-500" onChange={(event) => setActualShippingFee(event.target.value)} placeholder="实际 £" value={actualShippingFee} />
         <input className="h-9 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700 outline-none focus:border-cyan-500" onChange={(event) => setShippingFeeNote(event.target.value)} placeholder="运费核对备注" value={shippingFeeNote} />

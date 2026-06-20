@@ -10,6 +10,17 @@ export type StaffSession = {
   role: StaffRole;
 };
 
+export type StaffWhitelistSource = "环境变量" | "演示/本地";
+
+export type StaffWhitelistView = {
+  username: string;
+  displayName: string;
+  role: StaffRole;
+  roleLabel: string;
+  source: StaffWhitelistSource;
+  risks: string[];
+};
+
 export const staffRoleLabels: Record<StaffRole, string> = {
   admin: "系统管理员",
   ops: "运营",
@@ -61,6 +72,38 @@ export function getStaffWhitelist() {
 
   if (process.env.NODE_ENV !== "production" || process.env.ALLOW_DEMO_STAFF_LOGIN === "true") return defaultStaffWhitelist;
   return [];
+}
+
+export function staffWhitelistSource(): StaffWhitelistSource {
+  return process.env.STAFF_WHITELIST_JSON ? "环境变量" : "演示/本地";
+}
+
+export function getStaffWhitelistView(): StaffWhitelistView[] {
+  const accounts = getStaffWhitelist();
+  const source = staffWhitelistSource();
+  const usernameCounts = accounts.reduce((map, account) => {
+    map.set(account.username, (map.get(account.username) ?? 0) + 1);
+    return map;
+  }, new Map<string, number>());
+  const isProduction = process.env.NODE_ENV === "production" || Boolean(process.env.VERCEL);
+  const demoLoginEnabled = process.env.ALLOW_DEMO_STAFF_LOGIN === "true";
+
+  return accounts.map((account) => {
+    const risks = [
+      usernameCounts.get(account.username)! > 1 ? "用户名重复" : "",
+      isProduction && source !== "环境变量" ? "生产未使用环境变量白名单" : "",
+      isProduction && demoLoginEnabled ? "生产演示员工登录已开启" : "",
+    ].filter(Boolean);
+
+    return {
+      username: account.username,
+      displayName: account.displayName,
+      role: account.role,
+      roleLabel: staffRoleLabels[account.role],
+      source,
+      risks,
+    };
+  });
 }
 
 export function findWhitelistedStaff(username: string, password: string) {

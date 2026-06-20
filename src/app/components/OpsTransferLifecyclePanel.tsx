@@ -2,7 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { AlertTriangle, CheckCircle2, ClipboardCheck, PackageCheck, PackageSearch, Send, Truck, type LucideIcon } from "lucide-react";
-import type { TransferLifecycleAction, TransferOrder } from "@/lib/warehouseCoreStore";
+import type { DocumentRecord } from "@/lib/documentStore";
+import type { ApprovalTimelineEvent, TransferLifecycleAction, TransferOrder } from "@/lib/warehouseCoreStore";
+import { DocumentUploadPanel } from "./DocumentUploadPanel";
 
 const statusLabel: Record<TransferOrder["status"], string> = {
   new: "新调拨",
@@ -40,6 +42,23 @@ function numberText(value?: number) {
   return (value ?? 0).toLocaleString("zh-CN");
 }
 
+function ApprovalTimelineList({ events }: { events?: ApprovalTimelineEvent[] }) {
+  const latest = (events ?? []).slice(0, 3);
+  if (latest.length === 0) return null;
+  return (
+    <div className="mt-2 grid gap-1 rounded-md bg-slate-50 p-2">
+      <p className="text-[11px] font-semibold text-slate-500">审批记录</p>
+      {latest.map((event) => (
+        <div className="text-[11px] leading-4 text-slate-600" key={event.id}>
+          <p className="font-semibold text-slate-900">{event.label} · {event.actor}</p>
+          <p>{new Date(event.occurredAt).toLocaleString("zh-CN", { hour12: false })}</p>
+          {event.note ? <p className="text-slate-500">{event.note}</p> : null}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function nextActions(status: TransferOrder["status"]): TransferLifecycleAction[] {
   if (status === "new") return ["approve", "start_picking", "cancel"];
   if (status === "approved") return ["start_picking", "ship", "cancel"];
@@ -50,7 +69,7 @@ function nextActions(status: TransferOrder["status"]): TransferLifecycleAction[]
   return [];
 }
 
-export function OpsTransferLifecyclePanel({ rows }: { rows: TransferOrder[] }) {
+export function OpsTransferLifecyclePanel({ rows, documents = [] }: { rows: TransferOrder[]; documents?: DocumentRecord[] }) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [quantities, setQuantities] = useState<Record<string, string>>({});
@@ -156,6 +175,7 @@ export function OpsTransferLifecyclePanel({ rows }: { rows: TransferOrder[] }) {
                   <span className={`inline-flex rounded-md border px-2 py-1 text-xs font-semibold ${statusClass[row.status]}`}>{statusLabel[row.status]}</span>
                   {row.trackingNumber ? <p className="mt-2 font-mono text-[11px] text-slate-500">{row.trackingNumber}</p> : null}
                   {row.exceptionNote ? <p className="mt-2 max-w-44 text-[11px] leading-4 text-rose-700">{row.exceptionNote}</p> : null}
+                  <ApprovalTimelineList events={row.approvalTimeline} />
                 </td>
                 <td className="px-4 py-3 align-top">
                   <div className="grid gap-2">
@@ -177,6 +197,19 @@ export function OpsTransferLifecyclePanel({ rows }: { rows: TransferOrder[] }) {
                       );
                     })}
                   </div>
+                  {row.status === "new" ? (
+                    <div className="mt-3 min-w-64 text-left">
+                      <DocumentUploadPanel
+                        category="other"
+                        customerCode={row.customerCode}
+                        documents={documents.filter((document) => document.refType === "approval" && document.refId === row.id)}
+                        refId={row.id}
+                        refType="approval"
+                        title="调拨审批附件"
+                        uploadEndpoint="/api/ops/documents"
+                      />
+                    </div>
+                  ) : null}
                 </td>
               </tr>
             ))}

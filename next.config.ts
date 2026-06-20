@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
         hostname: "newsroom.tiktok.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "cms-assets.publishing.service.gov.uk",
+        pathname: "/**",
+      },
     ],
   },
 };

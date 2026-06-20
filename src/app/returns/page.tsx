@@ -1,8 +1,12 @@
 import Link from "next/link";
-import { ArrowRight, RotateCcw, Search, ShieldCheck, Warehouse } from "lucide-react";
+import { ArrowRight, Download, RotateCcw, Search, ShieldCheck, Warehouse } from "lucide-react";
 import { requireCustomerSession } from "@/lib/customerAuth";
+import { getDocumentsForCustomer, signDocumentToken } from "@/lib/documentStore";
 import { getWarehouseCoreDataForCustomer, returnOrderStatusLabel, type ReturnOrder } from "@/lib/warehouseCoreStore";
 import { CustomerReturnForm } from "../components/CustomerOperationForms";
+import { CustomerReturnDecisionPanel } from "../components/CustomerReturnDecisionPanel";
+import { CustomerReturnTrackingBulkPanel } from "../components/CustomerReturnTrackingBulkPanel";
+import { CustomerReturnTrackingPanel } from "../components/CustomerReturnTrackingPanel";
 import { PageShell } from "../components/MarketingShell";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +23,11 @@ const toneClass: Record<Tone, string> = {
   violet: "border-violet-200 bg-violet-50 text-violet-800",
 };
 
+function signedDocumentDownloadHref(id: string) {
+  const token = signDocumentToken(id, Date.now() + 30 * 60 * 1000);
+  return `/api/documents/${encodeURIComponent(id)}/download?token=${encodeURIComponent(token)}`;
+}
+
 function statusTone(status: ReturnOrder["status"]): Tone {
   if (status === "restocked" || status === "closed") return "emerald";
   if (status === "exception" || status === "disposed") return "rose";
@@ -31,15 +40,55 @@ function pill(label: string, tone: Tone = "slate") {
   return <span className={`inline-flex h-fit rounded-md border px-2 py-1 text-xs font-semibold ${toneClass[tone]}`}>{label}</span>;
 }
 
+type ReturnFilter = "all" | "submitted" | "in-transit" | "inspection" | "needs-decision" | "done";
+
 function dateText(value?: string) {
   if (!value) return "-";
   return new Intl.DateTimeFormat("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 }
 
-export default async function ReturnsPage() {
+function filterReturns(items: ReturnOrder[], filter: ReturnFilter, keyword = "") {
+  const byStatus =
+    filter === "submitted"
+      ? items.filter((item) => item.status === "requested" || item.status === "label_sent")
+      : filter === "in-transit"
+        ? items.filter((item) => item.status === "in_transit")
+        : filter === "inspection"
+          ? items.filter((item) => item.status === "received" || item.status === "inspection")
+          : filter === "needs-decision"
+            ? items.filter((item) => ["received", "inspection", "repair", "exception"].includes(item.status) && !item.customerResolutionDecision)
+            : filter === "done"
+              ? items.filter((item) => item.status === "restocked" || item.status === "disposed" || item.status === "closed")
+              : items;
+  const query = keyword.trim().toLowerCase();
+  if (!query) return byStatus;
+  return byStatus.filter((item) =>
+    [item.id, item.platform, item.originalOrderNo, item.buyerReturnTracking, item.returnReason, ...item.skuLines.map((line) => line.skuCode)]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(query)),
+  );
+}
+
+export default async function ReturnsPage({ searchParams }: { searchParams?: Promise<{ status?: string | string[]; q?: string | string[] }> }) {
+  const params = await searchParams;
+  const statusParam = Array.isArray(params?.status) ? params?.status[0] : params?.status;
+  const keyword = Array.isArray(params?.q) ? params?.q[0] ?? "" : params?.q ?? "";
+  const activeFilter: ReturnFilter = ["submitted", "in-transit", "inspection", "needs-decision", "done"].includes(statusParam ?? "") ? (statusParam as ReturnFilter) : "all";
   const session = await requireCustomerSession();
-  const coreData = await getWarehouseCoreDataForCustomer(session.customerCode);
+  const [coreData, documents] = await Promise.all([getWarehouseCoreDataForCustomer(session.customerCode), getDocumentsForCustomer(session.customerCode)]);
   const returns = [...coreData.returnOrders].sort((a, b) => new Date(b.updatedAt ?? b.createdAt).getTime() - new Date(a.updatedAt ?? a.createdAt).getTime());
+  const visibleReturns = filterReturns(returns, activeFilter, keyword);
+  const exportParams = new URLSearchParams({ kind: "returns" });
+  if (activeFilter !== "all") exportParams.set("status", activeFilter);
+  if (keyword.trim()) exportParams.set("q", keyword.trim());
+  const returnExportHref = `/api/downloads?${exportParams.toString()}`;
+  const summaryItems = [
+    { label: "已提交", href: "/returns?status=submitted", filter: "submitted" as ReturnFilter, value: returns.filter((item) => item.status === "requested" || item.status === "label_sent").length, tone: "slate" as Tone },
+    { label: "运输中", href: "/returns?status=in-transit", filter: "in-transit" as ReturnFilter, value: returns.filter((item) => item.status === "in_transit").length, tone: "cyan" as Tone },
+    { label: "质检中", href: "/returns?status=inspection", filter: "inspection" as ReturnFilter, value: returns.filter((item) => item.status === "received" || item.status === "inspection").length, tone: "amber" as Tone },
+    { label: "待确认", href: "/returns?status=needs-decision", filter: "needs-decision" as ReturnFilter, value: returns.filter((item) => ["received", "inspection", "repair", "exception"].includes(item.status) && !item.customerResolutionDecision).length, tone: "rose" as Tone },
+    { label: "已完成", href: "/returns?status=done", filter: "done" as ReturnFilter, value: returns.filter((item) => item.status === "restocked" || item.status === "disposed" || item.status === "closed").length, tone: "emerald" as Tone },
+  ];
 
   return (
     <PageShell surface="customer">
@@ -71,14 +120,36 @@ export default async function ReturnsPage() {
 
           <div className="space-y-5">
             <CustomerReturnForm />
+            <CustomerReturnTrackingBulkPanel />
+            <section className="grid gap-2 sm:grid-cols-5">
+              {summaryItems.map((item) => (
+                <Link className={`rounded-lg border bg-white p-3 shadow-sm transition hover:bg-white ${toneClass[item.tone]} ${activeFilter === item.filter ? "ring-2 ring-cyan-300" : ""}`} href={item.href} key={item.label}>
+                  <p className="text-xs font-semibold">{item.label}</p>
+                  <p className="mt-1 text-2xl font-semibold">{item.value}</p>
+                </Link>
+              ))}
+            </section>
             <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
               <div className="flex items-center gap-2 border-b border-slate-200 px-4 py-3">
                 <RotateCcw size={17} className="text-[#0E7490]" />
                 <h2 className="text-base font-semibold text-slate-950">我的退货预报</h2>
+                <Link className="ml-auto inline-flex min-h-8 items-center gap-1 rounded-md border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 hover:bg-slate-50" href={returnExportHref}>
+                  <Download size={14} />
+                  导出当前筛选
+                </Link>
+                {activeFilter !== "all" ? <Link className="text-xs font-semibold text-cyan-700 hover:text-cyan-900" href="/returns">查看全部</Link> : null}
               </div>
+              <form className="flex flex-col gap-2 border-b border-slate-100 p-4 sm:flex-row" action="/returns">
+                {activeFilter !== "all" ? <input name="status" type="hidden" value={activeFilter} /> : null}
+                <label className="flex min-h-10 flex-1 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 focus-within:border-cyan-500">
+                  <Search size={16} className="text-slate-400" />
+                  <input className="min-h-8 flex-1 bg-transparent text-sm outline-none" defaultValue={keyword} name="q" placeholder="搜索 RMA、追踪号、原订单号或 SKU" />
+                </label>
+                <button className="inline-flex min-h-10 items-center justify-center rounded-md bg-slate-950 px-4 text-sm font-semibold text-white hover:bg-slate-800" type="submit">搜索</button>
+              </form>
               <div className="divide-y divide-slate-200">
-                {returns.length > 0 ? (
-                  returns.map((order) => (
+                {visibleReturns.length > 0 ? (
+                  visibleReturns.map((order) => (
                     <div className="grid gap-3 px-4 py-4 md:grid-cols-[1fr_auto]" key={order.id}>
                       <div>
                         <p className="font-mono text-xs font-semibold text-slate-500">{order.id}</p>
@@ -89,14 +160,40 @@ export default async function ReturnsPage() {
                           <p>预计到仓：{order.expectedArrivalDate || "-"}</p>
                           <p>最近更新：{dateText(order.updatedAt ?? order.createdAt)}</p>
                         </div>
+                        <Link className="mt-2 inline-flex min-h-8 items-center rounded-md border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-700 hover:bg-slate-50" href={`/returns/print/rma/${encodeURIComponent(order.id)}`}>
+                          打印 RMA 标签
+                        </Link>
+                        {!order.buyerReturnTracking && !["restocked", "disposed", "closed"].includes(order.status) ? <CustomerReturnTrackingPanel orderId={order.id} /> : null}
                         <p className="mt-2 rounded-md bg-slate-50 p-3 text-sm leading-6 text-slate-700">{order.returnReason}</p>
                         {order.inspectionResult ? <p className="mt-2 rounded-md bg-amber-50 p-3 text-sm leading-6 text-amber-900">质检：{order.inspectionResult}</p> : null}
+                        {order.customerResolutionDecision ? (
+                          <p className="mt-2 rounded-md bg-emerald-50 p-3 text-sm leading-6 text-emerald-900">
+                            已确认处理方式：{order.customerResolutionDecision === "restock" ? "重新上架" : order.customerResolutionDecision === "repair" ? "维修翻新" : order.customerResolutionDecision === "dispose" ? "报废销毁" : "转寄"}{order.customerResolutionNote ? `；备注：${order.customerResolutionNote}` : ""}
+                          </p>
+                        ) : order.inspectionResult || order.status === "inspection" || order.status === "received" || order.status === "repair" || order.status === "exception" ? (
+                          <CustomerReturnDecisionPanel currentDecision={order.resolution} disabled={order.status === "closed" || order.status === "disposed" || order.status === "restocked"} orderId={order.id} />
+                        ) : null}
+                        {documents.some((document) => document.refType === "return" && document.refId === order.id) ? (
+                          <div className="mt-2 rounded-md border border-cyan-100 bg-cyan-50 p-3">
+                            <p className="text-xs font-semibold text-cyan-900">质检照片/附件</p>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {documents
+                                .filter((document) => document.refType === "return" && document.refId === order.id)
+                                .map((document) => (
+                                  <Link className="rounded-md border border-cyan-200 bg-white px-2 py-1 text-xs font-semibold text-cyan-800 hover:bg-cyan-50" href={signedDocumentDownloadHref(document.id)} key={document.id}>
+                                    {document.originalName}
+                                  </Link>
+                                ))}
+                            </div>
+                          </div>
+                        ) : null}
+                        {order.workOrderId ? <p className="mt-2 rounded-md bg-cyan-50 p-3 font-mono text-xs font-semibold text-cyan-800">售后工单：{order.workOrderId}，可在工作台待办中继续沟通。</p> : null}
                       </div>
                       {pill(returnOrderStatusLabel(order.status), statusTone(order.status))}
                     </div>
                   ))
                 ) : (
-                  <div className="px-4 py-10 text-center text-sm text-slate-500">暂无退货预报</div>
+                  <div className="px-4 py-10 text-center text-sm text-slate-500">当前筛选下暂无退货预报</div>
                 )}
               </div>
             </section>

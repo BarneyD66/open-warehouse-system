@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
+import { withApiErrorCapture } from "@/lib/apiErrorBoundary";
 import { parseCustomerSession } from "@/lib/customerAuth";
 import { saveOrderImportDraft, type ImportedOrderIssue } from "@/lib/opsExpansionStore";
-import { createCustomerOutboundOrder, getWarehouseCoreDataForCustomer } from "@/lib/warehouseCoreStore";
+import { createCustomerOutboundOrder, getCustomerCreditRisk, getWarehouseCoreDataForCustomer } from "@/lib/warehouseCoreStore";
 
 export const runtime = "nodejs";
 
@@ -37,6 +38,26 @@ function csvResponse(filename: string, rows: unknown[][]) {
     },
   });
 }
+
+function creditRiskResponse(creditRisk: Awaited<ReturnType<typeof getCustomerCreditRisk>>) {
+  return NextResponse.json(
+    {
+      error: `当前账号存在账期/信用风险，暂不能提交新的出库申请：${creditRisk.reasons.join("；")}`,
+      creditRisk,
+    },
+    { status: 409 },
+  );
+}
+
+const outboundStatusLabel: Record<string, string> = {
+  pending_review: "待审核",
+  picking: "拣货中",
+  label_pending: "待生成面单",
+  packing_check: "打包复核",
+  handover: "待交运",
+  shipped: "已发货",
+  blocked: "异常阻塞",
+};
 
 function parseCsv(csv: string) {
   const lines = csv
@@ -175,7 +196,7 @@ function prepareCustomerOutboundImport(csv: string, validSkuCodes: Set<string>) 
   };
 }
 
-export async function GET(request: Request) {
+async function handleGet(request: Request) {
   const session = sessionFromRequest(request);
   if (!session) return NextResponse.json({ error: "请先登录客户工作台" }, { status: 401 });
   const data = await getWarehouseCoreDataForCustomer(session.customerCode);
@@ -183,29 +204,33 @@ export async function GET(request: Request) {
   if (format === "template") {
     return csvResponse("出库订单导入模板.csv", [
       ["销售平台", "平台订单号", "SKU 编码", "数量", "物流渠道", "收件人", "收件地址", "要求发货日期", "备注"],
-      ["Shopify", "ORDER-001", "SKU-001", 1, "Royal Mail 48", "张三", "10 Example Street, London, UK", "2026-05-26", "请按默认包材发货"],
+      ["Shopify", "平台订单-001", "SKU-001", 1, "Royal Mail 48", "张三", "英国伦敦示例街10号", "2026-05-26", "请按默认包材发货"],
     ]);
   }
   if (format === "csv") {
     return csvResponse("客户出库订单.csv", [
       ["出库单号", "物流渠道", "订单数", "状态", "收件人", "追踪号", "创建时间", "SKU 明细", "备注"],
-      ...data.outboundOrders.map((item) => [item.id, item.channel, item.orderCount, item.status, item.recipientName ?? "", item.trackingNumber ?? "", item.createdAt, (item.skuLines ?? []).map((line) => `${line.skuCode} x ${line.quantity}`).join(" | "), item.note ?? ""]),
+      ...data.outboundOrders.map((item) => [item.id, item.channel, item.orderCount, outboundStatusLabel[item.status] ?? item.status, item.recipientName ?? "", item.trackingNumber ?? "", item.createdAt, (item.skuLines ?? []).map((line) => `${line.skuCode} × ${line.quantity}`).join(" | "), item.note ?? ""]),
     ]);
   }
   return NextResponse.json({ outboundOrders: data.outboundOrders });
 }
 
-export async function POST(request: Request) {
+async function handlePost(request: Request) {
   const session = sessionFromRequest(request);
   if (!session) return NextResponse.json({ error: "请先登录客户工作台" }, { status: 401 });
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+  const mode = clean(body.mode);
+  const creditRisk = await getCustomerCreditRisk(session.customerCode);
+  const shouldBlockCreation = creditRisk.status === "blocked" && mode !== "preview_import_csv" && mode !== "save_import_draft";
+  if (shouldBlockCreation) return creditRiskResponse(creditRisk);
 
-  if (body.mode === "preview_import_csv" || body.mode === "save_import_draft" || body.mode === "import_csv") {
+  if (mode === "preview_import_csv" || mode === "save_import_draft" || mode === "import_csv") {
     const data = await getWarehouseCoreDataForCustomer(session.customerCode);
     const validSkuCodes = new Set(data.skus.map((item) => item.skuCode.toUpperCase()));
     const prepared = prepareCustomerOutboundImport(clean(body.csv), validSkuCodes);
 
-    if (body.mode === "preview_import_csv") {
+    if (mode === "preview_import_csv") {
       return NextResponse.json({
         preview: {
           totalRows: prepared.totalRows,
@@ -219,7 +244,7 @@ export async function POST(request: Request) {
       });
     }
 
-    if (body.mode === "save_import_draft") {
+    if (mode === "save_import_draft") {
       const issues: ImportedOrderIssue[] = [
         ...prepared.errors.map((message) => ({ row: Number(message.match(/第\s+(\d+)\s+行/)?.[1] ?? 0), level: "error" as const, message })),
         ...prepared.warnings.map((message) => ({ row: Number(message.match(/第\s+(\d+)\s+行/)?.[1] ?? 0), level: "warning" as const, message })),
@@ -271,7 +296,7 @@ export async function POST(request: Request) {
       else errors.push(`订单 ${group.orderNo} 创建失败，请检查 SKU 明细。`);
     }
 
-    return NextResponse.json({ imported: created.length, skipped: prepared.skippedRows, errors: [...errors, ...prepared.warnings], orders: created });
+    return NextResponse.json({ imported: created.length, skipped: prepared.skippedRows, errors: [...errors, ...prepared.warnings], orders: created, creditRisk });
   }
 
   const channel = clean(body.channel);
@@ -299,5 +324,13 @@ export async function POST(request: Request) {
   });
 
   if (!order) return NextResponse.json({ error: "SKU 明细无效，请先维护 SKU 档案" }, { status: 400 });
-  return NextResponse.json({ order });
+  return NextResponse.json({ order, creditRisk });
+}
+
+export async function GET(request: Request) {
+  return withApiErrorCapture(request, "/api/outbounds", () => handleGet(request));
+}
+
+export async function POST(request: Request) {
+  return withApiErrorCapture(request, "/api/outbounds", () => handlePost(request));
 }

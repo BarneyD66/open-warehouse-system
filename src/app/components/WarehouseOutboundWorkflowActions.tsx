@@ -6,7 +6,7 @@ import { Ban, Printer, Route, Save } from "lucide-react";
 import type { CoreOutboundOrder, OutboundDocumentType, OutboundWorkMode } from "@/lib/warehouseCoreStore";
 
 type Props = {
-  order: Pick<CoreOutboundOrder, "id" | "workMode" | "assignedPicker" | "basketNo" | "status">;
+  order: Pick<CoreOutboundOrder, "id" | "workMode" | "assignedPicker" | "basketNo" | "status" | "interceptStatus">;
 };
 
 const workModes: Array<{ value: OutboundWorkMode; label: string }> = [
@@ -34,7 +34,7 @@ export function WarehouseOutboundWorkflowActions({ order }: Props) {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  function submit(action: "assign_work_mode" | "reprint_document" | "intercept_restock", success: string) {
+  function submit(action: "assign_work_mode" | "reprint_document" | "request_intercept" | "intercept_restock", success: string) {
     setError("");
     setMessage("");
     startTransition(async () => {
@@ -82,11 +82,15 @@ export function WarehouseOutboundWorkflowActions({ order }: Props) {
         </button>
       </div>
 
-      <div className="grid gap-2 border-t border-slate-200 pt-2 sm:grid-cols-[1fr_auto]">
+      <div className="grid gap-2 border-t border-slate-200 pt-2 sm:grid-cols-[1fr_auto_auto]">
         <input className="h-9 rounded-md border border-slate-300 bg-white px-2 text-xs text-slate-700 outline-none focus:border-cyan-500" onChange={(event) => setRestockLocationCode(event.target.value)} placeholder="截单回库位，如 A-01-03" value={restockLocationCode} />
-        <button className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-rose-200 bg-white px-3 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-60" disabled={isPending || order.status === "shipped"} onClick={() => submit("intercept_restock", "已截单并释放预占库存。")} type="button">
+        <button className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-amber-200 bg-white px-3 text-xs font-semibold text-amber-700 hover:bg-amber-50 disabled:opacity-60" disabled={isPending || order.status === "shipped" || order.interceptStatus === "completed"} onClick={() => submit("request_intercept", "已申请截单，等待复核回库。")} type="button">
           <Ban size={14} />
-          截单回库
+          申请截单
+        </button>
+        <button className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-rose-200 bg-white px-3 text-xs font-semibold text-rose-700 hover:bg-rose-50 disabled:opacity-60" disabled={isPending || order.status === "shipped" || order.interceptStatus === "completed"} onClick={() => submit("intercept_restock", "已按审批要求截单并释放预占库存。")} type="button">
+          <Ban size={14} />
+          审批回库
         </button>
       </div>
 

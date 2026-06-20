@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { ArrowRight, Clock3, FileText, PackageCheck, Truck, Warehouse } from "lucide-react";
+import { ArrowRight, Clock3, Download, FileCheck2, FileText, PackageCheck, Truck, Warehouse } from "lucide-react";
 import { requireCustomerSession } from "@/lib/customerAuth";
 import { buildInboundDocumentChecklist, getSubmissionsForCustomer, type InboundSubmission, type InquirySubmission, type Submission } from "@/lib/localStore";
 import { getOpsWorkbenchData, labelForOpsStatus } from "@/lib/opsStore";
-import { getWarehouseCoreDataForCustomer, outboundClaimStatusLabel, outboundDeliveryExceptionTypeLabel } from "@/lib/warehouseCoreStore";
+import { getWarehouseCoreDataForCustomer, outboundClaimStatusLabel, outboundDeliveryExceptionTypeLabel, type CoreOutboundOrder } from "@/lib/warehouseCoreStore";
 import { PageShell } from "../components/MarketingShell";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +34,7 @@ function pill(label: string, tone: Tone = "slate") {
 
 function displayText(value: string | undefined, fallback: string) {
   const text = value?.trim();
-  if (!text || text.includes("?")) return fallback;
+  if (!text || text.includes("?") || text.includes("閿?")) return fallback;
   return text;
 }
 
@@ -48,7 +48,7 @@ function inquiryStatus(item: InquirySubmission) {
     new: { label: "待方案评估", tone: "cyan" },
     contacted: { label: "客服已联系", tone: "cyan" },
     quoted: { label: "报价待确认", tone: "amber" },
-    waiting_customer: { label: "待客户确认", tone: "amber" },
+    waiting_customer: { label: "待您确认", tone: "amber" },
     quote_accepted: { label: "已确认报价", tone: "emerald" },
     quote_question: { label: "报价疑问处理中", tone: "amber" },
     converted_to_inbound: { label: "已转入库", tone: "violet" },
@@ -64,6 +64,7 @@ function inboundStatus(item: InboundSubmission) {
   if (checklist.missingRequired.length > 0) return { label: "待补资料", tone: "amber" as Tone };
   if (!item.tracking) return { label: "待补追踪号", tone: "rose" as Tone };
   if (item.status === "putaway_completed") return { label: "已上架", tone: "emerald" as Tone };
+  if (["arrived", "receiving", "received"].includes(item.status)) return { label: "仓库处理中", tone: "violet" as Tone };
   return { label: "处理中", tone: "cyan" as Tone };
 }
 
@@ -73,6 +74,46 @@ function opsTone(status: string): Tone {
   if (status === "waiting_customer" || status === "aging") return "amber";
   if (status === "packing_check" || status === "handover") return "violet";
   return "cyan";
+}
+
+function coreOutboundProofReady(order: CoreOutboundOrder) {
+  return Boolean(order.exceptions?.some((exception) => exception.proofUrl) || order.trackingEvents?.some((event) => event.status === "delivered"));
+}
+
+function Empty({ text }: { text: string }) {
+  return <div className="px-4 py-10 text-center text-sm text-slate-500">{text}</div>;
+}
+
+function CoreOutboundDownloadActions({ order }: { order: CoreOutboundOrder }) {
+  const encodedId = encodeURIComponent(order.id);
+  const button = "inline-flex min-h-8 items-center justify-center gap-1.5 rounded-md border px-2.5 text-xs font-semibold transition";
+  const enabled = `${button} border-cyan-100 bg-cyan-50 text-cyan-800 hover:border-cyan-200 hover:bg-cyan-100`;
+  const disabled = `${button} border-slate-200 bg-slate-50 text-slate-400`;
+
+  return (
+    <div className="mt-3 flex flex-wrap gap-2">
+      <a className={enabled} href={`/api/downloads?kind=outbound&orderId=${encodedId}`}>
+        <Download size={14} />
+        出库明细
+      </a>
+      {order.labelStatus === "generated" ? (
+        <a className={enabled} href={`/api/outbounds/${encodedId}/label`} rel="noreferrer" target="_blank">
+          <FileCheck2 size={14} />
+          面单
+        </a>
+      ) : (
+        <span className={disabled}>面单待生成</span>
+      )}
+      {coreOutboundProofReady(order) ? (
+        <a className={enabled} href={`/api/outbounds/${encodedId}/proof`} rel="noreferrer" target="_blank">
+          <FileCheck2 size={14} />
+          签收证明
+        </a>
+      ) : (
+        <span className={disabled}>签收证明待回传</span>
+      )}
+    </div>
+  );
 }
 
 export default async function TrackingPage() {
@@ -133,7 +174,7 @@ export default async function TrackingPage() {
                             {pill(status.label, status.tone)}
                           </div>
                           <p className="mt-2 text-sm leading-6 text-slate-600">
-                            预计 {item.eta} 到仓 / {item.cartons} 箱 / {item.skuCount} SKU / 资料 {checklist.requiredReady}/{checklist.requiredTotal}
+                            预计 {item.eta || "-"} 到仓 / {item.cartons} 箱 / {item.skuCount} SKU / 资料 {checklist.requiredReady}/{checklist.requiredTotal}
                           </p>
                           {latest ? (
                             <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-700">
@@ -148,7 +189,7 @@ export default async function TrackingPage() {
                       );
                     })
                   ) : (
-                    <div className="px-4 py-10 text-center text-sm text-slate-500">暂无入库进度</div>
+                    <Empty text="暂无入库进度" />
                   )}
                 </div>
               </div>
@@ -174,10 +215,13 @@ export default async function TrackingPage() {
                           {exception ? (
                             <div className="mt-3 rounded-md border border-rose-200 bg-rose-50 p-3 text-sm leading-6 text-rose-900">
                               <p className="font-semibold">{exception.deliveryExceptionType ? outboundDeliveryExceptionTypeLabel[exception.deliveryExceptionType] : "物流异常"}：{exception.message}</p>
+                              {exception.workOrderId ? <p>客户工单：{exception.workOrderId}，可在工作台待办中继续沟通处理。</p> : null}
                               {exception.redeliveryRequired ? <p>改派要求：{exception.redeliveryNote || "待运营确认"}</p> : null}
+                              {exception.proofUrl ? <p>签收证明：已关联，可下载或核对。</p> : null}
                               {exception.claimAmount ? <p>赔付进度：£{exception.claimAmount.toFixed(2)} / {outboundClaimStatusLabel[exception.claimStatus ?? "draft"]}</p> : null}
                             </div>
                           ) : null}
+                          <CoreOutboundDownloadActions order={item} />
                         </div>
                         {pill(labelForOpsStatus("outbound", item.status), opsTone(item.status))}
                       </div>
@@ -203,7 +247,7 @@ export default async function TrackingPage() {
                       {pill(labelForOpsStatus("logistics", item.status), opsTone(item.status))}
                     </div>
                   ))}
-                  {coreOutbound.length + outbound.length + logistics.length === 0 ? <div className="px-4 py-10 text-center text-sm text-slate-500">暂无出库或物流进度</div> : null}
+                  {coreOutbound.length + outbound.length + logistics.length === 0 ? <Empty text="暂无出库或物流进度" /> : null}
                 </div>
               </div>
             </div>
@@ -224,19 +268,17 @@ export default async function TrackingPage() {
                           <div className="flex flex-wrap items-start justify-between gap-2">
                             <div>
                               <p className="font-mono text-xs font-semibold text-slate-500">{item.id}</p>
-                              <h3 className="mt-1 text-sm font-semibold text-slate-950">{displayText(item.service, "服务待确认")}</h3>
+                              <h3 className="mt-1 text-sm font-semibold text-slate-950">{displayText(item.service, "服务需求待确认")}</h3>
                             </div>
                             {pill(status.label, status.tone)}
                           </div>
-                          <p className="mt-2 text-sm leading-6 text-slate-600">
-                            {displayText(item.platform, "平台待确认")} / {displayText(item.volume, "货量待确认")} / 提交 {dateLabel(item.createdAt)}
-                          </p>
-                          {latest ? <p className="mt-2 text-sm leading-6 text-slate-500">最新：{latest.messageCustomer}</p> : null}
+                          <p className="mt-2 text-sm text-slate-600">{displayText(item.company, "公司信息待补")} / {item.platform || "平台待补"}</p>
+                          {latest ? <p className="mt-2 text-xs text-slate-500">最新记录：{latest.messageCustomer}</p> : null}
                         </div>
                       );
                     })
                   ) : (
-                    <div className="px-4 py-10 text-center text-sm text-slate-500">暂无报价进度</div>
+                    <Empty text="暂无报价需求" />
                   )}
                 </div>
               </div>
@@ -244,7 +286,7 @@ export default async function TrackingPage() {
               <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
                 <div className="flex items-center gap-2 border-b border-slate-200 px-4 py-3">
                   <Warehouse size={17} className="text-[#0E7490]" />
-                  <h2 className="text-base font-semibold text-slate-950">库存状态</h2>
+                  <h2 className="text-base font-semibold text-slate-950">库存观察</h2>
                 </div>
                 <div className="divide-y divide-slate-200">
                   {inventory.length > 0 ? (
@@ -253,13 +295,13 @@ export default async function TrackingPage() {
                         <div>
                           <p className="font-mono text-xs font-semibold text-slate-500">{item.sku}</p>
                           <h3 className="mt-1 text-sm font-semibold text-slate-950">{item.product}</h3>
-                          <p className="mt-2 text-sm text-slate-600">可用 {item.available} / 占用 {item.reserved} / 库龄 {item.agingDays} 天</p>
+                          <p className="mt-2 text-sm text-slate-600">可用 {item.available} / 占用 {item.reserved} / 预警 {item.alert} / 库龄 {item.agingDays} 天</p>
                         </div>
                         {pill(labelForOpsStatus("inventory", item.status), opsTone(item.status))}
                       </div>
                     ))
                   ) : (
-                    <div className="px-4 py-10 text-center text-sm text-slate-500">暂无库存状态</div>
+                    <Empty text="暂无库存记录" />
                   )}
                 </div>
               </div>

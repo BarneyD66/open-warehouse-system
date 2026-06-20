@@ -32,6 +32,20 @@ function tone(status: InventoryLot["status"], expiryDate?: string) {
   return "border-emerald-200 bg-emerald-50 text-emerald-800";
 }
 
+function serialStatusText(lot: InventoryLot) {
+  if (!lot.serialNumberStatuses?.length) return lot.serialNumbers?.length ? `${lot.serialNumbers.length} 个序列号` : lot.id;
+  const counts = lot.serialNumberStatuses.reduce(
+    (map, item) => ({ ...map, [item.status]: (map[item.status] ?? 0) + 1 }),
+    {} as Record<string, number>,
+  );
+  return [
+    counts.active ? `可用 ${counts.active}` : "",
+    counts.reserved ? `预留 ${counts.reserved}` : "",
+    counts.consumed ? `已出库 ${counts.consumed}` : "",
+    counts.blocked ? `冻结 ${counts.blocked}` : "",
+  ].filter(Boolean).join(" / ");
+}
+
 export function OpsInventoryLotPanel({ balances, lots }: Props) {
   const [isPending, startTransition] = useTransition();
   const [selectedBalanceId, setSelectedBalanceId] = useState(balances[0]?.id ?? "");
@@ -100,6 +114,28 @@ export function OpsInventoryLotPanel({ balances, lots }: Props) {
     post({ id, action, quantity: actionQty[id] || 0, note: `批次${statusLabels[action === "activate" ? "active" : action === "block" ? "blocked" : "reserved"] ?? action}` }, "批次状态已更新。");
   }
 
+  function reviewLotRisks() {
+    setMessage("");
+    setError("");
+    startTransition(async () => {
+      const response = await fetch("/api/ops/inventory-lots/risk-review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ limit: 80, expiryWarningDays: 45 }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        summary?: { scannedLots?: number; reviewed?: number; expiredMarked?: number; workOrders?: number; failed?: number };
+      };
+      if (!response.ok) {
+        setError(payload.error || "库存批次风险巡检失败，请稍后再试。");
+        return;
+      }
+      setMessage(`库存批次风险巡检完成：扫描 ${payload.summary?.scannedLots ?? 0} 个批次，复核 ${payload.summary?.reviewed ?? 0} 个，标记过期 ${payload.summary?.expiredMarked ?? 0} 个，工单 ${payload.summary?.workOrders ?? 0} 个，失败 ${payload.summary?.failed ?? 0} 个。`);
+      window.location.reload();
+    });
+  }
+
   return (
     <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="grid gap-4 border-b border-slate-200 p-4 xl:grid-cols-[1fr_1.2fr]">
@@ -121,6 +157,10 @@ export function OpsInventoryLotPanel({ balances, lots }: Props) {
               </div>
             ))}
           </div>
+          <button className="mt-3 inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 text-sm font-semibold text-amber-800 hover:bg-amber-100 disabled:opacity-60" disabled={isPending || lots.length === 0} onClick={reviewLotRisks} type="button">
+            <ShieldAlert size={16} />
+            巡检批次风险
+          </button>
         </div>
         <form className="grid gap-3" onSubmit={submit}>
           <label className="grid gap-1 text-xs font-semibold text-slate-500">
@@ -171,7 +211,7 @@ export function OpsInventoryLotPanel({ balances, lots }: Props) {
                 <tr key={lot.id}>
                   <td className="px-4 py-3">
                     <p className="font-mono text-xs font-semibold text-slate-950">{lot.lotNo}</p>
-                    <p className="mt-1 text-xs text-slate-500">{lot.serialNumbers?.length ? `${lot.serialNumbers.length} 个序列号` : lot.id}</p>
+                    <p className="mt-1 text-xs text-slate-500">{serialStatusText(lot)}</p>
                   </td>
                   <td className="px-4 py-3 text-slate-600">
                     <p>{lot.customerCode}</p>

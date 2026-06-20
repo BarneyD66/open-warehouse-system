@@ -6,6 +6,7 @@ import { getDocumentsForCustomer } from "@/lib/documentStore";
 import { getSubmissionsForCustomer, type InboundSubmission, type InquirySubmission, type Submission } from "@/lib/localStore";
 import { getOpsWorkbenchData } from "@/lib/opsStore";
 import { billingInvoiceStatusLabel, billingStatusLabel, getWarehouseCoreDataForCustomer, type BillingRecord } from "@/lib/warehouseCoreStore";
+import { BillingTimeline } from "../components/BillingTimeline";
 import { CustomerBillingActions } from "../components/CustomerBillingActions";
 import { DocumentUploadPanel } from "../components/DocumentUploadPanel";
 import { PageShell } from "../components/MarketingShell";
@@ -64,6 +65,32 @@ function refTypeLabel(refType: BillingRecord["refType"]) {
   return labels[refType];
 }
 
+function adjustmentLabel(record: BillingRecord) {
+  if (record.adjustmentKind === "fee_adjustment") return "费用调账";
+  if (record.adjustmentKind === "compensation") return "赔付抵扣";
+  return "";
+}
+
+function adjustmentApprovalStatusLabel(record: BillingRecord) {
+  if (record.adjustmentApprovalStatus === "pending_approval") return "待审批";
+  if (record.adjustmentApprovalStatus === "approved") return "已审批";
+  if (record.adjustmentApprovalStatus === "posted") return "已入账";
+  if (record.adjustmentApprovalStatus === "rejected") return "有争议";
+  if (record.adjustmentApprovalStatus === "paid") return "已核销";
+  if (record.status === "paid") return "已核销";
+  if (record.status === "confirmed") return "已入账";
+  if (record.status === "disputed") return "有争议";
+  return "已审批";
+}
+
+function adjustmentAttachmentStatusLabel(record: BillingRecord) {
+  if (record.adjustmentAttachmentStatus === "archived") return "附件已归档";
+  if (record.adjustmentAttachmentStatus === "confirmed") return "附件已确认";
+  if (record.adjustmentAttachmentStatus === "missing") return "附件待补";
+  if (record.adjustmentAttachmentStatus === "not_required") return "无需附件";
+  return "";
+}
+
 export default async function BillingPage() {
   const session = await requireCustomerSession();
   const [submissions, opsData, coreData, documents] = await Promise.all([
@@ -76,9 +103,15 @@ export default async function BillingPage() {
   const inbounds = submissions.filter(isInbound);
   const inquiries = submissions.filter(isInquiry);
   const quoted = inquiries.filter((item) => item.quoteDraft);
-  const logistics = opsData.logistics.filter((item) => item.customerCode === session.customerCode);
   const outbound = opsData.outbound.filter((item) => item.customerCode === session.customerCode);
   const billingRecords = [...coreData.billingRecords].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const adjustmentRecords = billingRecords.filter((item) => item.adjustmentKind);
+  const adjustmentAmount = adjustmentRecords.reduce((sum, item) => sum + item.amount, 0);
+  const adjustmentsBySource = new Map<string, BillingRecord[]>();
+  adjustmentRecords.forEach((item) => {
+    if (!item.adjustmentSourceRecordId) return;
+    adjustmentsBySource.set(item.adjustmentSourceRecordId, [...(adjustmentsBySource.get(item.adjustmentSourceRecordId) ?? []), item]);
+  });
   const documentsByBillingId = new Map<string, typeof documents>();
   documents.forEach((item) => {
     const key = item.refType === "billing" ? item.refId : "";
@@ -87,7 +120,6 @@ export default async function BillingPage() {
   });
   const pendingBills = billingRecords.filter((item) => ["draft", "pending_confirmation", "confirmed", "payment_submitted"].includes(item.status));
   const payableAmount = pendingBills.reduce((sum, item) => sum + item.amount, 0);
-  const estimatedLogisticsDelta = logistics.reduce((sum, item) => sum + (item.costDelta ?? 0), 0);
   const monthlySummaries = summarizeBillingMonths(billingRecords);
 
   return (
@@ -110,6 +142,9 @@ export default async function BillingPage() {
                 <Link className="inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50" href="/portal">
                   返回工作台
                 </Link>
+                <Link className="inline-flex min-h-10 items-center gap-2 rounded-md border border-cyan-200 bg-cyan-50 px-3 text-sm font-semibold text-cyan-800 hover:bg-cyan-100" href="/api/downloads?kind=payment-reconciliation">
+                  导出付款核销记录
+                </Link>
                 <Link className="inline-flex min-h-10 items-center gap-2 rounded-md bg-slate-950 px-3 text-sm font-semibold text-white hover:bg-slate-800" href="/tracking">
                   查进度 <ArrowRight size={16} />
                 </Link>
@@ -122,7 +157,7 @@ export default async function BillingPage() {
               { label: "正式账单", value: billingRecords.length, icon: ReceiptText, tone: billingRecords.length > 0 ? "cyan" : "slate" },
               { label: "待确认金额", value: money(payableAmount), icon: CreditCard, tone: payableAmount > 0 ? "amber" : "emerald" },
               { label: "报价方案", value: quoted.length, icon: FileText, tone: quoted.length > 0 ? "amber" : "slate" },
-              { label: "费用差异", value: estimatedLogisticsDelta > 0 ? money(estimatedLogisticsDelta) : "暂无", icon: Truck, tone: estimatedLogisticsDelta > 0 ? "rose" : "emerald" },
+              { label: "调账/赔付", value: adjustmentRecords.length > 0 ? money(adjustmentAmount) : "暂无", icon: Truck, tone: adjustmentRecords.length > 0 ? (adjustmentAmount < 0 ? "emerald" : "amber") : "slate" },
             ].map(({ label, value, icon: Icon, tone }) => (
               <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm" key={label}>
                 <span className={`flex h-9 w-9 items-center justify-center rounded-md ${toneClass[tone as Tone]}`}>
@@ -197,6 +232,8 @@ export default async function BillingPage() {
                           {pill(refTypeLabel(item.refType), "slate")}
                           {pill(billingInvoiceStatusLabel(item.invoiceStatus), item.invoiceStatus === "issued" ? "emerald" : item.invoiceStatus === "requested" ? "amber" : item.invoiceStatus === "voided" ? "rose" : "slate")}
                           {item.statementStatus === "locked" ? pill("已锁账", "emerald") : null}
+                          {item.adjustmentKind ? pill(adjustmentLabel(item), item.adjustmentKind === "compensation" ? "emerald" : "amber") : null}
+                          {item.adjustmentKind ? pill(adjustmentApprovalStatusLabel(item), item.adjustmentApprovalStatus === "paid" || item.status === "paid" ? "emerald" : "cyan") : null}
                         </div>
                         <h3 className="mt-2 text-sm font-semibold text-slate-950">{item.title}</h3>
                         {item.feeLines?.length ? (
@@ -211,9 +248,40 @@ export default async function BillingPage() {
                         <p className="mt-2 text-sm leading-6 text-slate-600">
                           关联 {item.refId} / 到期 {dateLabel(item.dueDate)} / 创建 {dateLabel(item.createdAt)}
                         </p>
+                        {item.adjustmentKind || item.workOrderId || item.adjustmentSourceRecordId ? (
+                          <div className="mt-3 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm leading-6 text-emerald-950">
+                            <p className="font-semibold">争议处理结果</p>
+                            <p>
+                              {item.adjustmentKind ? `${adjustmentLabel(item)}已生成` : "已关联财务复核"}
+                              {item.adjustmentKind ? ` / ${adjustmentApprovalStatusLabel(item)}` : ""}
+                              {item.adjustmentApprovalRuleName ? ` / 审批规则 ${item.adjustmentApprovalRuleName}` : ""}
+                              {item.adjustmentAttachmentStatus ? ` / ${adjustmentAttachmentStatusLabel(item)}` : ""}
+                              {item.workOrderId ? ` / 来源工单 ${item.workOrderId}` : ""}
+                              {item.adjustmentSourceRecordId ? ` / 原账单 ${item.adjustmentSourceRecordId}` : ""}
+                            </p>
+                          </div>
+                        ) : null}
+                        {adjustmentsBySource.get(item.id)?.length ? (
+                          <div className="mt-3 rounded-md border border-cyan-200 bg-cyan-50 p-3 text-sm leading-6 text-cyan-950">
+                            <p className="font-semibold">该账单已有复核调整</p>
+                            <div className="mt-1 grid gap-1">
+                              {adjustmentsBySource.get(item.id)?.map((adjustment) => (
+                                <p key={adjustment.id}>
+                                  {adjustmentLabel(adjustment)}：{money(adjustment.amount)} / {billingStatusLabel(adjustment.status)} / 调整单 {adjustment.id}
+                                  {` / ${adjustmentApprovalStatusLabel(adjustment)}`}
+                                  {adjustment.adjustmentApprovalRuleName ? ` / ${adjustment.adjustmentApprovalRuleName}` : ""}
+                                  {adjustment.adjustmentAttachmentStatus ? ` / ${adjustmentAttachmentStatusLabel(adjustment)}` : ""}
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        ) : null}
                         {item.note ? <p className="mt-3 rounded-md bg-slate-50 p-3 text-sm leading-6 text-slate-700">{item.note}</p> : null}
                         {item.customerMessage ? <p className="mt-3 rounded-md bg-amber-50 p-3 text-sm leading-6 text-amber-900">客户说明：{item.customerMessage}</p> : null}
                         {item.reviewNote ? <p className="mt-3 rounded-md bg-cyan-50 p-3 text-sm leading-6 text-cyan-900">运营复核：{item.reviewNote}</p> : null}
+                        <div className="mt-3">
+                          <BillingTimeline compact emptyText="该账单暂无处理进度记录" events={item.approvalTimeline} />
+                        </div>
                         <CustomerBillingActions record={item} />
                         <DocumentUploadPanel
                           category="payment_proof"

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { AlertTriangle, Calculator, CheckCircle2, ClipboardCheck, Copy, FileUp, Loader2, PackageCheck, Search, Send } from "lucide-react";
@@ -90,6 +90,7 @@ export function InquiryForm({ initialQuote }: { initialQuote?: InitialInquiryQuo
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [successId, setSuccessId] = useState("");
+  const [uploadSummary, setUploadSummary] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [copied, setCopied] = useState(false);
 
@@ -151,31 +152,44 @@ export function InquiryForm({ initialQuote }: { initialQuote?: InitialInquiryQuo
 
     setErrors(nextErrors);
     setSubmitError("");
+    setUploadSummary("");
     if (Object.keys(nextErrors).length > 0) return;
 
     setSubmitting(true);
     try {
+      const submitData = new FormData();
+      const files = data.getAll("files").filter((file): file is File => file instanceof File && Boolean(file.name) && file.size > 0);
+      const documentTypes = data.getAll("documentTypes").map((item) => String(item).trim()).filter(Boolean);
+      [
+        ["company", company],
+        ["contact", contact],
+        ["phone", phone],
+        ["email", email],
+        ["platform", platform],
+        ["volume", volume],
+        ["service", service],
+        ["leadIntent", leadIntent],
+        ["origin", String(data.get("origin") ?? "").trim()],
+        ["tailDeliveryNeed", tailDeliveryNeed],
+        ["note", salesNote],
+        ["quoteEstimate", String(data.get("quoteEstimate") ?? "").trim()],
+      ].forEach(([key, value]) => submitData.set(key, value));
+      documentTypes.forEach((item) => submitData.append("documentTypes", item));
+      files.forEach((file) => submitData.append("files", file));
+
       const response = await fetch("/api/inquiries", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          company,
-          contact,
-          phone,
-          email,
-          platform,
-          volume,
-          service,
-          leadIntent,
-          origin: String(data.get("origin") ?? "").trim(),
-          tailDeliveryNeed,
-          note: salesNote,
-          quoteEstimate: String(data.get("quoteEstimate") ?? "").trim(),
-        }),
+        body: submitData,
       });
-      const payload = (await response.json()) as { id?: string; error?: string };
+      const payload = (await response.json()) as { id?: string; error?: string; uploadedFiles?: number; uploadErrors?: string[] };
       if (!response.ok || !payload.id) {
         throw new Error(payload.error || "提交失败，请稍后再试。");
+      }
+      if ((payload.uploadedFiles ?? 0) > 0) {
+        setUploadSummary(`已同步上传 ${payload.uploadedFiles} 个询盘资料文件，运营可在资料中心查看。`);
+      }
+      if (payload.uploadErrors?.length) {
+        setUploadSummary(`询盘已提交，但部分附件未归档：${payload.uploadErrors.join("；")}`);
       }
       setSuccessId(payload.id);
       setCopied(false);
@@ -198,6 +212,7 @@ export function InquiryForm({ initialQuote }: { initialQuote?: InitialInquiryQuo
         <div className="mt-4 rounded-md border border-cyan-200 bg-cyan-50 p-4 text-sm leading-6 text-cyan-900">
           下一步：请保持微信或电话可联系。客服会先确认报价和入仓要求；已经准备发货的客户，可以继续创建入库预报，并保留这个咨询编号方便沟通。
         </div>
+        {uploadSummary ? <p className="mt-3 rounded-md border border-cyan-100 bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-800">{uploadSummary}</p> : null}
         <div className="mt-5 flex flex-wrap gap-3">
           <button className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-800" onClick={copyInquiryId} type="button">
             <Copy size={16} />
@@ -406,11 +421,32 @@ export function InboundForm() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [successId, setSuccessId] = useState("");
+  const [uploadSummary, setUploadSummary] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [step, setStep] = useState(0);
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const steps = ["基础信息", "货物信息", "资料确认"];
+
+  async function uploadInboundDocuments(inboundId: string, files: File[]) {
+    let uploaded = 0;
+    for (const file of files) {
+      const form = new FormData();
+      form.set("file", file);
+      form.set("refType", "inbound");
+      form.set("refId", inboundId);
+      form.set("category", "packing_list");
+      form.set("note", "客户提交入库预报时同步上传");
+
+      const response = await fetch("/api/documents", { method: "POST", body: form });
+      if (!response.ok) {
+        const payload = (await response.json().catch(() => ({}))) as { error?: string };
+        throw new Error(payload.error || `${file.name} 上传失败`);
+      }
+      uploaded += 1;
+    }
+    return uploaded;
+  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -438,6 +474,7 @@ export function InboundForm() {
 
     setErrors(nextErrors);
     setSubmitError("");
+    setUploadSummary("");
     if (Object.keys(nextErrors).length > 0) {
       if (nextErrors.contact || nextErrors.phone) setStep(0);
       else if (nextErrors.eta || nextErrors.transport || nextErrors.cartons || nextErrors.skuCount || nextErrors.productName) setStep(1);
@@ -447,7 +484,7 @@ export function InboundForm() {
 
     setSubmitting(true);
     try {
-      const files = data.getAll("files").filter((file): file is File => file instanceof File && Boolean(file.name));
+      const files = data.getAll("files").filter((file): file is File => file instanceof File && Boolean(file.name) && file.size > 0);
       const declaredDocs = data.getAll("documentTypes").map((item) => String(item).trim()).filter(Boolean);
       const response = await fetch("/api/inbounds", {
         method: "POST",
@@ -473,6 +510,14 @@ export function InboundForm() {
       if (!response.ok || !payload.id) {
         throw new Error(payload.error || "提交失败，请稍后再试。");
       }
+      if (files.length > 0) {
+        try {
+          const uploaded = await uploadInboundDocuments(payload.id, files);
+          setUploadSummary(`已同步上传 ${uploaded} 个资料文件，运营可在资料中心查看。`);
+        } catch (error) {
+          setUploadSummary(`入库预报已提交，但附件上传失败：${error instanceof Error ? error.message : "请稍后到补交资料页重新上传"}`);
+        }
+      }
       setSuccessId(payload.id);
       setStep(0);
       form.reset();
@@ -491,6 +536,7 @@ export function InboundForm() {
         <p className="mt-3 text-sm leading-6 text-slate-600">
           入库预报编号：<span className="font-mono font-semibold text-slate-950">{successId}</span>。状态：待审核。客户服务审核后会确认完整入仓要求和收货安排。
         </p>
+        {uploadSummary ? <p className="mt-3 rounded-md border border-cyan-100 bg-cyan-50 px-3 py-2 text-sm font-semibold text-cyan-800">{uploadSummary}</p> : null}
         <div className="mt-5 flex flex-wrap gap-3">
           <button className="inline-flex min-h-11 items-center rounded-md bg-slate-950 px-4 text-sm font-semibold text-white" onClick={() => setSuccessId("")}>
             继续提交

@@ -3,7 +3,9 @@
 import { useRouter } from "next/navigation";
 import { type ChangeEvent, type FormEvent, useMemo, useState, useTransition } from "react";
 import { AlertTriangle, Download, FileCheck2, GitBranch, PoundSterling, RadioTower, ShieldAlert, Upload, Wand2, type LucideIcon } from "lucide-react";
-import type { CarrierServiceCode, CoreOutboundOrder, OutboundClaimStatus, OutboundDeliveryExceptionType } from "@/lib/warehouseCoreStore";
+import { DocumentUploadPanel } from "./DocumentUploadPanel";
+import type { DocumentRecord } from "@/lib/documentStore";
+import type { CarrierServiceCode, CoreOutboundOrder, OutboundClaimStatus, OutboundDeliveryExceptionType, OutboundExceptionStatus } from "@/lib/warehouseCoreStore";
 
 export type LogisticsControlRow = Pick<
   CoreOutboundOrder,
@@ -29,6 +31,7 @@ export type LogisticsControlRow = Pick<
 
 type Props = {
   rows: LogisticsControlRow[];
+  documents: DocumentRecord[];
 };
 
 const exceptionTypeOptions: Array<{ value: OutboundDeliveryExceptionType; label: string }> = [
@@ -50,6 +53,13 @@ const claimStatusOptions: Array<{ value: OutboundClaimStatus; label: string }> =
   { value: "approved", label: "已通过" },
   { value: "rejected", label: "已拒赔" },
   { value: "paid", label: "已赔付到账" },
+];
+
+const exceptionStatusOptions: Array<{ value: OutboundExceptionStatus; label: string }> = [
+  { value: "open", label: "待处理" },
+  { value: "investigating", label: "处理中" },
+  { value: "resolved", label: "已处理" },
+  { value: "ignored", label: "已忽略" },
 ];
 
 function money(value?: number) {
@@ -77,15 +87,17 @@ function statusLabel(status?: string) {
   return status ? labels[status] ?? status : "-";
 }
 
-export function OpsLogisticsControlPanel({ rows }: Props) {
+export function OpsLogisticsControlPanel({ rows, documents }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [selectedOrderId, setSelectedOrderId] = useState("");
 
   const unmatched = rows.filter((row) => !row.trackingNumber && (!row.labelStatus || row.labelStatus === "not_requested" || row.labelStatus === "rated"));
   const exceptionRows = rows.filter((row) => row.riskLabels.length > 0 || (row.exceptions ?? []).some((item) => item.status === "open" || item.status === "investigating"));
   const feeDiffRows = rows.filter((row) => typeof row.shippingFee === "number" && typeof row.actualShippingFee === "number" && Math.abs(row.actualShippingFee - row.shippingFee) >= 1);
+  const selectedOrder = rows.find((row) => row.id === selectedOrderId);
   const recentExceptions = useMemo(
     () =>
       rows
@@ -142,13 +154,13 @@ export function OpsLogisticsControlPanel({ rows }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ csv }),
       });
-      const payload = (await response.json().catch(() => ({}))) as { updated?: number; skipped?: number; errors?: string[]; error?: string };
+      const payload = (await response.json().catch(() => ({}))) as { updated?: number; skipped?: number; exceptionsCreated?: number; errors?: string[]; error?: string };
       if (!response.ok) {
         setError(payload.error || "追踪号上传失败，请检查模板格式。");
         return;
       }
       const errors = payload.errors ?? [];
-      setMessage(`已回传 ${payload.updated ?? 0} 条轨迹，${payload.skipped ?? 0} 行需要复核。`);
+      setMessage(`已回传 ${payload.updated ?? 0} 条轨迹，自动生成 ${payload.exceptionsCreated ?? 0} 条异常/签收证明工单，${payload.skipped ?? 0} 行需要复核。`);
       setError(errors.length > 0 ? errors.slice(0, 4).join("；") : "");
       router.refresh();
     });
@@ -188,7 +200,44 @@ export function OpsLogisticsControlPanel({ rows }: Props) {
         return;
       }
       form.reset();
+      setSelectedOrderId("");
       setMessage("物流异常已写入出库单，客户侧轨迹和运营风险会同步更新。");
+      router.refresh();
+    });
+  }
+
+  function updateDeliveryException(event: FormEvent<HTMLFormElement>, orderId: string) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const exceptionId = String(data.get("exceptionId") || "");
+    if (!exceptionId) {
+      setError("请选择需要更新的异常记录。");
+      return;
+    }
+
+    setMessage("");
+    setError("");
+    startTransition(async () => {
+      const response = await fetch(`/api/ops/outbounds/${encodeURIComponent(orderId)}/delivery-exception`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          exceptionId,
+          status: data.get("status"),
+          claimStatus: data.get("claimStatus"),
+          claimAmount: data.get("claimAmount"),
+          claimNote: data.get("claimNote"),
+          note: data.get("note"),
+          proofUrl: data.get("proofUrl"),
+        }),
+      });
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        setError(payload.error || "物流异常更新失败，请检查审批原因和附件。");
+        return;
+      }
+      setMessage("物流异常和赔付状态已更新，客户侧轨迹与运营报表会同步刷新。");
       router.refresh();
     });
   }
@@ -241,7 +290,13 @@ export function OpsLogisticsControlPanel({ rows }: Props) {
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             <label className="text-xs font-semibold text-slate-600">
               出库单
-              <select className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500" name="orderId" required>
+              <select
+                className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500"
+                name="orderId"
+                onChange={(event) => setSelectedOrderId(event.target.value)}
+                required
+                value={selectedOrderId}
+              >
                 <option value="">请选择</option>
                 {rows.slice(0, 80).map((row) => (
                   <option key={row.id} value={row.id}>
@@ -302,6 +357,19 @@ export function OpsLogisticsControlPanel({ rows }: Props) {
               <input className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-800 outline-none focus:border-cyan-500" name="claimNote" placeholder="材料、承运商工单号、客户沟通结论" />
             </label>
           </div>
+          {selectedOrder ? (
+            <DocumentUploadPanel
+              category="other"
+              customerCode={selectedOrder.customerCode}
+              documents={documents.filter((item) => item.refType === "approval" && item.refId === `claim:${selectedOrder.id}`)}
+              refId={`claim:${selectedOrder.id}`}
+              refType="approval"
+              title="赔付审批附件"
+              uploadEndpoint="/api/ops/documents"
+            />
+          ) : (
+            <p className="mt-3 rounded-md border border-dashed border-slate-200 bg-white p-3 text-sm text-slate-500">选择出库单后，可先上传赔付截图、承运商邮件、POD 或客户确认记录。若审批规则要求附件，需上传后再提交赔付。</p>
+          )}
           <button className="mt-4 inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-slate-950 px-4 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60" disabled={isPending} type="submit">
             <FileCheck2 size={16} />
             写入物流异常
@@ -325,9 +393,62 @@ export function OpsLogisticsControlPanel({ rows }: Props) {
                   <p className="mt-1 text-xs text-slate-500">
                     {item.customerCode} / {item.trackingNumber || "暂无追踪号"} / {new Date(item.createdAt).toLocaleString("zh-CN")}
                   </p>
+                  {item.workOrderId ? <p className="mt-1 font-mono text-xs font-semibold text-cyan-700">客户工单：{item.workOrderId}</p> : null}
                   {item.claimAmount ? <p className="mt-1 text-xs font-semibold text-rose-700">赔付：£{item.claimAmount.toFixed(2)} / {statusLabel(item.claimStatus)}</p> : null}
                   {item.redeliveryRequired ? <p className="mt-1 text-xs font-semibold text-cyan-700">改派：{item.redeliveryNote || "待补充"}</p> : null}
                   {item.proofUrl ? <p className="mt-1 text-xs font-semibold text-emerald-700">已关联签收证明</p> : null}
+                  <form className="mt-3 grid gap-2 rounded-md border border-slate-200 bg-white p-3" onSubmit={(event) => updateDeliveryException(event, item.orderId)}>
+                    <input name="exceptionId" type="hidden" value={item.id} />
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <label className="text-xs font-semibold text-slate-600">
+                        异常状态
+                        <select className="mt-1 h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-cyan-500" defaultValue={item.status} name="status">
+                          {exceptionStatusOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="text-xs font-semibold text-slate-600">
+                        赔付状态
+                        <select className="mt-1 h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-xs font-semibold text-slate-800 outline-none focus:border-cyan-500" defaultValue={item.claimStatus ?? "not_required"} name="claimStatus">
+                          {claimStatusOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <label className="text-xs font-semibold text-slate-600">
+                        赔付金额
+                        <input className="mt-1 h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-800 outline-none focus:border-cyan-500" defaultValue={item.claimAmount ?? ""} min="0" name="claimAmount" step="0.01" type="number" />
+                      </label>
+                      <label className="text-xs font-semibold text-slate-600">
+                        签收证明链接
+                        <input className="mt-1 h-9 w-full rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-800 outline-none focus:border-cyan-500" defaultValue={item.proofUrl ?? ""} name="proofUrl" placeholder="POD 或承运商链接" />
+                      </label>
+                    </div>
+                    <input className="h-9 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-800 outline-none focus:border-cyan-500" defaultValue={item.claimNote ?? ""} name="claimNote" placeholder="赔付审批原因/承运商工单号" />
+                    <input className="h-9 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-800 outline-none focus:border-cyan-500" name="note" placeholder="本次处理说明，例如：承运商已确认赔付" />
+                    <button className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md bg-slate-950 px-3 text-xs font-semibold text-white hover:bg-slate-800 disabled:opacity-60 sm:w-fit" disabled={isPending} type="submit">
+                      <FileCheck2 size={14} />
+                      更新异常/赔付
+                    </button>
+                  </form>
+                  {item.claimAmount || ["submitted", "approved", "paid"].includes(item.claimStatus ?? "") ? (
+                    <DocumentUploadPanel
+                      category="other"
+                      customerCode={item.customerCode}
+                      documents={documents.filter((document) => document.refType === "approval" && document.refId === `claim:${item.id}`)}
+                      refId={`claim:${item.id}`}
+                      refType="approval"
+                      title="异常赔付补充附件"
+                      uploadEndpoint="/api/ops/documents"
+                    />
+                  ) : null}
                 </div>
               ))
             ) : (
