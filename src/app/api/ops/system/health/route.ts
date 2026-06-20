@@ -35,7 +35,7 @@ function csvResponse(filename: string, rows: unknown[][]) {
 
 export async function GET(request: Request) {
   const rate = checkRateLimit(rateLimitKey(request, "ops-system-health"), 30, 60_000);
-  if (!rate.ok) return NextResponse.json({ error: "生产健康检查查询过于频繁，请稍后再试", resetAt: rate.resetAt }, { status: 429 });
+  if (!rate.ok) return NextResponse.json({ error: "生产健康检查查询过于频繁，请稍后再试。", resetAt: rate.resetAt }, { status: 429 });
 
   await requireStaffSession();
   const health = await evaluateOpsSystemHealth();

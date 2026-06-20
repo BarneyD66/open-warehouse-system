@@ -56,7 +56,7 @@ async function databaseCheck(): Promise<OpsSystemHealthCheck> {
       label: "数据库持久化",
       status: "degraded",
       owner: "运维",
-      detail: "未配置 POSTGRES_URL 或 DATABASE_URL，当前会回落本地/临时存储；生产环境建议配置 Postgres。",
+      detail: "未配置 POSTGRES_URL 或 DATABASE_URL，当前会回落到本地/临时存储；生产环境建议配置 Postgres。",
       actionHref: "/ops?section=overview",
     };
   }
@@ -94,6 +94,10 @@ function statusScore(status: OpsSystemHealthStatus) {
   return 15;
 }
 
+function configuredText(value: boolean) {
+  return value ? "已配置" : "未配置";
+}
+
 export async function evaluateOpsSystemHealth(): Promise<OpsSystemHealth> {
   const [database, launchReadiness, integrationReadiness, alerts, expansionData, coreData, probes, auditLogs, staffAccounts, productionErrors] = await Promise.all([
     databaseCheck(),
@@ -117,7 +121,7 @@ export async function evaluateOpsSystemHealth(): Promise<OpsSystemHealth> {
   });
   const failedProbeCount = Array.from(latestProbeMap.values()).filter((probe) => probe.status === "failed" || probe.status === "blocked").length;
   const whitelistRisks = getStaffWhitelistView().flatMap((account) => account.risks);
-  const objectStorageReady = envPresent("OBJECT_STORAGE_UPLOAD_URL") && envPresent("OBJECT_STORAGE_TOKEN") || envPresent("BLOB_UPLOAD_URL") && envPresent("BLOB_READ_WRITE_TOKEN");
+  const objectStorageReady = (envPresent("OBJECT_STORAGE_UPLOAD_URL") && envPresent("OBJECT_STORAGE_TOKEN")) || (envPresent("BLOB_UPLOAD_URL") && envPresent("BLOB_READ_WRITE_TOKEN"));
   const virusScanReady = envPresent("VIRUS_SCAN_WEBHOOK_URL") || envPresent("CLAMAV_SCAN_URL");
   const notificationReady = envPresent("NOTIFICATION_DELIVERY_WEBHOOK_URL") || envPresent("NOTIFICATION_EMAIL_WEBHOOK_URL") || envPresent("NOTIFICATION_SMS_WEBHOOK_URL") || envPresent("NOTIFICATION_WECHAT_WEBHOOK_URL");
   const notificationRetryReady = envPresent("NOTIFICATION_RETRY_SECRET") || envPresent("CRON_SECRET");
@@ -164,7 +168,10 @@ export async function evaluateOpsSystemHealth(): Promise<OpsSystemHealth> {
       label: "任务队列",
       status: exceptionJobs > 0 ? "critical" : jobRunReady && jobRetryReady ? "healthy" : "degraded",
       owner: "运营",
-      detail: exceptionJobs > 0 ? `当前有 ${exceptionJobs} 个批量任务处于异常状态，需要重试或人工处理；自动重试密钥${jobRetryReady ? "已配置" : "未配置"}。` : `批量任务队列未发现异常任务；自动重试密钥${jobRetryReady ? "已配置" : "未配置"}。`,
+      detail:
+        exceptionJobs > 0
+          ? `当前有 ${exceptionJobs} 个批量任务处于异常状态，需要重试或人工处理；自动执行密钥${configuredText(jobRunReady)}，自动重试密钥${configuredText(jobRetryReady)}。`
+          : `批量任务队列未发现异常任务；自动执行密钥${configuredText(jobRunReady)}，自动重试密钥${configuredText(jobRetryReady)}。`,
       actionHref: "/ops?section=logistics",
     },
     {
@@ -180,7 +187,7 @@ export async function evaluateOpsSystemHealth(): Promise<OpsSystemHealth> {
       label: "文件存储与安全扫描",
       status: objectStorageReady && virusScanReady ? "healthy" : objectStorageReady || virusScanReady ? "degraded" : "critical",
       owner: "运维",
-      detail: `对象存储${objectStorageReady ? "已配置" : "未配置"}，外部病毒扫描${virusScanReady ? "已配置" : "未配置"}。`,
+      detail: `对象存储${configuredText(objectStorageReady)}，外部病毒扫描${configuredText(virusScanReady)}。`,
       actionHref: "/ops?section=overview",
     },
     {
@@ -188,13 +195,15 @@ export async function evaluateOpsSystemHealth(): Promise<OpsSystemHealth> {
       label: "外部通知投递",
       status: notificationReady && notificationRetryReady ? "healthy" : notificationReady || notificationRetryReady ? "degraded" : "degraded",
       owner: "运营",
-      detail: notificationReady ? `邮件/短信/微信或统一通知 webhook 已配置，外部提醒可进入投递台账；自动重试密钥${notificationRetryReady ? "已配置" : "未配置"}。` : "站内信可用，但外部通知 webhook 未配置；上线前建议配置自动重试密钥和调度器。",
+      detail: notificationReady
+        ? `邮件/短信/微信或统一通知 webhook 已配置，外部提醒可进入投递台账；自动重试密钥${configuredText(notificationRetryReady)}。`
+        : "站内信可用，但外部通知 webhook 未配置；上线前建议配置自动重试密钥和调度器。",
       actionHref: "/ops?section=permissions",
     },
     {
       id: "staff-governance",
       label: "员工账号治理",
-      status: whitelistRisks.length > 0 ? "critical" : staffAccounts.length > 0 ? "healthy" : "degraded",
+      status: whitelistRisks.length > 0 ? "degraded" : staffAccounts.length > 0 ? "healthy" : "degraded",
       owner: "运维",
       detail: whitelistRisks.length > 0 ? `员工白名单存在风险：${Array.from(new Set(whitelistRisks)).join("、")}。` : `正式员工账号 ${staffAccounts.length} 个，未发现白名单风险。`,
       actionHref: "/ops?section=permissions",
