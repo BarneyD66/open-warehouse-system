@@ -97,6 +97,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/MAINTENANCE_PLAN.md`: issue triage, release rhythm, review policy, and quality gates.
 - `docs/MOCK_CARRIER_ADAPTER.md`: safe mock carrier adapter design for logistics contributors.
 - `docs/OPEN_SOURCE_LAUNCH_CHECKLIST.md`: launch checklist and repository setup notes.
+- `docs/PULL_REQUEST_REVIEW_CHECKLIST.md`: PR review checklist for scope, verification, data safety, and localization.
 - `docs/REGIONAL_ADAPTATION_GUIDE.md`: practical checklist for adapting language, carriers, tax, customs, privacy, and billing by region.
 - `docs/SCREENSHOT_GUIDE.md`: safe screenshot and demo media guidance.
 - `docs/STAFF_AUTH.md`: staff whitelist, demo login, and production authentication guidance.

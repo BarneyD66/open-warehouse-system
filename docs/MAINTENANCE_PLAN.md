@@ -158,3 +158,5 @@ Before accepting a PR:
 - Check data safety.
 - Check customer-visible language behavior.
 - Check billing, inventory, logistics, and auth risk.
+
+Use `docs/PULL_REQUEST_REVIEW_CHECKLIST.md` for the detailed review checklist.
