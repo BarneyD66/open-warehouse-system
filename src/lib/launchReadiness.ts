@@ -72,15 +72,15 @@ async function canConnectPostgres() {
 function logisticsChannelIssues(channel: LogisticsChannelConfig) {
   const features = channel.enabledFeatures.join(" ");
   return [
-    channel.status === "paused" ? "渠道暂停" : "",
-    channel.status === "draft" ? "未启用" : "",
+    channel.status === "paused" ? "渠道已暂停" : "",
+    channel.status === "draft" ? "渠道未启用" : "",
     channel.apiMode !== "manual" && !channel.credentialRef ? "缺少承运商凭证引用" : "",
     channel.apiMode === "live" && !channel.trackingWebhook ? "正式接口缺少轨迹回传地址" : "",
-    channel.apiMode !== "manual" && !features.includes("面单购买") ? "缺面单购买能力" : "",
-    channel.apiMode !== "manual" && !features.includes("轨迹自动回传") ? "缺轨迹自动回传" : "",
-    !features.includes("派送失败处理") ? "缺派送失败处理" : "",
-    !features.includes("签收证明") ? "缺签收证明" : "",
-    !features.includes("物流赔付") ? "缺物流赔付" : "",
+    channel.apiMode !== "manual" && !features.includes("面单购买") ? "缺少面单购买能力" : "",
+    channel.apiMode !== "manual" && !features.includes("轨迹自动回传") ? "缺少轨迹自动回传能力" : "",
+    !features.includes("派送失败处理") ? "缺少派送失败处理" : "",
+    !features.includes("签收证明") ? "缺少签收证明" : "",
+    !features.includes("物流赔付") ? "缺少物流赔付" : "",
     channel.surchargeRules.length === 0 ? "未配置附加费规则" : "",
   ].filter(Boolean);
 }
@@ -123,14 +123,18 @@ export async function evaluateLaunchReadiness(surfaceOverride?: LaunchSurface): 
       id: "shared-db",
       label: "共享数据库",
       status: hasSharedDb ? "pass" : isProduction ? "fail" : "warn",
-      detail: hasSharedDb ? "Postgres 已配置并可连接，核心业务数据可跨部署保留。" : "未确认 Postgres 可用，生产数据可能落到临时存储。",
+      detail: hasSharedDb ? "Postgres 已配置并可连接，核心业务数据可跨部署保留。" : "未确认 Postgres 可用，生产数据可能回落到临时存储。",
       owner: "后端",
     },
     {
       id: "document-storage",
       label: "资料持久化",
       status: hasSharedDb || objectStorageConfigured ? "pass" : isProduction ? "fail" : "warn",
-      detail: objectStorageConfigured ? "对象存储上传网关已配置，文件可从业务数据库之外持久化归档。" : hasSharedDb ? "上传资料会写入数据库 payload，避免 Vercel /tmp 丢失。" : "上传资料仍依赖本地文件存储，生产不可直接开放。",
+      detail: objectStorageConfigured
+        ? "对象存储上传网关已配置，文件可从业务数据库之外持久化归档。"
+        : hasSharedDb
+          ? "上传资料会写入数据库 payload，避免 Vercel /tmp 丢失。"
+          : "上传资料仍依赖本地文件存储，生产环境不能直接开放。",
       owner: "后端",
     },
     {
@@ -139,7 +143,7 @@ export async function evaluateLaunchReadiness(surfaceOverride?: LaunchSurface): 
       status: blockedDocuments > 0 ? "fail" : pendingDocuments > 0 || (isProduction && localDocuments > 0) ? "warn" : "pass",
       detail:
         blockedDocuments > 0
-          ? `当前有 ${blockedDocuments} 个文件被安全扫描拦截，需要重新上传或复核。`
+          ? `当前有 ${blockedDocuments} 个文件被安全扫描拦截，需要重新上传或人工复核。`
           : pendingDocuments > 0
             ? `当前有 ${pendingDocuments} 个文件仍待扫描；建议上线前确认病毒扫描服务和文件台账。`
             : isProduction && localDocuments > 0
@@ -162,17 +166,17 @@ export async function evaluateLaunchReadiness(surfaceOverride?: LaunchSurface): 
         managedStaffAccounts.length > 0
           ? `已启用后台员工账号治理，当前正式员工 ${managedStaffAccounts.length} 个。`
           : staffWhitelist.length > 0
-          ? `当前白名单 ${staffWhitelist.length} 个，来源：${staffWhitelist[0]?.source ?? "未配置"}${staffWhitelistRisks.length > 0 ? `，风险：${Array.from(new Set(staffWhitelistRisks)).join("、")}` : "，未发现白名单风险"}。`
-          : isAdminSurface
-            ? "运营后台生产必须配置 STAFF_WHITELIST_JSON。"
-            : "当前不是运营后台域名，员工白名单不阻塞客户侧健康检查。",
+            ? `当前白名单 ${staffWhitelist.length} 个，来源：${staffWhitelist[0]?.source ?? "未配置"}${staffWhitelistRisks.length > 0 ? `，风险：${Array.from(new Set(staffWhitelistRisks)).join("、")}` : "，未发现白名单风险"}。`
+            : isAdminSurface
+              ? "运营后台生产环境必须配置 STAFF_WHITELIST_JSON。"
+              : "当前不是运营后台域名，员工白名单不阻塞客户侧健康检查。",
       owner: "运营",
     },
     {
       id: "demo-login",
       label: "演示登录开关",
       status: isProduction && (allowsDemoCustomerLogin || allowsDemoStaffLogin) ? "fail" : "pass",
-      detail: isProduction && (allowsDemoCustomerLogin || allowsDemoStaffLogin) ? "生产仍允许演示登录，需要关闭 ALLOW_DEMO_LOGIN / ALLOW_DEMO_STAFF_LOGIN。" : "生产不会主动打开演示登录。",
+      detail: isProduction && (allowsDemoCustomerLogin || allowsDemoStaffLogin) ? "生产环境仍允许演示登录，需要关闭 ALLOW_DEMO_LOGIN / ALLOW_DEMO_STAFF_LOGIN。" : "生产环境不会主动打开演示登录。",
       owner: "后端",
     },
     {
