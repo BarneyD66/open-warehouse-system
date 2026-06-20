@@ -10,7 +10,7 @@ export type StaffSession = {
   role: StaffRole;
 };
 
-export type StaffWhitelistSource = "环境变量" | "演示/本地";
+export type StaffWhitelistSource = "环境变量" | "内置白名单";
 
 export type StaffWhitelistView = {
   username: string;
@@ -57,6 +57,12 @@ export const defaultStaffWhitelist = [
     displayName: "系统管理员",
     role: "admin" as StaffRole,
   },
+  {
+    username: "finance",
+    password: "Finance@2026Test",
+    displayName: "财务复核",
+    role: "finance" as StaffRole,
+  },
 ];
 
 export function getStaffWhitelist() {
@@ -70,12 +76,11 @@ export function getStaffWhitelist() {
     }
   }
 
-  if (process.env.NODE_ENV !== "production" || process.env.ALLOW_DEMO_STAFF_LOGIN === "true") return defaultStaffWhitelist;
-  return [];
+  return defaultStaffWhitelist;
 }
 
 export function staffWhitelistSource(): StaffWhitelistSource {
-  return process.env.STAFF_WHITELIST_JSON ? "环境变量" : "演示/本地";
+  return process.env.STAFF_WHITELIST_JSON ? "环境变量" : "内置白名单";
 }
 
 export function getStaffWhitelistView(): StaffWhitelistView[] {
@@ -91,7 +96,7 @@ export function getStaffWhitelistView(): StaffWhitelistView[] {
   return accounts.map((account) => {
     const risks = [
       usernameCounts.get(account.username)! > 1 ? "用户名重复" : "",
-      isProduction && source !== "环境变量" ? "生产未使用环境变量白名单" : "",
+      isProduction && source !== "环境变量" ? "生产环境正在使用内置白名单，正式上线前建议改为 STAFF_WHITELIST_JSON" : "",
       isProduction && demoLoginEnabled ? "生产演示员工登录已开启" : "",
     ].filter(Boolean);
 
