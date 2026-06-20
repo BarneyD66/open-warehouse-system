@@ -88,6 +88,7 @@ function reportDownloadUrlForView(request: Request, view: SavedReportView) {
     params.set("format", "csv");
     return new URL(`/api/ops/launch-guard?${params.toString()}`, request.url).toString();
   }
+  if (view.module === "integration_acceptance") return new URL(`/api/ops/reports/integration-acceptance?${params.toString()}`, request.url).toString();
 
   const reportModule = view.module === "orders" ? "outbound" : view.module;
   params.set("module", reportModule);

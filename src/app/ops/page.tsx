@@ -90,6 +90,7 @@ import { getManagedStaffAccounts } from "@/lib/staffAccountStore";
 import { getSlaNotificationRules } from "@/lib/slaRuleStore";
 import { getOpsExpansionData } from "@/lib/opsExpansionStore";
 import { getLatestIntegrationProbeMap, type IntegrationProbeRecord, type IntegrationProbeStatus } from "@/lib/integrationProbeStore";
+import { buildIntegrationAcceptanceReport } from "@/lib/integrationAcceptanceReport";
 import { evaluateOpsSystemHealth, type OpsSystemHealth, type OpsSystemHealthStatus } from "@/lib/opsSystemHealth";
 import { evaluateProductionIntegrationReadiness, type IntegrationReadinessStatus, type ProductionIntegrationReadiness } from "@/lib/productionIntegrationReadiness";
 import { buildCustomerSelfServiceOpsReport } from "@/lib/customerSelfServiceOpsReport";
@@ -2323,7 +2324,8 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
     workOrders: expansionData.selfServiceWorkOrders,
   });
   const launchGuardTasks = buildLaunchGuardTasks({ launchReadiness, integrationReadiness: productionIntegrationReadiness, systemHealth: opsSystemHealth, alerts: systemAlerts });
-  const reportCenterData = buildReportCenterData({ expansionData, auditLogs, coreData, notificationDeliveries, automationRuns, customerSelfServiceReport: customerSelfServiceOpsReport, documents, launchGuardTasks });
+  const integrationAcceptanceReport = buildIntegrationAcceptanceReport({ readiness: productionIntegrationReadiness, probes: integrationProbeMap });
+  const reportCenterData = buildReportCenterData({ expansionData, auditLogs, coreData, notificationDeliveries, automationRuns, customerSelfServiceReport: customerSelfServiceOpsReport, documents, launchGuardTasks, integrationAcceptanceReport });
   const todoCount = staffNotifications.length || openInquiries + missingDocs + missingTracking + openInboundReceivingExceptions.length + openLogistics + openOutbound + openScanExceptions.length + inventoryRisks + unverifiedCustomers;
   const pendingBilling = coreData.billingRecords.filter((item) => item.status === "draft" || item.status === "pending_confirmation").length;
   const lowStockBalances = coreData.inventoryBalances.filter((item) => item.availableQty < item.alertQty).length;

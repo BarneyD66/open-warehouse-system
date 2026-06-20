@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getAuditLogs, recordAuditLog } from "@/lib/auditLogStore";
 import { getAutomationRuns } from "@/lib/automationRunStore";
 import { getDocuments } from "@/lib/documentStore";
+import { getIntegrationProbeRecords } from "@/lib/integrationProbeStore";
+import { buildIntegrationAcceptanceReport } from "@/lib/integrationAcceptanceReport";
 import { buildLaunchGuardTasks } from "@/lib/launchGuard";
 import { evaluateLaunchReadiness } from "@/lib/launchReadiness";
 import { getNotificationDeliveries } from "@/lib/notificationStore";
@@ -41,7 +43,7 @@ export async function GET(request: Request) {
   const expansionData = await getOpsExpansionData();
   if (!canAccessOpsModule(staff, "reports", expansionData)) return NextResponse.json({ error: "当前角色无权查看报表中心。" }, { status: 403 });
 
-  const [auditLogs, coreData, notificationDeliveries, automationRuns, documents, launchReadiness, integrationReadiness, systemHealth, alerts] = await Promise.all([
+  const [auditLogs, coreData, notificationDeliveries, automationRuns, documents, launchReadiness, integrationReadiness, systemHealth, alerts, integrationProbes] = await Promise.all([
     getAuditLogs({ limit: 500 }),
     getWarehouseCoreData(),
     getNotificationDeliveries(500),
@@ -51,9 +53,11 @@ export async function GET(request: Request) {
     evaluateProductionIntegrationReadiness(),
     evaluateOpsSystemHealth(),
     getSystemAlerts(),
+    getIntegrationProbeRecords(500),
   ]);
   const launchGuardTasks = buildLaunchGuardTasks({ launchReadiness, integrationReadiness, systemHealth, alerts });
-  const data = buildReportCenterData({ expansionData, auditLogs, coreData, notificationDeliveries, automationRuns, documents, launchGuardTasks });
+  const integrationAcceptanceReport = buildIntegrationAcceptanceReport({ readiness: integrationReadiness, probes: integrationProbes });
+  const data = buildReportCenterData({ expansionData, auditLogs, coreData, notificationDeliveries, automationRuns, documents, launchGuardTasks, integrationAcceptanceReport });
   const url = new URL(request.url);
 
   if (url.searchParams.get("format") === "csv") {

@@ -365,7 +365,8 @@ export type SavedReportView = {
     | "customer_self_service"
     | "documents_security"
     | "notification_deliveries"
-    | "launch_guard";
+    | "launch_guard"
+    | "integration_acceptance";
   filters: Record<string, string>;
   metrics: string[];
   ownerRole: string;
@@ -450,6 +451,15 @@ function systemDefaultSavedViews(): SavedReportView[] {
       filters: { scope: "all" },
       metrics: ["总体结论", "总评分", "阻塞项", "负责人", "下一步动作"],
       ownerRole: "admin",
+      updatedAt: systemViewUpdatedAt,
+    },
+    {
+      id: "SYS-VIEW-INTEGRATION-ACCEPTANCE",
+      name: "生产集成验收记录",
+      module: "integration_acceptance",
+      filters: { scope: "all" },
+      metrics: ["验收评分", "验收状态", "最近探测", "缺少配置", "下一步动作"],
+      ownerRole: "ops",
       updatedAt: systemViewUpdatedAt,
     },
     {

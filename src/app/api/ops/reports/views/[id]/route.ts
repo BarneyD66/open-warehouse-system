@@ -150,6 +150,11 @@ function reportUrlForView(request: Request, view: SavedReportView) {
     return new URL(`/api/ops/launch-guard?${params.toString()}`, request.url);
   }
 
+  if (view.module === "integration_acceptance") {
+    params.set("auditSource", "saved_view");
+    return new URL(`/api/ops/reports/integration-acceptance?${params.toString()}`, request.url);
+  }
+
   const reportModule = view.module === "orders" ? "outbound" : view.module;
   params.set("module", reportModule);
   params.set("auditSource", "saved_view");

@@ -39,6 +39,7 @@ export function OpsReportCenterPanel({ data }: Props) {
   const riskModules = data.modules.filter((item) => item.riskLevel !== "正常").slice(0, 6);
   const financeModule = data.modules.find((item) => item.module === "finance_adjustments");
   const launchGuardModule = data.modules.find((item) => item.module === "launch_guard");
+  const integrationAcceptanceModule = data.modules.find((item) => item.module === "integration_acceptance");
   const primaryModules = [...data.modules]
     .sort((left, right) => {
       const rank: Record<ReportCenterRisk, number> = { 高风险: 0, 关注: 1, 正常: 2 };
@@ -155,6 +156,29 @@ export function OpsReportCenterPanel({ data }: Props) {
           <ReportScheduleQuickCreate
             views={[
               { id: "SYS-VIEW-LAUNCH-GUARD", name: "上线复核包", description: "每日发送上线阻塞项、负责人和下一步动作。" },
+            ]}
+          />
+        </div>
+      ) : null}
+
+      {integrationAcceptanceModule ? (
+        <div className="mt-4 rounded-md border border-emerald-100 bg-emerald-50 p-3">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-emerald-950">生产集成验收</h3>
+              <p className="mt-1 text-xs leading-5 text-emerald-800">沉淀承运商、平台、对象存储、通知投递和安全扫描的配置状态、最近探测和下一步动作。</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <span className={`w-fit rounded-md border px-2 py-1 text-xs font-semibold ${riskClass[integrationAcceptanceModule.riskLevel]}`}>{integrationAcceptanceModule.riskReason}</span>
+              <Link className="inline-flex min-h-8 items-center gap-2 rounded-md border border-emerald-200 bg-white px-3 text-xs font-semibold text-emerald-800 hover:bg-emerald-50" href="/api/ops/reports/views/SYS-VIEW-INTEGRATION-ACCEPTANCE">
+                <FileDown size={14} />
+                导出验收记录
+              </Link>
+            </div>
+          </div>
+          <ReportScheduleQuickCreate
+            views={[
+              { id: "SYS-VIEW-INTEGRATION-ACCEPTANCE", name: "生产集成验收记录", description: "每日发送生产集成配置、最近探测和待处理项。" },
             ]}
           />
         </div>
