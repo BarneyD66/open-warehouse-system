@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { recordAuditLog } from "@/lib/auditLogStore";
+import { getIntegrationProbeRecords } from "@/lib/integrationProbeStore";
+import { buildIntegrationAcceptanceReport } from "@/lib/integrationAcceptanceReport";
 import { buildLaunchGuardTasks, guardStatusLabel, summarizeLaunchGuard } from "@/lib/launchGuard";
 import { evaluateLaunchReadiness } from "@/lib/launchReadiness";
 import { evaluateOpsSystemHealth } from "@/lib/opsSystemHealth";
@@ -27,13 +29,15 @@ function csvResponse(filename: string, rows: unknown[][]) {
 
 export async function GET(request: Request) {
   const staff = await requireStaffSession();
-  const [launchReadiness, integrationReadiness, systemHealth, alerts] = await Promise.all([
+  const [launchReadiness, integrationReadiness, systemHealth, alerts, probes] = await Promise.all([
     evaluateLaunchReadiness(),
     evaluateProductionIntegrationReadiness(),
     evaluateOpsSystemHealth(),
     getSystemAlerts(),
+    getIntegrationProbeRecords(500),
   ]);
-  const input = { launchReadiness, integrationReadiness, systemHealth, alerts };
+  const integrationAcceptanceReport = buildIntegrationAcceptanceReport({ readiness: integrationReadiness, probes });
+  const input = { launchReadiness, integrationReadiness, systemHealth, alerts, integrationAcceptanceReport };
   const tasks = buildLaunchGuardTasks(input);
   const summary = summarizeLaunchGuard(tasks, input);
   const url = new URL(request.url);
@@ -85,6 +89,7 @@ export async function GET(request: Request) {
         launchReadiness: launchReadiness.score,
         integrationReadiness: integrationReadiness.score,
         systemHealth: systemHealth.score,
+        integrationAcceptance: integrationAcceptanceReport.score,
       },
       generatedAt: summary.generatedAt,
     },

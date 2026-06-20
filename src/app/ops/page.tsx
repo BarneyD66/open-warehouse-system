@@ -2323,8 +2323,8 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
     documents,
     workOrders: expansionData.selfServiceWorkOrders,
   });
-  const launchGuardTasks = buildLaunchGuardTasks({ launchReadiness, integrationReadiness: productionIntegrationReadiness, systemHealth: opsSystemHealth, alerts: systemAlerts });
   const integrationAcceptanceReport = buildIntegrationAcceptanceReport({ readiness: productionIntegrationReadiness, probes: integrationProbeMap });
+  const launchGuardTasks = buildLaunchGuardTasks({ launchReadiness, integrationReadiness: productionIntegrationReadiness, systemHealth: opsSystemHealth, alerts: systemAlerts, integrationAcceptanceReport });
   const reportCenterData = buildReportCenterData({ expansionData, auditLogs, coreData, notificationDeliveries, automationRuns, customerSelfServiceReport: customerSelfServiceOpsReport, documents, launchGuardTasks, integrationAcceptanceReport });
   const todoCount = staffNotifications.length || openInquiries + missingDocs + missingTracking + openInboundReceivingExceptions.length + openLogistics + openOutbound + openScanExceptions.length + inventoryRisks + unverifiedCustomers;
   const pendingBilling = coreData.billingRecords.filter((item) => item.status === "draft" || item.status === "pending_confirmation").length;
@@ -2433,7 +2433,7 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
               <MetricTile caption="扫码" icon={ScanLine} label="扫码异常" tone={openScanExceptions.length > 0 ? "rose" : "emerald"} value={openScanExceptions.length} />
             </section>
 
-            <OpsLaunchGuardPanel alerts={systemAlerts} integrationReadiness={productionIntegrationReadiness} launchReadiness={launchReadiness} systemHealth={opsSystemHealth} />
+            <OpsLaunchGuardPanel alerts={systemAlerts} integrationAcceptanceReport={integrationAcceptanceReport} integrationReadiness={productionIntegrationReadiness} launchReadiness={launchReadiness} systemHealth={opsSystemHealth} />
 
             <OpsSlaReportPanel billingRecords={coreData.billingRecords} inbounds={inbounds} nowMs={new Date().getTime()} outbounds={coreData.outboundOrders} workOrders={expansionData.selfServiceWorkOrders} />
 

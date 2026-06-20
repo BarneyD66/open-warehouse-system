@@ -55,8 +55,8 @@ export async function GET(request: Request) {
     getSystemAlerts(),
     getIntegrationProbeRecords(500),
   ]);
-  const launchGuardTasks = buildLaunchGuardTasks({ launchReadiness, integrationReadiness, systemHealth, alerts });
   const integrationAcceptanceReport = buildIntegrationAcceptanceReport({ readiness: integrationReadiness, probes: integrationProbes });
+  const launchGuardTasks = buildLaunchGuardTasks({ launchReadiness, integrationReadiness, systemHealth, alerts, integrationAcceptanceReport });
   const data = buildReportCenterData({ expansionData, auditLogs, coreData, notificationDeliveries, automationRuns, documents, launchGuardTasks, integrationAcceptanceReport });
   const url = new URL(request.url);
 

@@ -1,3 +1,4 @@
+import type { IntegrationAcceptanceReport, IntegrationAcceptanceRow } from "./integrationAcceptanceReport";
 import type { LaunchReadiness } from "./launchReadiness";
 import type { OpsSystemHealth, OpsSystemHealthStatus } from "./opsSystemHealth";
 import type { IntegrationReadinessStatus, ProductionIntegrationReadiness } from "./productionIntegrationReadiness";
@@ -22,6 +23,7 @@ export type LaunchGuardInput = {
   integrationReadiness: ProductionIntegrationReadiness;
   systemHealth: OpsSystemHealth;
   alerts: SystemAlert[];
+  integrationAcceptanceReport?: IntegrationAcceptanceReport;
 };
 
 export const guardStatusLabel: Record<GuardStatus, string> = {
@@ -72,6 +74,17 @@ function integrationOwner(group: ProductionIntegrationReadiness["items"][number]
   return "运营";
 }
 
+function acceptanceOwner(group: IntegrationAcceptanceRow["group"]): GuardOwner {
+  if (group === "storage" || group === "security") return "运维";
+  return "运营";
+}
+
+function acceptanceGuardStatus(row: IntegrationAcceptanceRow): GuardStatus {
+  if (row.acceptanceStatus === "联调失败") return "blocked";
+  if (row.acceptanceStatus === "配置待补" && ["carrier", "platform", "storage", "security"].includes(row.group)) return "blocked";
+  return "warning";
+}
+
 function healthOwner(id: string): GuardOwner {
   if (["database", "production-errors", "integration-probes", "file-security"].includes(id)) return "运维";
   if (id === "notification-delivery") return "运营";
@@ -103,7 +116,7 @@ function dedupeTasks(tasks: GuardTask[]) {
   });
 }
 
-export function buildLaunchGuardTasks({ launchReadiness, integrationReadiness, systemHealth, alerts }: LaunchGuardInput) {
+export function buildLaunchGuardTasks({ launchReadiness, integrationReadiness, systemHealth, alerts, integrationAcceptanceReport }: LaunchGuardInput) {
   const launchTasks = launchReadiness.checks
     .filter((check) => check.status !== "pass")
     .map<GuardTask>((check) => ({
@@ -127,6 +140,19 @@ export function buildLaunchGuardTasks({ launchReadiness, integrationReadiness, s
       title: item.name,
       detail: item.summary,
       nextAction: item.nextActions[0] || "补齐生产环境变量、正式授权和联调验收。",
+      href: "/ops?section=overview",
+    }));
+
+  const acceptanceTasks = (integrationAcceptanceReport?.rows ?? [])
+    .filter((row) => row.acceptanceStatus !== "验收通过" && (row.readinessStatus === "配置可上线" || row.acceptanceStatus === "联调失败"))
+    .map<GuardTask>((row) => ({
+      id: `acceptance:${row.itemId}`,
+      source: "生产集成验收",
+      owner: acceptanceOwner(row.group),
+      status: acceptanceGuardStatus(row),
+      title: row.itemName,
+      detail: `${row.groupLabel} / ${row.acceptanceStatus} / ${row.latestProbeStatus}${row.message ? `：${row.message}` : ""}`,
+      nextAction: row.nextAction || "补齐配置并重新执行集成探测。",
       href: "/ops?section=overview",
     }));
 
@@ -156,13 +182,13 @@ export function buildLaunchGuardTasks({ launchReadiness, integrationReadiness, s
       href: alert.actionHref || "/ops?section=overview",
     }));
 
-  return dedupeTasks([...alertTasks, ...launchTasks, ...integrationTasks, ...healthTasks]).sort((a, b) => taskRank(a) - taskRank(b) || a.title.localeCompare(b.title));
+  return dedupeTasks([...alertTasks, ...launchTasks, ...integrationTasks, ...acceptanceTasks, ...healthTasks]).sort((a, b) => taskRank(a) - taskRank(b) || a.title.localeCompare(b.title));
 }
 
 export function summarizeLaunchGuard(tasks: GuardTask[], input: LaunchGuardInput) {
   const blocked = tasks.filter((task) => task.status === "blocked").length;
   const warning = tasks.filter((task) => task.status === "warning").length;
-  const score = Math.min(input.launchReadiness.score, input.integrationReadiness.score, input.systemHealth.score);
+  const score = Math.min(input.launchReadiness.score, input.integrationReadiness.score, input.systemHealth.score, input.integrationAcceptanceReport?.score ?? 100);
   return {
     blocked,
     warning,
