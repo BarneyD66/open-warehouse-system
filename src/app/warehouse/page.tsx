@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Boxes, ClipboardCheck, Download, PackageCheck, Truck, Warehouse, type LucideIcon } from "lucide-react";
+import { Boxes, ClipboardCheck, Download, PackageCheck, Smartphone, Truck, Warehouse, type LucideIcon } from "lucide-react";
 import { buildInboundDocumentChecklist, getSubmissions, inboundStatusLabel, type InboundSubmission } from "@/lib/localStore";
 import { requireStaffSession } from "@/lib/staffAuth";
 import { buildStocktakeCandidates, getWarehouseCoreData, outboundWorkModeLabel, returnOrderStatusLabel, suggestOutboundLotAllocations, type CoreOutboundOrder, type ReturnOrder } from "@/lib/warehouseCoreStore";
@@ -217,6 +217,10 @@ export default async function WarehousePage() {
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
+                <Link className="inline-flex min-h-10 items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-100" href="/pda">
+                  <Smartphone size={16} />
+                  PDA 作业台
+                </Link>
                 <Link className="inline-flex min-h-10 items-center gap-2 rounded-md border border-cyan-200 bg-cyan-50 px-3 text-sm font-semibold text-cyan-800 hover:bg-cyan-100" href="/api/ops/reports/scans">
                   <Download size={16} />
                   导出扫码留痕
