@@ -14,6 +14,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added screenshot and demo media guidance for safe public README assets, release notes, and Codex for OSS application materials.
 - Added an open-source maintenance plan covering triage cadence, review policy, quality gates, and release rhythm.
 - Added contributor onboarding, safe demo data planning, local PostgreSQL setup notes, and internationalization guidance.
+- Added release process guidance with versioning notes, release checklist, and release-note template.
 
 ### Changed
 

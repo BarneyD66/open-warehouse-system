@@ -57,6 +57,7 @@ Recommended release rhythm:
 - Keep release notes short and workflow-focused.
 - Mention setup changes, migration notes, security-sensitive changes, and breaking behavior clearly.
 - Tag launch and milestone releases, such as `v0.1.0`, `v0.2.0`, and `v0.3.0`.
+- Use `docs/RELEASE_PROCESS.md` before publishing tags or GitHub releases.
 
 Suggested milestone focus:
 
