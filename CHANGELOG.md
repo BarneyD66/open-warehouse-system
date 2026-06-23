@@ -15,6 +15,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added an open-source maintenance plan covering triage cadence, review policy, quality gates, and release rhythm.
 - Added contributor onboarding, safe demo data planning, local PostgreSQL setup notes, and internationalization guidance.
 - Added release process guidance with versioning notes, release checklist, and release-note template.
+- Added demo seed data guidance for safe fake records, future seed command behavior, and contributor review.
 
 ### Changed
 
