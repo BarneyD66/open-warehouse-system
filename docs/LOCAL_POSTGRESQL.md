@@ -4,6 +4,8 @@ This guide helps contributors run Open Warehouse System with a local PostgreSQL 
 
 The app can still run with local fallback data for lightweight demos. PostgreSQL is useful when you want to test schema migrations, persistence behavior, or production-oriented workflows.
 
+For a shorter command-oriented Docker Compose checklist, see `docs/DOCKER_COMPOSE_RUNBOOK.md`.
+
 ## Prerequisites
 
 - Node.js 20 or newer.
