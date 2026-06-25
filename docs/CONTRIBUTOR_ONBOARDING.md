@@ -4,6 +4,8 @@ This guide gives new contributors a practical first path through Open Warehouse 
 
 The goal is not to learn every warehouse workflow on day one. The goal is to run the project, understand the major surfaces, choose a small contribution, and avoid touching production-sensitive data.
 
+Before proposing broad architecture, persistence, auth, billing, logistics, or localization changes, read `docs/CONTRIBUTOR_DECISION_RECORDS.md`.
+
 ## 30-minute First Run
 
 1. Fork and clone the repository.
@@ -61,6 +63,8 @@ Choose one bounded path:
 - Localization: add language examples while keeping Chinese-first customer-visible templates intact.
 
 Good starter issues are listed in `docs/INITIAL_ISSUES.md`.
+
+Project tradeoffs and review constraints are summarized in `docs/CONTRIBUTOR_DECISION_RECORDS.md`.
 
 ## Verification Before Pull Request
 

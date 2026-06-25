@@ -17,6 +17,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added release process guidance with versioning notes, release checklist, and release-note template.
 - Added demo seed data guidance for safe fake records, future seed command behavior, and contributor review.
 - Added Docker Compose runbook for local PostgreSQL startup, health checks, reset, and troubleshooting.
+- Added contributor decision records for architecture, localization, demo data, persistence, and high-risk workflow review.
 
 ### Changed
 

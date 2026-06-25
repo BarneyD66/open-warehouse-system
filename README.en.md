@@ -90,6 +90,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/ARCHITECTURE.md`: application surfaces, domain modules, persistence and security boundaries.
 - `docs/CONTRIBUTOR_QUICK_PATH.md`: short first-contribution path for new contributors.
 - `docs/CONTRIBUTOR_ONBOARDING.md`: first-run, first-contribution, and PR guidance for contributors.
+- `docs/CONTRIBUTOR_DECISION_RECORDS.md`: lightweight project decisions for contributors and maintainers.
 - `docs/DEMO_DATA_PLAN.md`: safe fake demo data plan for onboarding, screenshots, and tests.
 - `docs/DEMO_SEED_DATA_GUIDE.md`: safe demo seed data contract and future seed command expectations.
 - `docs/DOCKER_COMPOSE_RUNBOOK.md`: Docker Compose PostgreSQL startup, reset, healthcheck, and troubleshooting notes.
