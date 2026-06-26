@@ -104,6 +104,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/REGIONAL_ADAPTATION_GUIDE.md`: practical checklist for adapting language, carriers, tax, customs, privacy, and billing by region.
 - `docs/RELEASE_PROCESS.md`: release checklist, versioning notes, and release-note template.
 - `docs/SCREENSHOT_GUIDE.md`: safe screenshot and demo media guidance.
+- `docs/SMOKE_TEST_PLAN.md`: minimal smoke verification plan for contributors and maintainers.
 - `docs/STAFF_AUTH.md`: staff whitelist, demo login, and production authentication guidance.
 - `SECURITY.md`: vulnerability reporting, security scope, and public data policy.
 - `CHANGELOG.md`: public release history and release-note summary.

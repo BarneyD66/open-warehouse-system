@@ -14,6 +14,7 @@ Use this checklist when reviewing changes from maintainers or external contribut
 - Documentation-only changes ran `git diff --check`.
 - Code changes ran `npm run lint`.
 - Behavior changes include either `npm run build`, an automated test, or a manual route check.
+- Smoke notes follow `docs/SMOKE_TEST_PLAN.md` for the affected surface.
 - The pull request description names the checked routes, scripts, or files.
 - Screenshots, if included, follow `docs/SCREENSHOT_GUIDE.md` and use fake demo data.
 

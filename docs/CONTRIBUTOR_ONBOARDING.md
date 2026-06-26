@@ -89,6 +89,8 @@ npm run db:init
 
 If your change touches customer, ops, or warehouse workflows, include manual verification notes in the pull request.
 
+Use `docs/SMOKE_TEST_PLAN.md` for the recommended customer, ops, warehouse, tracking, PostgreSQL, and documentation-only smoke paths.
+
 ## Data and Security Rules
 
 Do not commit:
