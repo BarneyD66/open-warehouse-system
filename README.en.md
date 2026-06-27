@@ -94,6 +94,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/DEMO_DATA_PLAN.md`: safe fake demo data plan for onboarding, screenshots, and tests.
 - `docs/DEMO_SEED_DATA_GUIDE.md`: safe demo seed data contract and future seed command expectations.
 - `docs/DOCKER_COMPOSE_RUNBOOK.md`: Docker Compose PostgreSQL startup, reset, healthcheck, and troubleshooting notes.
+- `docs/EXPORT_LOCALIZATION_CHECKLIST.md`: CSV, Excel, template, and printable export localization checklist.
 - `docs/INTERNATIONALIZATION.md`: localization, regional adaptation, and global-readiness notes.
 - `docs/LOCAL_DEMO_RESET.md`: safe local fallback data reset guidance.
 - `docs/LOCAL_POSTGRESQL.md`: local PostgreSQL and Docker Compose setup.

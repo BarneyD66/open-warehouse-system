@@ -109,6 +109,7 @@ For regional adaptation pull requests:
 ## Related Docs
 
 - `docs/INTERNATIONALIZATION.md`
+- `docs/EXPORT_LOCALIZATION_CHECKLIST.md`
 - `docs/MOCK_CARRIER_ADAPTER.md`
 - `docs/DEMO_DATA_PLAN.md`
 - `docs/SCREENSHOT_GUIDE.md`
