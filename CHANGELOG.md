@@ -20,6 +20,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added contributor decision records for architecture, localization, demo data, persistence, and high-risk workflow review.
 - Added smoke test plan for customer, ops, warehouse, tracking, PostgreSQL, and documentation-only verification.
 - Added export localization checklist for CSV, Excel, templates, sample rows, and printable customer-facing artifacts.
+- Added GitHub support guide covering questions, bug reports, feature requests, security reporting, and public data safety.
 
 ### Changed
 
