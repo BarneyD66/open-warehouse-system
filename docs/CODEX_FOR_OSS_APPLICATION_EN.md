@@ -51,6 +51,8 @@ Codex credits would help improve open-source maintenance velocity and project qu
 - Generate Playwright coverage for customer, ops, and warehouse workflows.
 - Assist with carrier adapter interfaces and safe API boundary design.
 
+The detailed public usage plan is in `docs/CODEX_CREDIT_USE_PLAN.md`.
+
 ## Near-term OSS Plan
 
 - Add seed data and one-command local setup.

@@ -114,6 +114,8 @@ Do not publish exploit details, real customer data, production logs, or credenti
 
 If the project receives Codex/API credits, use them for work that improves open-source quality and maintainability:
 
+See `docs/CODEX_CREDIT_USE_PLAN.md` for the detailed public plan.
+
 - Generate and review focused tests for customer, ops, warehouse, billing, returns, and logistics workflows.
 - Draft reproducible issue summaries from bug reports.
 - Review PRs for data isolation, auth boundaries, billing correctness, and migration risk.
