@@ -104,6 +104,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/OPEN_SOURCE_LAUNCH_CHECKLIST.md`: launch checklist and repository setup notes.
 - `docs/PULL_REQUEST_REVIEW_CHECKLIST.md`: PR review checklist for scope, verification, data safety, and localization.
 - `docs/REGIONAL_ADAPTATION_GUIDE.md`: practical checklist for adapting language, carriers, tax, customs, privacy, and billing by region.
+- `docs/REGION_PROFILE_TEMPLATE.md`: structured template for proposing new regional adaptation work.
 - `docs/RELEASE_PROCESS.md`: release checklist, versioning notes, and release-note template.
 - `docs/SCREENSHOT_GUIDE.md`: safe screenshot and demo media guidance.
 - `docs/SMOKE_TEST_PLAN.md`: minimal smoke verification plan for contributors and maintainers.

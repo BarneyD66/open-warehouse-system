@@ -22,6 +22,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added export localization checklist for CSV, Excel, templates, sample rows, and printable customer-facing artifacts.
 - Added GitHub support guide covering questions, bug reports, feature requests, security reporting, and public data safety.
 - Added public Codex/API credit use plan for tests, triage, PR review, docs, demo data, localization, PostgreSQL hardening, and safe carrier adapter design.
+- Added region profile template for documenting language, carrier, tax, customs, privacy, export, and workflow assumptions before regional implementation.
 
 ### Changed
 

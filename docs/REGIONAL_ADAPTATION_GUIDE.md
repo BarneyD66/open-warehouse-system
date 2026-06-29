@@ -6,6 +6,8 @@ The project is Chinese-first and global-ready. That means Chinese-speaking cross
 
 This is not legal, tax, customs, privacy, labor, or carrier compliance advice. Treat it as an engineering checklist for responsible localization and integration work.
 
+For a fill-in proposal format, use `docs/REGION_PROFILE_TEMPLATE.md`.
+
 ## Adaptation Layers
 
 Use separate layers instead of scattering region-specific logic across pages:
@@ -110,6 +112,7 @@ For regional adaptation pull requests:
 
 - `docs/INTERNATIONALIZATION.md`
 - `docs/EXPORT_LOCALIZATION_CHECKLIST.md`
+- `docs/REGION_PROFILE_TEMPLATE.md`
 - `docs/MOCK_CARRIER_ADAPTER.md`
 - `docs/DEMO_DATA_PLAN.md`
 - `docs/SCREENSHOT_GUIDE.md`
