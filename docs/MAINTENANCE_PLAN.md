@@ -139,6 +139,8 @@ Keep the public backlog useful:
 
 ## Maintainer Checklist
 
+For handoff to another maintainer or trusted collaborator, start with `docs/MAINTAINER_HANDOFF.md`.
+
 Weekly:
 
 - Review new issues.

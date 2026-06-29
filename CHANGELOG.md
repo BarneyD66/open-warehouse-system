@@ -23,6 +23,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added GitHub support guide covering questions, bug reports, feature requests, security reporting, and public data safety.
 - Added public Codex/API credit use plan for tests, triage, PR review, docs, demo data, localization, PostgreSQL hardening, and safe carrier adapter design.
 - Added region profile template for documenting language, carrier, tax, customs, privacy, export, and workflow assumptions before regional implementation.
+- Added maintainer handoff checklist for routine maintenance, release preparation, safety review, and Codex-assisted work.
 
 ### Changed
 
