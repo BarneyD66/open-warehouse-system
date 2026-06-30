@@ -108,6 +108,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/REGION_PROFILE_TEMPLATE.md`: structured template for proposing new regional adaptation work.
 - `docs/RELEASE_PROCESS.md`: release checklist, versioning notes, and release-note template.
 - `docs/SCREENSHOT_GUIDE.md`: safe screenshot and demo media guidance.
+- `docs/SECRET_HANDLING_CHECKLIST.md`: checklist for keeping secrets, credentials, logs, and production data out of public work.
 - `docs/SMOKE_TEST_PLAN.md`: minimal smoke verification plan for contributors and maintainers.
 - `docs/STAFF_AUTH.md`: staff whitelist, demo login, and production authentication guidance.
 - `SECURITY.md`: vulnerability reporting, security scope, and public data policy.

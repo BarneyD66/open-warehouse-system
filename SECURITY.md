@@ -69,6 +69,7 @@ Chinese-mode customer-facing exports and templates should keep Chinese headers a
 Related docs:
 
 - `docs/STAFF_AUTH.md`: staff whitelist, demo login, and production authentication guidance.
+- `docs/SECRET_HANDLING_CHECKLIST.md`: secret, credential, and production-data handling checklist.
 - `docs/DEMO_DATA_PLAN.md`: safe fake demo data guidance.
 - `docs/SCREENSHOT_GUIDE.md`: safe screenshot and public demo media guidance.
 - `docs/MAINTENANCE_PLAN.md`: maintainer triage and review process.

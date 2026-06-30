@@ -133,4 +133,5 @@ Pause and ask for maintainer review before merging changes that:
 - `docs/RELEASE_PROCESS.md`
 - `docs/CODEX_CREDIT_USE_PLAN.md`
 - `docs/EXPORT_LOCALIZATION_CHECKLIST.md`
+- `docs/SECRET_HANDLING_CHECKLIST.md`
 - `SECURITY.md`
