@@ -25,6 +25,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added region profile template for documenting language, carrier, tax, customs, privacy, export, and workflow assumptions before regional implementation.
 - Added maintainer handoff checklist for routine maintenance, release preparation, safety review, and Codex-assisted work.
 - Added secret handling checklist for environment files, provider credentials, integration examples, public issues, and Codex/API prompts.
+- Added public demo checklist for screenshots, videos, README media, release assets, and Codex for OSS application materials.
 
 ### Changed
 

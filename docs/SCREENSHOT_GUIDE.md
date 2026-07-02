@@ -4,6 +4,8 @@ This guide defines how Open Warehouse System should create screenshots, short de
 
 Screenshots are useful only when they are safe, repeatable, and tied to real product workflows. Do not use production customer data or private operational screenshots.
 
+Before publishing public demo media, also use `docs/PUBLIC_DEMO_CHECKLIST.md`.
+
 ## Goals
 
 - Show the project is a working warehouse system, not only a code skeleton.

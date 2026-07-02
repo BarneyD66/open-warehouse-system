@@ -2,6 +2,8 @@
 
 This English version can be used when applying to OpenAI Codex for OSS or when explaining the project to international contributors.
 
+Public screenshots and demos for the application should follow `docs/PUBLIC_DEMO_CHECKLIST.md`.
+
 ## Project Name
 
 Open Warehouse System
