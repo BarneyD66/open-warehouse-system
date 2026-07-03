@@ -94,6 +94,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/CONTRIBUTOR_DECISION_RECORDS.md`: lightweight project decisions for contributors and maintainers.
 - `docs/DEMO_DATA_PLAN.md`: safe fake demo data plan for onboarding, screenshots, and tests.
 - `docs/DEMO_SEED_DATA_GUIDE.md`: safe demo seed data contract and future seed command expectations.
+- `docs/DEPLOYMENT_ENVIRONMENT_CHECKLIST.md`: deployment environment, auth, data, integration, and public-demo review checklist.
 - `docs/DOCKER_COMPOSE_RUNBOOK.md`: Docker Compose PostgreSQL startup, reset, healthcheck, and troubleshooting notes.
 - `docs/EXPORT_LOCALIZATION_CHECKLIST.md`: CSV, Excel, template, and printable export localization checklist.
 - `docs/INTERNATIONALIZATION.md`: localization, regional adaptation, and global-readiness notes.
