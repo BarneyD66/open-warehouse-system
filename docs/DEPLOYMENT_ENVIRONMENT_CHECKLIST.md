@@ -160,6 +160,7 @@ Do not share or promote the deployment if:
 - `docs/PUBLIC_DEMO_CHECKLIST.md`
 - `docs/SMOKE_TEST_PLAN.md`
 - `docs/REGION_PROFILE_TEMPLATE.md`
+- `docs/PRIVACY_DATA_RETENTION_GUIDE.md`
 - `docs/EXPORT_LOCALIZATION_CHECKLIST.md`
 - `docs/PULL_REQUEST_REVIEW_CHECKLIST.md`
 - `SECURITY.md`

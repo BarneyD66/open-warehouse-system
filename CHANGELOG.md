@@ -27,6 +27,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added secret handling checklist for environment files, provider credentials, integration examples, public issues, and Codex/API prompts.
 - Added public demo checklist for screenshots, videos, README media, release assets, and Codex for OSS application materials.
 - Added deployment environment checklist for auth, data, integration, public-demo, and regional assumption reviews before sharing hosted environments.
+- Added privacy and data-retention guide for customer records, files, billing, carrier data, logs, backups, exports, and regional review.
 
 ### Changed
 

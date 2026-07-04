@@ -71,6 +71,7 @@ Related docs:
 - `docs/STAFF_AUTH.md`: staff whitelist, demo login, and production authentication guidance.
 - `docs/SECRET_HANDLING_CHECKLIST.md`: secret, credential, and production-data handling checklist.
 - `docs/DEPLOYMENT_ENVIRONMENT_CHECKLIST.md`: deployment environment, auth, data, and integration safety checklist.
+- `docs/PRIVACY_DATA_RETENTION_GUIDE.md`: privacy and data-retention engineering checklist.
 - `docs/DEMO_DATA_PLAN.md`: safe fake demo data guidance.
 - `docs/SCREENSHOT_GUIDE.md`: safe screenshot and public demo media guidance.
 - `docs/MAINTENANCE_PLAN.md`: maintainer triage and review process.
