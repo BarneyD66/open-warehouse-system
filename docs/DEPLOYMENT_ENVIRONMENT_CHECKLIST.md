@@ -130,6 +130,8 @@ For PostgreSQL-backed deployments:
 npm run db:init
 ```
 
+Use `docs/POSTGRES_MIGRATION_REVIEW_CHECKLIST.md` before deploying schema, migration script, repository, backup, restore, or export changes that rely on PostgreSQL state.
+
 Manual smoke routes:
 
 - `/`
@@ -161,6 +163,7 @@ Do not share or promote the deployment if:
 - `docs/SMOKE_TEST_PLAN.md`
 - `docs/REGION_PROFILE_TEMPLATE.md`
 - `docs/PRIVACY_DATA_RETENTION_GUIDE.md`
+- `docs/POSTGRES_MIGRATION_REVIEW_CHECKLIST.md`
 - `docs/EXPORT_LOCALIZATION_CHECKLIST.md`
 - `docs/PULL_REQUEST_REVIEW_CHECKLIST.md`
 - `SECURITY.md`

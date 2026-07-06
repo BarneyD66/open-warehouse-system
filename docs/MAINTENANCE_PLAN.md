@@ -88,6 +88,8 @@ For PostgreSQL changes:
 npm run db:init
 ```
 
+Use `docs/POSTGRES_MIGRATION_REVIEW_CHECKLIST.md` for schema, migration script, repository, backup, restore, export, and rollback review notes.
+
 For frontend workflow changes, include manual checks for relevant routes such as:
 
 - `/login`
@@ -119,7 +121,7 @@ See `docs/CODEX_CREDIT_USE_PLAN.md` for the detailed public plan.
 - Generate and review focused tests for customer, ops, warehouse, billing, returns, and logistics workflows.
 - Draft reproducible issue summaries from bug reports.
 - Review PRs for data isolation, auth boundaries, billing correctness, and migration risk.
-- Generate PostgreSQL migration review notes.
+- Generate PostgreSQL migration review notes using `docs/POSTGRES_MIGRATION_REVIEW_CHECKLIST.md`.
 - Improve English and Chinese docs.
 - Create Playwright smoke-test plans and starter tests.
 - Produce safe fake demo data and seed scripts.
