@@ -29,6 +29,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added deployment environment checklist for auth, data, integration, public-demo, and regional assumption reviews before sharing hosted environments.
 - Added privacy and data-retention guide for customer records, files, billing, carrier data, logs, backups, exports, and regional review.
 - Added PostgreSQL migration review checklist for schema, migration scripts, data access, rollback, export localization, and deployment safety.
+- Added OSS reviewer guide with a fast review path, safety signals, verification commands, and current `0.x` project scope.
 
 ### Changed
 

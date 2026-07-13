@@ -104,6 +104,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/MAINTENANCE_PLAN.md`: issue triage, release rhythm, review policy, and quality gates.
 - `docs/MOCK_CARRIER_ADAPTER.md`: safe mock carrier adapter design for logistics contributors.
 - `docs/OPEN_SOURCE_LAUNCH_CHECKLIST.md`: launch checklist and repository setup notes.
+- `docs/OSS_REVIEWER_GUIDE.md`: quick review path for OSS evaluators, maintainers, and first-time contributors.
 - `docs/POSTGRES_MIGRATION_REVIEW_CHECKLIST.md`: PostgreSQL schema, migration, data access, and rollback review checklist.
 - `docs/PRIVACY_DATA_RETENTION_GUIDE.md`: privacy and data-retention engineering checklist for deployments and regional adaptation.
 - `docs/PUBLIC_DEMO_CHECKLIST.md`: public demo, screenshot, video, and application-material safety checklist.
