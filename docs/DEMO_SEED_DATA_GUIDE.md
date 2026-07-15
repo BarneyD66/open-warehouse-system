@@ -4,6 +4,8 @@ This guide defines how contributors should design, review, and eventually implem
 
 The project does not currently ship a `npm run seed:demo` command. Until that command exists, use this guide as the contract for safe demo records, screenshots, smoke tests, and contributor examples.
 
+For a small first contribution before implementing the command, see the safe demo seed dry-run issue draft in `docs/GOOD_FIRST_ISSUE_DRAFTS.md`.
+
 ## Goals
 
 - Make local demos understandable without using private warehouse data.
@@ -99,6 +101,7 @@ Before merging demo seed work:
 ## Related Docs
 
 - `docs/DEMO_DATA_PLAN.md`
+- `docs/GOOD_FIRST_ISSUE_DRAFTS.md`
 - `docs/LOCAL_DEMO_RESET.md`
 - `docs/LOCAL_POSTGRESQL.md`
 - `docs/SCREENSHOT_GUIDE.md`

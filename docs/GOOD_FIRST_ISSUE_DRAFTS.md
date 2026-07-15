@@ -129,3 +129,25 @@ Carrier integration is important for warehouse operations, but first contributor
 - Explicitly state that real carrier credentials must not be committed.
 - Link to `SECURITY.md` and `docs/STAFF_AUTH.md` where relevant.
 - Run `git diff --check`.
+
+## 7. Draft a safe demo seed dry-run plan
+
+Suggested labels: `good first issue`, `developer-experience`, `documentation`
+
+### Summary
+
+Add a small contributor-facing plan for a future `npm run seed:demo -- --dry-run` workflow that can preview fake demo records without writing to local fallback data or PostgreSQL.
+
+### Context
+
+Open Warehouse System needs safe demo seed data so reviewers and first-time contributors can understand customer, ops, warehouse, returns, billing, and tracking workflows quickly. A dry-run plan is a low-risk first step before implementing seed scripts because it lets contributors agree on record shape, IDs, safety checks, and verification expectations.
+
+### Acceptance criteria
+
+- Add or update a doc under `docs/`.
+- Base the plan on `docs/DEMO_SEED_DATA_GUIDE.md`.
+- Explain what the dry-run command should print without writing data.
+- Include fake examples only, such as `DEMO-CUSTOMER-001`, `SKU-DEMO-001`, and `TRK-DEMO-0001`.
+- State that the command must refuse production mode and must not read `.env.local`, logs, uploads, private spreadsheets, or production database URLs.
+- Include expected verification commands: `git diff --check` for docs-only work and `npm run lint` if script code is added.
+- Keep Chinese-mode customer-facing examples, templates, CSV/Excel headers, and sample rows Chinese-first.
