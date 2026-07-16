@@ -146,6 +146,7 @@ Open Warehouse System needs safe demo seed data so reviewers and first-time cont
 
 - Add or update a doc under `docs/`.
 - Base the plan on `docs/DEMO_SEED_DATA_GUIDE.md`.
+- Use `docs/DEMO_SEED_DRY_RUN_EXAMPLE.md` as the expected output baseline.
 - Explain what the dry-run command should print without writing data.
 - Include fake examples only, such as `DEMO-CUSTOMER-001`, `SKU-DEMO-001`, and `TRK-DEMO-0001`.
 - State that the command must refuse production mode and must not read `.env.local`, logs, uploads, private spreadsheets, or production database URLs.
