@@ -34,6 +34,32 @@ Open Warehouse System packages common warehouse and cross-border fulfillment wor
 - Logistics and billing: carrier rules, rate estimates, labels/tracking, statement confirmation, payment proof, dispute handling.
 - Data layer: local JSON fallback plus PostgreSQL schema for production migration.
 
+## System Map
+
+```mermaid
+flowchart LR
+  Visitor[Visitor] --> PublicSite[Public site]
+  Seller[Customer or seller] --> CustomerPortal[Customer portal]
+  Staff[Ops staff] --> OpsWorkbench[Ops workbench]
+  WarehouseUser[Warehouse user] --> WarehouseWorkbench[Warehouse workbench]
+
+  PublicSite --> InquiryAPI[Inquiry and lead APIs]
+  CustomerPortal --> CustomerAPI[Customer workflow APIs]
+  OpsWorkbench --> OpsAPI[Ops review APIs]
+  WarehouseWorkbench --> WarehouseAPI[Warehouse task APIs]
+
+  InquiryAPI --> DomainStores[Domain stores]
+  CustomerAPI --> DomainStores
+  OpsAPI --> DomainStores
+  WarehouseAPI --> DomainStores
+
+  DomainStores --> LocalFallback[Local fallback .local-data]
+  DomainStores --> PostgreSQL[PostgreSQL db/schema.sql]
+  OpsAPI -.-> AdapterBoundary[Mock or sandbox carrier and marketplace adapters]
+```
+
+For a fuller explanation of surfaces, modules, persistence, and security boundaries, see `docs/ARCHITECTURE.md`.
+
 ## Tech Stack
 
 - Next.js 16 App Router

@@ -67,13 +67,15 @@ The app can run without PostgreSQL using local fallback stores. Contributors nee
 - Link to `docs/DEMO_DATA_PLAN.md` and `docs/LOCAL_POSTGRESQL.md`.
 - Run `git diff --check`.
 
-## 4. Add an architecture diagram to README.en.md
+## 4. Refine the README architecture diagram
 
 Suggested labels: `good first issue`, `documentation`, `architecture`
 
+Status: baseline Mermaid diagram exists in `README.en.md`; future issues can refine it when major surfaces or persistence boundaries change.
+
 ### Summary
 
-Add a concise Mermaid diagram to `README.en.md` that shows the customer, ops, warehouse, API, and persistence boundaries.
+Refine the compact Mermaid diagram in `README.en.md` so it stays accurate as customer, ops, warehouse, API, integration, and persistence boundaries evolve.
 
 ### Context
 
@@ -81,8 +83,8 @@ First-time visitors should be able to understand the main surfaces without readi
 
 ### Acceptance criteria
 
-- Add one compact Mermaid diagram to `README.en.md`.
-- Show at least these surfaces: public site, customer portal, ops workbench, warehouse workbench, API routes, local fallback data, and PostgreSQL.
+- Keep one compact Mermaid diagram in `README.en.md`.
+- Show at least these surfaces when they are relevant: public site, customer portal, ops workbench, warehouse workbench, API routes, local fallback data, and PostgreSQL.
 - Link to `docs/ARCHITECTURE.md` for details.
 - Keep the README readable and not too long.
 - Run `git diff --check`.

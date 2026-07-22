@@ -32,6 +32,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added OSS reviewer guide with a fast review path, safety signals, verification commands, and current `0.x` project scope.
 - Added a good first issue draft for planning a safe demo seed dry-run workflow before implementation.
 - Added a demo seed dry-run output example for future safe seed command review.
+- Added a compact Mermaid system map to the English README and updated the related architecture good first issue draft.
 
 ### Changed
 
