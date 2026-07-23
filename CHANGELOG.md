@@ -33,6 +33,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added a good first issue draft for planning a safe demo seed dry-run workflow before implementation.
 - Added a demo seed dry-run output example for future safe seed command review.
 - Added a compact Mermaid system map to the English README and updated the related architecture good first issue draft.
+- Added a safe demo walkthrough for route-by-route local review, screenshots, and Codex for OSS application preparation.
 
 ### Changed
 

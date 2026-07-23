@@ -143,6 +143,7 @@ For docs, templates, issue text, release notes, and contributor guidance:
 
 - `docs/PULL_REQUEST_REVIEW_CHECKLIST.md`
 - `docs/CONTRIBUTOR_ONBOARDING.md`
+- `docs/DEMO_WALKTHROUGH.md`
 - `docs/DOCKER_COMPOSE_RUNBOOK.md`
 - `docs/LOCAL_POSTGRESQL.md`
 - `docs/SCREENSHOT_GUIDE.md`

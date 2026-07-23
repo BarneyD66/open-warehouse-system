@@ -12,8 +12,9 @@ Start here:
 2. Read `docs/ARCHITECTURE.md` for the main application surfaces and domain boundaries.
 3. Read `docs/CONTRIBUTOR_QUICK_PATH.md` for the expected first-contribution workflow.
 4. Read `docs/DEMO_DATA_PLAN.md` and `docs/PUBLIC_DEMO_CHECKLIST.md` to understand the public-data safety model.
-5. Read `docs/CODEX_CREDIT_USE_PLAN.md` to see how Codex/API credits would be used for open-source work.
-6. Check `CHANGELOG.md` for recent maintenance and governance improvements.
+5. Use `docs/DEMO_WALKTHROUGH.md` for a route-by-route local review path.
+6. Read `docs/CODEX_CREDIT_USE_PLAN.md` to see how Codex/API credits would be used for open-source work.
+7. Check `CHANGELOG.md` for recent maintenance and governance improvements.
 
 If you only have time to run the project locally:
 
