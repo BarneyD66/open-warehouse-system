@@ -140,6 +140,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/REGIONAL_ADAPTATION_GUIDE.md`: practical checklist for adapting language, carriers, tax, customs, privacy, and billing by region.
 - `docs/REGION_PROFILE_TEMPLATE.md`: structured template for proposing new regional adaptation work.
 - `docs/RELEASE_PROCESS.md`: release checklist, versioning notes, and release-note template.
+- `docs/README_MEDIA_PLAN.md`: recommended README screenshot slots, filenames, alt text, captions, and safety checks.
 - `docs/SCREENSHOT_GUIDE.md`: safe screenshot and demo media guidance.
 - `docs/SECRET_HANDLING_CHECKLIST.md`: checklist for keeping secrets, credentials, logs, and production data out of public work.
 - `docs/SMOKE_TEST_PLAN.md`: minimal smoke verification plan for contributors and maintainers.

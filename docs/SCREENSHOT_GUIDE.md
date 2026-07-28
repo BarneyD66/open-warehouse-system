@@ -5,6 +5,7 @@ This guide defines how Open Warehouse System should create screenshots, short de
 Screenshots are useful only when they are safe, repeatable, and tied to real product workflows. Do not use production customer data or private operational screenshots.
 
 Before publishing public demo media, also use `docs/PUBLIC_DEMO_CHECKLIST.md`.
+Before adding README screenshots, use `docs/README_MEDIA_PLAN.md` for recommended slots, filenames, alt text, and captions.
 
 ## Goals
 
@@ -167,3 +168,12 @@ A future screenshot task can use Playwright to:
 - Fail if screenshots are blank or contain obvious error pages.
 
 This should be implemented after the demo seed data plan is stable.
+
+## Related Docs
+
+- `docs/README_MEDIA_PLAN.md`
+- `docs/PUBLIC_DEMO_CHECKLIST.md`
+- `docs/DEMO_WALKTHROUGH.md`
+- `docs/DEMO_DATA_PLAN.md`
+- `docs/DEMO_SEED_DATA_GUIDE.md`
+- `docs/EXPORT_LOCALIZATION_CHECKLIST.md`

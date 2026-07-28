@@ -122,6 +122,8 @@ Do not publish the demo if it:
 ## Related Docs
 
 - `docs/SCREENSHOT_GUIDE.md`
+- `docs/README_MEDIA_PLAN.md`
+- `docs/DEMO_WALKTHROUGH.md`
 - `docs/DEMO_DATA_PLAN.md`
 - `docs/DEMO_SEED_DATA_GUIDE.md`
 - `docs/SECRET_HANDLING_CHECKLIST.md`
