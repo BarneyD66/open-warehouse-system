@@ -99,6 +99,7 @@ The credit use is successful if it produces:
 ## Related Docs
 
 - `docs/CODEX_FOR_OSS_APPLICATION_EN.md`
+- `docs/CODEX_FOR_OSS_REVIEW_EVIDENCE.md`
 - `docs/MAINTENANCE_PLAN.md`
 - `docs/SMOKE_TEST_PLAN.md`
 - `docs/PULL_REQUEST_REVIEW_CHECKLIST.md`

@@ -2,7 +2,7 @@
 
 This English version can be used when applying to OpenAI Codex for OSS or when explaining the project to international contributors.
 
-Public screenshots and demos for the application should follow `docs/PUBLIC_DEMO_CHECKLIST.md`. Reviewers who want a fast project overview can start with `docs/OSS_REVIEWER_GUIDE.md`.
+Public screenshots and demos for the application should follow `docs/PUBLIC_DEMO_CHECKLIST.md`. Reviewers who want a fast project overview can start with `docs/OSS_REVIEWER_GUIDE.md`; a consolidated evidence index is available in `docs/CODEX_FOR_OSS_REVIEW_EVIDENCE.md`.
 
 ## Project Name
 

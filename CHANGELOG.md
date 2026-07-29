@@ -35,6 +35,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added a compact Mermaid system map to the English README and updated the related architecture good first issue draft.
 - Added a safe demo walkthrough for route-by-route local review, screenshots, and Codex for OSS application preparation.
 - Added README media plan covering screenshot slots, filenames, alt text, captions, and public safety checks.
+- Added Codex for OSS review evidence index for application review, workflow evidence, safety posture, contributor readiness, and credit-use fit.
 
 ### Changed
 
