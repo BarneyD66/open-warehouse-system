@@ -27,6 +27,7 @@ Before creating a tag:
 - Run `npm run lint`.
 - Run `npm run build` when code, routes, Next.js configuration, or database behavior changed.
 - Run `git diff --check` for documentation changes.
+- Review `docs/DEPENDENCY_UPDATE_POLICY.md` when a release includes package, lockfile, CI runtime, or build-tool changes.
 - Confirm `.env.local`, local data, logs, screenshots with private data, and production documents are not staged.
 - Review `SECURITY.md` if the release touches auth, staff access, customer isolation, file downloads, billing, carrier credentials, or webhooks.
 - Review `docs/PULL_REQUEST_REVIEW_CHECKLIST.md` for changes that affect inventory, billing, logistics, returns, warehouse execution, or customer-facing exports.

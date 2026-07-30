@@ -48,6 +48,7 @@ Reviewers should check:
 - Does it include useful verification notes?
 - Does customer-facing Chinese-mode output remain Chinese-first, including CSV/Excel templates and examples?
 - Does the change affect billing, inventory, returns, logistics, or auth logic? If yes, require stricter review and tests or manual verification.
+- Does the change update dependencies, CI runtimes, or build tooling? If yes, use `docs/DEPENDENCY_UPDATE_POLICY.md`.
 
 ## Release Rhythm
 
@@ -89,6 +90,8 @@ npm run db:init
 ```
 
 Use `docs/POSTGRES_MIGRATION_REVIEW_CHECKLIST.md` for schema, migration script, repository, backup, restore, export, and rollback review notes.
+
+Use `docs/DEPENDENCY_UPDATE_POLICY.md` for package, lockfile, CI runtime, PostgreSQL client, Playwright, Next.js, React, TypeScript, Tailwind CSS, and build-tool updates.
 
 For frontend workflow changes, include manual checks for relevant routes such as:
 

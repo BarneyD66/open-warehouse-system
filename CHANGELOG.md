@@ -37,6 +37,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added README media plan covering screenshot slots, filenames, alt text, captions, and public safety checks.
 - Added Codex for OSS review evidence index for application review, workflow evidence, safety posture, contributor readiness, and credit-use fit.
 - Added CI workflow guide for GitHub Actions checks, local reproduction, PR verification notes, and safe CI data rules.
+- Added dependency update policy covering risk levels, verification commands, PR notes, and public data safety rules.
 
 ### Changed
 
