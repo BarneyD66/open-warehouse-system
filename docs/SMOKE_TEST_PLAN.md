@@ -142,6 +142,7 @@ For docs, templates, issue text, release notes, and contributor guidance:
 ## Related Docs
 
 - `docs/PULL_REQUEST_REVIEW_CHECKLIST.md`
+- `docs/CI_WORKFLOW_GUIDE.md`
 - `docs/CONTRIBUTOR_ONBOARDING.md`
 - `docs/DEMO_WALKTHROUGH.md`
 - `docs/DOCKER_COMPOSE_RUNBOOK.md`

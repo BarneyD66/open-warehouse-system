@@ -115,6 +115,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/CODEX_FOR_OSS_APPLICATION_EN.md`: English Codex for OSS application draft.
 - `docs/CODEX_FOR_OSS_REVIEW_EVIDENCE.md`: reviewer evidence index for Codex for OSS application and maintainer orientation.
 - `docs/CODEX_CREDIT_USE_PLAN.md`: public plan for responsible Codex/API credit use.
+- `docs/CI_WORKFLOW_GUIDE.md`: GitHub Actions checks, local reproduction, PR verification notes, and CI safety rules.
 - `docs/ARCHITECTURE.md`: application surfaces, domain modules, persistence and security boundaries.
 - `docs/CONTRIBUTOR_QUICK_PATH.md`: short first-contribution path for new contributors.
 - `docs/CONTRIBUTOR_ONBOARDING.md`: first-run, first-contribution, and PR guidance for contributors.

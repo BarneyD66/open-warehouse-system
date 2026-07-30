@@ -89,6 +89,8 @@ npm run lint
 npm run build
 ```
 
+GitHub Actions runs `npm ci`, `npm run lint`, and `npm run build` on pull requests and pushes to main branches. See `docs/CI_WORKFLOW_GUIDE.md`.
+
 For workflow changes, also include a short manual verification note in the pull request.
 
 ## 6. Open the Pull Request
