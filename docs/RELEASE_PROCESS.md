@@ -79,4 +79,5 @@ If a release is documentation-only, say that clearly in the GitHub release notes
 - Confirm the GitHub release links to the correct tag.
 - Open follow-up issues for deferred work instead of hiding it in release notes.
 - Keep `docs/INITIAL_ISSUES.md` and `docs/GOOD_FIRST_ISSUE_DRAFTS.md` aligned with the next contributor-friendly tasks.
+- Remove or refresh draft release-note files, such as `docs/RELEASE_NOTES_DRAFT_V0_1_1.md`, after the corresponding release is tagged.
 - Update `docs/CODEX_FOR_OSS_APPLICATION_EN.md` only when the release materially improves open-source value.
