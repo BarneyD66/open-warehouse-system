@@ -149,6 +149,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/SECRET_HANDLING_CHECKLIST.md`: checklist for keeping secrets, credentials, logs, and production data out of public work.
 - `docs/SMOKE_TEST_PLAN.md`: minimal smoke verification plan for contributors and maintainers.
 - `docs/STAFF_AUTH.md`: staff whitelist, demo login, and production authentication guidance.
+- `docs/TRANSLATION_CONTRIBUTION_GUIDE.md`: translation and localization contribution rules for global-ready workflows.
 - `SECURITY.md`: vulnerability reporting, security scope, and public data policy.
 - `SUPPORT.md`: support channels, issue expectations, and public data safety rules.
 - `CHANGELOG.md`: public release history and release-note summary.

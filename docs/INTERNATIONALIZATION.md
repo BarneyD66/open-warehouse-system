@@ -4,7 +4,7 @@ Open Warehouse System is Chinese-first, but it is designed to be adapted for cro
 
 This document clarifies what "global-ready" means in this repository. It is intended for contributors, early adopters, and reviewers who want to understand how the project can support users outside one local market without making unrealistic compliance claims.
 
-For a more practical region-by-region checklist, see `docs/REGIONAL_ADAPTATION_GUIDE.md`. For a fill-in proposal format, use `docs/REGION_PROFILE_TEMPLATE.md`. For CSV, Excel, template, and printable export review, see `docs/EXPORT_LOCALIZATION_CHECKLIST.md`.
+For a more practical region-by-region checklist, see `docs/REGIONAL_ADAPTATION_GUIDE.md`. For a fill-in proposal format, use `docs/REGION_PROFILE_TEMPLATE.md`. For CSV, Excel, template, and printable export review, see `docs/EXPORT_LOCALIZATION_CHECKLIST.md`. For translation pull requests, use `docs/TRANSLATION_CONTRIBUTION_GUIDE.md`.
 
 ## Positioning
 
@@ -71,4 +71,4 @@ Before merging internationalization-related changes, reviewers should check:
 - Are secrets, real customer data, production addresses, and payment proofs excluded?
 - Is there a test or manual verification note for the affected workflow?
 
-Use `docs/EXPORT_LOCALIZATION_CHECKLIST.md` for detailed export and template review.
+Use `docs/TRANSLATION_CONTRIBUTION_GUIDE.md` for translation pull requests and `docs/EXPORT_LOCALIZATION_CHECKLIST.md` for detailed export and template review.

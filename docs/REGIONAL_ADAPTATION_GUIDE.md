@@ -111,6 +111,7 @@ For regional adaptation pull requests:
 ## Related Docs
 
 - `docs/INTERNATIONALIZATION.md`
+- `docs/TRANSLATION_CONTRIBUTION_GUIDE.md`
 - `docs/EXPORT_LOCALIZATION_CHECKLIST.md`
 - `docs/REGION_PROFILE_TEMPLATE.md`
 - `docs/PRIVACY_DATA_RETENTION_GUIDE.md`
