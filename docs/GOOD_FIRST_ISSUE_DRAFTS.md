@@ -154,3 +154,26 @@ Open Warehouse System needs safe demo seed data so reviewers and first-time cont
 - State that the command must refuse production mode and must not read `.env.local`, logs, uploads, private spreadsheets, or production database URLs.
 - Include expected verification commands: `git diff --check` for docs-only work and `npm run lint` if script code is added.
 - Keep Chinese-mode customer-facing examples, templates, CSV/Excel headers, and sample rows Chinese-first.
+
+## 8. Review one customer workflow for localization readiness
+
+Suggested labels: `good first issue`, `documentation`, `localization`
+
+### Summary
+
+Review one customer-facing workflow and document what must be translated together so the page, exports, errors, and handoff artifacts stay language-consistent.
+
+### Context
+
+Open Warehouse System is Chinese-first and global-ready. New contributors can help by mapping one workflow at a time, such as `/portal`, `/skus`, `/inbound`, `/outbound`, `/returns`, `/billing`, or `/tracking`, and identifying the customer-visible copy that needs workflow-level localization.
+
+### Acceptance criteria
+
+- Add or update a doc under `docs/`.
+- Choose one customer-facing route or workflow.
+- List the page copy, form labels, validation messages, empty states, CSV/Excel headers, printable notes, and notification text that should be reviewed together.
+- Keep Chinese-mode customer-facing artifacts Chinese-first.
+- Treat English names as internal aliases unless a complete alternate locale is proposed.
+- Link to `docs/TRANSLATION_CONTRIBUTION_GUIDE.md`, `docs/INTERNATIONALIZATION.md`, and `docs/EXPORT_LOCALIZATION_CHECKLIST.md`.
+- Use fake examples only; do not include real customer records, production screenshots, logs, `.env.local`, private pricing sheets, or carrier/payment documents.
+- Include expected verification commands: `git diff --check` and `npm run lint` if code or config changes are added.

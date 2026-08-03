@@ -40,6 +40,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added dependency update policy covering risk levels, verification commands, PR notes, and public data safety rules.
 - Added draft `v0.1.1` release notes for the next documentation and OSS-readiness release.
 - Added translation contribution guide for workflow-level localization, Chinese-first customer artifacts, regional assumptions, and public data safety.
+- Added locale-readiness good first issue draft for reviewing one customer workflow at a time.
 
 ### Changed
 
