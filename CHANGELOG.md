@@ -41,6 +41,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added draft `v0.1.1` release notes for the next documentation and OSS-readiness release.
 - Added translation contribution guide for workflow-level localization, Chinese-first customer artifacts, regional assumptions, and public data safety.
 - Added locale-readiness good first issue draft for reviewing one customer workflow at a time.
+- Clarified `localization` and `internationalization` issue label usage for workflow-level translation and broader regional adaptation work.
 
 ### Changed
 

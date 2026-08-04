@@ -25,6 +25,7 @@ Use a small set of labels and prefer clarity over precision. Most issues should 
 - `warehouse`: receiving, putaway, picking, packing, locations, or warehouse task flow.
 - `returns`: RMA, return inspection, restock, refund evidence, or exception handling.
 - `internationalization`: language, region, carrier, tax, customs, privacy, or localized export behavior.
+- `localization`: workflow-level translation readiness, customer-visible copy, locale examples, or translated artifacts for one route or workflow.
 
 ### Contributor Labels
 
@@ -44,7 +45,8 @@ Use a small set of labels and prefer clarity over precision. Most issues should 
 - Use `good first issue` only when the task has a clear file or route, small scope, safe fake data, and explicit verification steps.
 - Use `help wanted` when the issue is useful to the roadmap but needs contributor input before implementation.
 - Use `security` or `security-sensitive` carefully. Public issues should not include exploit steps, real customer data, secrets, logs, production URLs, or private documents.
-- Use `internationalization` when an issue affects language, region-specific deployment, carrier assumptions, tax/customs copy, or localized templates.
+- Use `localization` when an issue reviews one workflow's translated page copy, validation messages, CSV/Excel headers, printable notes, or customer-facing examples.
+- Use `internationalization` when an issue affects broader language architecture, region-specific deployment, carrier assumptions, tax/customs copy, or localized templates across workflows.
 - For Chinese-mode customer-facing flows, check the full visible artifact: page copy, admin copy shown to customers, downloadable templates, CSV/Excel headers, and example rows.
 - Do not create labels that contain customer names, private warehouse names, carrier account identifiers, or production incident details.
 
@@ -56,12 +58,14 @@ Use a small set of labels and prefer clarity over precision. Most issues should 
 | Add acceptance criteria for mock carrier adapter behavior | `documentation`, `logistics`, `help wanted` |
 | Fix staff-only API route that accepts a customer session | `bug`, `backend`, `auth`, `security-sensitive` |
 | Review CSV template headers for Chinese-mode exports | `documentation`, `internationalization`, `good first issue` |
+| Map localization readiness for `/outbound` customer copy and exports | `documentation`, `localization`, `good first issue` |
 | Add Playwright smoke coverage for inbound receiving | `test`, `warehouse`, `inventory` |
 
 ## Related Docs
 
 - `SECURITY.md`: vulnerability reporting and public data policy.
 - `docs/GOOD_FIRST_ISSUE_DRAFTS.md`: copy-ready starter issue drafts.
+- `docs/TRANSLATION_CONTRIBUTION_GUIDE.md`: translation and localization contribution rules.
 - `docs/INITIAL_ISSUES.md`: first public backlog candidates.
 - `docs/CONTRIBUTOR_QUICK_PATH.md`: short contributor onboarding path.
 - `docs/MAINTENANCE_PLAN.md`: maintenance cadence, review policy, and quality gates.
