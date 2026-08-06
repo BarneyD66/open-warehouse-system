@@ -6,7 +6,7 @@ This draft helps maintainers prepare the next small `0.x` documentation and open
 
 ## Suggested Summary
 
-`v0.1.1` is a documentation, onboarding, and maintainer-readiness update for the early Open Warehouse System public launch. It improves reviewer orientation, safe demo guidance, CI reproduction, release process, dependency update rules, and contributor entry points without changing runtime warehouse behavior.
+`v0.1.1` is a documentation, onboarding, localization, and maintainer-readiness update for the early Open Warehouse System public launch. It improves reviewer orientation, safe demo guidance, CI reproduction, release process, dependency update rules, workflow-level localization review, and contributor entry points without changing runtime warehouse behavior.
 
 ## Highlights
 
@@ -16,6 +16,8 @@ This draft helps maintainers prepare the next small `0.x` documentation and open
 - Added README media and screenshot planning guidance so public assets use fake demo data only.
 - Added demo walkthrough and demo seed dry-run notes for safer onboarding and future seed work.
 - Added maintainer-facing checklists for releases, handoff, privacy, deployment review, PostgreSQL migration review, and secret handling.
+- Added translation, localization, and region-adaptation guidance for workflow-level customer-facing review.
+- Added a localization workflow review template and good first issue path so contributors can map one route safely.
 
 ## Security And Data Safety
 
@@ -55,7 +57,7 @@ npm run db:init
 ```markdown
 ## Summary
 
-`v0.1.1` improves open-source reviewer readiness, contributor onboarding, demo safety, CI reproduction, release process, and dependency update guidance for Open Warehouse System.
+`v0.1.1` improves open-source reviewer readiness, contributor onboarding, demo safety, CI reproduction, release process, dependency update guidance, and workflow-level localization review for Open Warehouse System.
 
 ## Added
 
@@ -63,6 +65,7 @@ npm run db:init
 - CI workflow guide and dependency update policy.
 - README media plan, screenshot guidance, demo walkthrough, and demo seed dry-run notes.
 - Maintainer handoff, release, privacy, deployment, PostgreSQL migration, and secret-handling checklists.
+- Translation contribution guide, localization issue labels, and localization workflow review template.
 
 ## Security And Data Safety
 
