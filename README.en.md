@@ -131,6 +131,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/INTERNATIONALIZATION.md`: localization, regional adaptation, and global-readiness notes.
 - `docs/LOCAL_DEMO_RESET.md`: safe local fallback data reset guidance.
 - `docs/LOCAL_POSTGRESQL.md`: local PostgreSQL and Docker Compose setup.
+- `docs/LOCALIZATION_WORKFLOW_REVIEW_TEMPLATE.md`: fill-in template for reviewing one customer workflow before localization work.
 - `docs/MAINTAINER_HANDOFF.md`: maintainer handoff checklist for routine maintenance, release, safety, and Codex-assisted work.
 - `docs/MAINTENANCE_PLAN.md`: issue triage, release rhythm, review policy, and quality gates.
 - `docs/MOCK_CARRIER_ADAPTER.md`: safe mock carrier adapter design for logistics contributors.

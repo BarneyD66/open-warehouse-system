@@ -60,7 +60,7 @@ The app can run without PostgreSQL using local fallback stores. Contributors nee
 
 ### Acceptance criteria
 
-- Add or update a doc under `docs/`.
+- Add or update a doc under `docs/`, using `docs/LOCALIZATION_WORKFLOW_REVIEW_TEMPLATE.md` as the starting point.
 - Explain local JSON fallback mode in plain English.
 - Mention `.local-data` as local-only generated data that must not be committed.
 - Include a safe reset checklist that does not delete unrelated files.

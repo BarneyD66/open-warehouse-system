@@ -42,6 +42,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added translation contribution guide for workflow-level localization, Chinese-first customer artifacts, regional assumptions, and public data safety.
 - Added locale-readiness good first issue draft for reviewing one customer workflow at a time.
 - Clarified `localization` and `internationalization` issue label usage for workflow-level translation and broader regional adaptation work.
+- Added localization workflow review template for mapping one customer-facing route before translation work.
 
 ### Changed
 

@@ -56,6 +56,8 @@ For non-Chinese locale proposals:
 
 Use `docs/REGION_PROFILE_TEMPLATE.md` when proposing a new regional workflow.
 
+Use `docs/LOCALIZATION_WORKFLOW_REVIEW_TEMPLATE.md` when reviewing one existing customer workflow before translation work starts.
+
 ## Public Data Safety
 
 Translation examples, screenshots, fixtures, and issue reproductions must not include:
@@ -99,6 +101,7 @@ Template:
 - `docs/INTERNATIONALIZATION.md`
 - `docs/REGIONAL_ADAPTATION_GUIDE.md`
 - `docs/REGION_PROFILE_TEMPLATE.md`
+- `docs/LOCALIZATION_WORKFLOW_REVIEW_TEMPLATE.md`
 - `docs/EXPORT_LOCALIZATION_CHECKLIST.md`
 - `docs/SCREENSHOT_GUIDE.md`
 - `docs/PULL_REQUEST_REVIEW_CHECKLIST.md`
