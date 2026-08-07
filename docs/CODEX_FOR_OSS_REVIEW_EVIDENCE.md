@@ -23,6 +23,7 @@ Start with these files:
 - `docs/DEMO_WALKTHROUGH.md`: route-by-route local demo path.
 - `docs/CODEX_FOR_OSS_APPLICATION_EN.md`: application pitch and current capabilities.
 - `docs/CODEX_CREDIT_USE_PLAN.md`: responsible use plan for Codex/API credits.
+- `docs/RELEASE_NOTES_DRAFT_V0_1_1.md`: draft release notes for the next documentation and OSS-readiness release.
 - `CHANGELOG.md`: public maintenance history.
 
 Suggested local commands:
@@ -61,6 +62,22 @@ Reviewer references:
 - `docs/SMOKE_TEST_PLAN.md`
 - `docs/LOCAL_POSTGRESQL.md`
 - `docs/DOCKER_COMPOSE_RUNBOOK.md`
+
+## Localization And Release Readiness Evidence
+
+The project documents internationalization as workflow-level review work, not only label translation. Recent maintainer materials make it easier for contributors to review one customer-facing route safely before proposing translations or regional copy.
+
+Reviewer references:
+
+- `docs/INTERNATIONALIZATION.md`
+- `docs/REGIONAL_ADAPTATION_GUIDE.md`
+- `docs/TRANSLATION_CONTRIBUTION_GUIDE.md`
+- `docs/LOCALIZATION_WORKFLOW_REVIEW_TEMPLATE.md`
+- `docs/EXPORT_LOCALIZATION_CHECKLIST.md`
+- `docs/ISSUE_TRIAGE_LABELS.md`
+- `docs/GOOD_FIRST_ISSUE_DRAFTS.md`
+
+The `v0.1.1` draft release notes are intentionally marked as untagged. They summarize documentation, onboarding, demo-safety, CI, dependency, and localization-readiness work without claiming a release has been published.
 
 ## Safety And Governance Evidence
 
