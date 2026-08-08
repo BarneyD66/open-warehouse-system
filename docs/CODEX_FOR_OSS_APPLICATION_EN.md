@@ -4,6 +4,8 @@ This English version can be used when applying to OpenAI Codex for OSS or when e
 
 Public screenshots and demos for the application should follow `docs/PUBLIC_DEMO_CHECKLIST.md`. Reviewers who want a fast project overview can start with `docs/OSS_REVIEWER_GUIDE.md`; a consolidated evidence index is available in `docs/CODEX_FOR_OSS_REVIEW_EVIDENCE.md`.
 
+Before submitting or refreshing application materials, use `docs/REPOSITORY_HEALTH_CHECK.md` to confirm the public branch, review evidence, safety rules, contributor entry points, verification commands, and remote sync status.
+
 ## Project Name
 
 Open Warehouse System
@@ -68,3 +70,12 @@ The detailed public usage plan is in `docs/CODEX_CREDIT_USE_PLAN.md`.
 ## Suggested One-paragraph Pitch
 
 Open Warehouse System is a global-ready, Chinese-first open-source WMS starter for cross-border warehouse, fulfillment, and 3PL teams. It focuses on practical workflows small operators need first: customer onboarding, inbound ASN, SKU and inventory management, outbound fulfillment, returns/RMA, billing review, document handling, logistics tracking, ops review, and warehouse operations. The project starts from Chinese-first workflows because many real cross-border operators work in Chinese, but it is built with Next.js, React, TypeScript, Tailwind CSS, and PostgreSQL so global developers can deploy, audit, localize, and extend it. Codex would help turn this working MVP into a stronger open-source project by accelerating tests, docs, schema hardening, issue triage, PR review, and internationalization work.
+
+## Pre-submit Review Checklist
+
+- Repository URL is public and points to `https://github.com/BarneyD66/open-warehouse-system`.
+- `README.en.md`, `docs/OSS_REVIEWER_GUIDE.md`, and `docs/CODEX_FOR_OSS_REVIEW_EVIDENCE.md` reflect current project scope.
+- `docs/RELEASE_NOTES_DRAFT_V0_1_1.md` is clearly marked as a draft until a GitHub release is published.
+- Public examples, screenshots, issue text, and application materials use fake demo data only.
+- Latest docs-only maintenance was verified with `git diff --check` and `npm run lint`.
+- Local `HEAD` matches `origin/main` after the latest push.

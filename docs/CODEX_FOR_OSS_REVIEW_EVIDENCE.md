@@ -23,6 +23,7 @@ Start with these files:
 - `docs/DEMO_WALKTHROUGH.md`: route-by-route local demo path.
 - `docs/CODEX_FOR_OSS_APPLICATION_EN.md`: application pitch and current capabilities.
 - `docs/CODEX_CREDIT_USE_PLAN.md`: responsible use plan for Codex/API credits.
+- `docs/REPOSITORY_HEALTH_CHECK.md`: public-readiness checks for repository state, docs, safety, verification, and remote sync.
 - `docs/RELEASE_NOTES_DRAFT_V0_1_1.md`: draft release notes for the next documentation and OSS-readiness release.
 - `CHANGELOG.md`: public maintenance history.
 
@@ -152,6 +153,7 @@ Before using this repository as application evidence, confirm:
 - The repository is public.
 - `README.en.md` renders and links to current docs.
 - `CHANGELOG.md` reflects recent public maintenance.
+- `docs/REPOSITORY_HEALTH_CHECK.md` has been used for the current application material refresh.
 - Demo routes use fake data.
 - Screenshot/media examples follow `docs/README_MEDIA_PLAN.md` and `docs/PUBLIC_DEMO_CHECKLIST.md`.
 - Current verification commands were run for the latest change.

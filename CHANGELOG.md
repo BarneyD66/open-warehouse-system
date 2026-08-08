@@ -44,6 +44,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Clarified `localization` and `internationalization` issue label usage for workflow-level translation and broader regional adaptation work.
 - Added localization workflow review template for mapping one customer-facing route before translation work.
 - Added repository health check guide for OSS review readiness, public-data safety, verification, and remote sync.
+- Added pre-submit review checklist to the English Codex for OSS application draft.
 
 ### Changed
 
