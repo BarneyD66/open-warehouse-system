@@ -151,6 +151,7 @@ Weekly:
 - Review new issues.
 - Check for stale setup instructions.
 - Confirm README links still work.
+- Run `docs/REPOSITORY_HEALTH_CHECK.md` when sharing application or reviewer materials.
 - Identify one small contributor-friendly task.
 
 Before releases:
