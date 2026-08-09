@@ -146,6 +146,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/RELEASE_PROCESS.md`: release checklist, versioning notes, and release-note template.
 - `docs/RELEASE_NOTES_DRAFT_V0_1_1.md`: draft notes for the next small documentation and OSS-readiness release.
 - `docs/REPOSITORY_HEALTH_CHECK.md`: quick public-readiness checklist for repository state, documentation, safety, verification, and remote sync.
+- `docs/CODEX_FOR_OSS_FORM_RESPONSES.md`: copy-ready Codex for OSS form answers and pre-submit checks.
 - `docs/README_MEDIA_PLAN.md`: recommended README screenshot slots, filenames, alt text, captions, and safety checks.
 - `docs/SCREENSHOT_GUIDE.md`: safe screenshot and demo media guidance.
 - `docs/SECRET_HANDLING_CHECKLIST.md`: checklist for keeping secrets, credentials, logs, and production data out of public work.

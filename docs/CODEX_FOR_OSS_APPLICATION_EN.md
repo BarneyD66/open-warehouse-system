@@ -1,6 +1,6 @@
 # Codex for OSS Application Draft - English Version
 
-This English version can be used when applying to OpenAI Codex for OSS or when explaining the project to international contributors.
+This English version can be used when applying to OpenAI Codex for OSS or when explaining the project to international contributors. For short copy-ready form answers, use `docs/CODEX_FOR_OSS_FORM_RESPONSES.md`.
 
 Public screenshots and demos for the application should follow `docs/PUBLIC_DEMO_CHECKLIST.md`. Reviewers who want a fast project overview can start with `docs/OSS_REVIEWER_GUIDE.md`; a consolidated evidence index is available in `docs/CODEX_FOR_OSS_REVIEW_EVIDENCE.md`.
 

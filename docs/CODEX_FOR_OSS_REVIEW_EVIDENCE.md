@@ -22,6 +22,7 @@ Start with these files:
 - `docs/OSS_REVIEWER_GUIDE.md`: 10-minute review path, safety signals, and good review questions.
 - `docs/DEMO_WALKTHROUGH.md`: route-by-route local demo path.
 - `docs/CODEX_FOR_OSS_APPLICATION_EN.md`: application pitch and current capabilities.
+- `docs/CODEX_FOR_OSS_FORM_RESPONSES.md`: copy-ready application form answers and pre-submit checks.
 - `docs/CODEX_CREDIT_USE_PLAN.md`: responsible use plan for Codex/API credits.
 - `docs/REPOSITORY_HEALTH_CHECK.md`: public-readiness checks for repository state, docs, safety, verification, and remote sync.
 - `docs/RELEASE_NOTES_DRAFT_V0_1_1.md`: draft release notes for the next documentation and OSS-readiness release.
