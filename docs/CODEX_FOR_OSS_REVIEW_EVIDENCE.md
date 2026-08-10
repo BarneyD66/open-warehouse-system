@@ -20,6 +20,7 @@ Start with these files:
 
 - `README.en.md`: positioning, routes, stack, system map, documentation index.
 - `docs/OSS_REVIEWER_GUIDE.md`: 10-minute review path, safety signals, and good review questions.
+- `docs/OSS_REVIEWER_FAQ.md`: short answers to reviewer questions about scope, maintenance, safety, global readiness, and Codex credit fit.
 - `docs/DEMO_WALKTHROUGH.md`: route-by-route local demo path.
 - `docs/CODEX_FOR_OSS_APPLICATION_EN.md`: application pitch and current capabilities.
 - `docs/CODEX_FOR_OSS_FORM_RESPONSES.md`: copy-ready application form answers and pre-submit checks.

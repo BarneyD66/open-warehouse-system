@@ -47,6 +47,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added pre-submit review checklist to the English Codex for OSS application draft.
 - Added copy-ready Codex for OSS form responses with safety and pre-submit checks.
 - Added global readiness review checklist for regional adaptation claims, boundaries, and contribution review.
+- Added OSS reviewer FAQ covering scope, maintenance, public data safety, global readiness, and Codex/API credit fit.
 
 ### Changed
 
