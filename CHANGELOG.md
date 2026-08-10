@@ -46,6 +46,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added repository health check guide for OSS review readiness, public-data safety, verification, and remote sync.
 - Added pre-submit review checklist to the English Codex for OSS application draft.
 - Added copy-ready Codex for OSS form responses with safety and pre-submit checks.
+- Added global readiness review checklist for regional adaptation claims, boundaries, and contribution review.
 
 ### Changed
 

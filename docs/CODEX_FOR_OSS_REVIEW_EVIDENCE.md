@@ -72,6 +72,7 @@ The project documents internationalization as workflow-level review work, not on
 Reviewer references:
 
 - `docs/INTERNATIONALIZATION.md`
+- `docs/GLOBAL_READINESS_REVIEW.md`
 - `docs/REGIONAL_ADAPTATION_GUIDE.md`
 - `docs/TRANSLATION_CONTRIBUTION_GUIDE.md`
 - `docs/LOCALIZATION_WORKFLOW_REVIEW_TEMPLATE.md`

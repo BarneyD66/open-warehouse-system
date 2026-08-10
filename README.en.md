@@ -128,6 +128,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/DEPLOYMENT_ENVIRONMENT_CHECKLIST.md`: deployment environment, auth, data, integration, and public-demo review checklist.
 - `docs/DOCKER_COMPOSE_RUNBOOK.md`: Docker Compose PostgreSQL startup, reset, healthcheck, and troubleshooting notes.
 - `docs/EXPORT_LOCALIZATION_CHECKLIST.md`: CSV, Excel, template, and printable export localization checklist.
+- `docs/GLOBAL_READINESS_REVIEW.md`: reviewer checklist for global-ready claims, adaptation boundaries, and regional review rules.
 - `docs/INTERNATIONALIZATION.md`: localization, regional adaptation, and global-readiness notes.
 - `docs/LOCAL_DEMO_RESET.md`: safe local fallback data reset guidance.
 - `docs/LOCAL_POSTGRESQL.md`: local PostgreSQL and Docker Compose setup.
