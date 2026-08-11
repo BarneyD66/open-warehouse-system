@@ -6,7 +6,7 @@ This draft helps maintainers prepare the next small `0.x` documentation and open
 
 ## Suggested Summary
 
-`v0.1.1` is a documentation, onboarding, localization, and maintainer-readiness update for the early Open Warehouse System public launch. It improves reviewer orientation, safe demo guidance, CI reproduction, release process, dependency update rules, workflow-level localization review, and contributor entry points without changing runtime warehouse behavior.
+`v0.1.1` is a documentation, onboarding, localization, application-readiness, and maintainer-readiness update for the early Open Warehouse System public launch. It improves reviewer orientation, safe demo guidance, CI reproduction, release process, dependency update rules, workflow-level localization review, Codex for OSS application materials, and contributor entry points without changing runtime warehouse behavior.
 
 ## Highlights
 
@@ -18,6 +18,7 @@ This draft helps maintainers prepare the next small `0.x` documentation and open
 - Added maintainer-facing checklists for releases, handoff, privacy, deployment review, PostgreSQL migration review, and secret handling.
 - Added translation, localization, and region-adaptation guidance for workflow-level customer-facing review.
 - Added a localization workflow review template and good first issue path so contributors can map one route safely.
+- Added Codex for OSS form responses, pre-submit checks, repository health check guidance, global-readiness review, and reviewer FAQ materials.
 
 ## Security And Data Safety
 
@@ -57,7 +58,7 @@ npm run db:init
 ```markdown
 ## Summary
 
-`v0.1.1` improves open-source reviewer readiness, contributor onboarding, demo safety, CI reproduction, release process, dependency update guidance, and workflow-level localization review for Open Warehouse System.
+`v0.1.1` improves open-source reviewer readiness, contributor onboarding, demo safety, CI reproduction, release process, dependency update guidance, workflow-level localization review, and Codex for OSS application readiness for Open Warehouse System.
 
 ## Added
 
@@ -66,6 +67,7 @@ npm run db:init
 - README media plan, screenshot guidance, demo walkthrough, and demo seed dry-run notes.
 - Maintainer handoff, release, privacy, deployment, PostgreSQL migration, and secret-handling checklists.
 - Translation contribution guide, localization issue labels, and localization workflow review template.
+- Codex for OSS form responses, repository health check, global-readiness review, and OSS reviewer FAQ.
 
 ## Security And Data Safety
 
@@ -91,4 +93,5 @@ Before publishing:
 - Move the relevant `CHANGELOG.md` entries from `Unreleased` into `v0.1.1 - YYYY-MM-DD`.
 - Confirm the commit range does not include unrelated local product work.
 - Confirm no private data, logs, screenshots, `.env.local`, or production documents are staged.
+- Confirm application-facing docs still link to `docs/CODEX_FOR_OSS_FORM_RESPONSES.md`, `docs/REPOSITORY_HEALTH_CHECK.md`, `docs/GLOBAL_READINESS_REVIEW.md`, and `docs/OSS_REVIEWER_FAQ.md`.
 - Create an annotated tag only after verification passes.
