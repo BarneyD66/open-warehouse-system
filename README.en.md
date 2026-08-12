@@ -158,6 +158,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `SECURITY.md`: vulnerability reporting, security scope, and public data policy.
 - `SUPPORT.md`: support channels, issue expectations, and public data safety rules.
 - `CHANGELOG.md`: public release history and release-note summary.
+- `docs/COMMUNITY_FEEDBACK_REQUEST_GUIDE.md`: healthy star, fork, issue, and feedback request guidance for early OSS review.
 - `docs/INITIAL_ISSUES.md`: first public issues for contributors.
 - `docs/GOOD_FIRST_ISSUE_DRAFTS.md`: copy-ready good first issue drafts.
 - `docs/ISSUE_TRIAGE_LABELS.md`: GitHub issue label guide for maintainers and contributors.
