@@ -135,6 +135,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/LOCALIZATION_WORKFLOW_REVIEW_TEMPLATE.md`: fill-in template for reviewing one customer workflow before localization work.
 - `docs/MAINTAINER_HANDOFF.md`: maintainer handoff checklist for routine maintenance, release, safety, and Codex-assisted work.
 - `docs/MAINTENANCE_PLAN.md`: issue triage, release rhythm, review policy, and quality gates.
+- `docs/MAINTENANCE_STATUS_2026_08.md`: August 2026 maintenance snapshot for reviewability, verification, safety, and next steps.
 - `docs/MOCK_CARRIER_ADAPTER.md`: safe mock carrier adapter design for logistics contributors.
 - `docs/OPEN_SOURCE_LAUNCH_CHECKLIST.md`: launch checklist and repository setup notes.
 - `docs/OSS_REVIEWER_FAQ.md`: short FAQ for Codex for OSS reviewers, maintainers, and first-time contributors.

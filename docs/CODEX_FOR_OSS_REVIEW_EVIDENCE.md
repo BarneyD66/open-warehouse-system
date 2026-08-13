@@ -26,6 +26,7 @@ Start with these files:
 - `docs/CODEX_FOR_OSS_FORM_RESPONSES.md`: copy-ready application form answers and pre-submit checks.
 - `docs/CODEX_CREDIT_USE_PLAN.md`: responsible use plan for Codex/API credits.
 - `docs/REPOSITORY_HEALTH_CHECK.md`: public-readiness checks for repository state, docs, safety, verification, and remote sync.
+- `docs/MAINTENANCE_STATUS_2026_08.md`: recent maintenance snapshot, verification pattern, safety reminder, and next steps.
 - `docs/RELEASE_NOTES_DRAFT_V0_1_1.md`: draft release notes for the next documentation and OSS-readiness release.
 - `CHANGELOG.md`: public maintenance history.
 

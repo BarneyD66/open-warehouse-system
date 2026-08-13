@@ -49,6 +49,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added global readiness review checklist for regional adaptation claims, boundaries, and contribution review.
 - Added OSS reviewer FAQ covering scope, maintenance, public data safety, global readiness, and Codex/API credit fit.
 - Added community feedback request guide for healthy stars, forks, issues, early reviews, and public data safety.
+- Added August 2026 maintenance status snapshot covering recent docs, verification pattern, safety rules, and next steps.
 
 ### Changed
 
