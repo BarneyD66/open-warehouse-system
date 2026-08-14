@@ -122,6 +122,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/CONTRIBUTOR_ONBOARDING.md`: first-run, first-contribution, and PR guidance for contributors.
 - `docs/CONTRIBUTOR_DECISION_RECORDS.md`: lightweight project decisions for contributors and maintainers.
 - `docs/DEMO_DATA_PLAN.md`: safe fake demo data plan for onboarding, screenshots, and tests.
+- `docs/DEMO_PERSONAS.md`: fictional customer, ops, warehouse, maintainer, and regional contributor personas for safe review.
 - `docs/DEMO_WALKTHROUGH.md`: safe route-by-route local demo walkthrough for reviewers and first-time contributors.
 - `docs/DEMO_SEED_DRY_RUN_EXAMPLE.md`: expected dry-run output shape for future safe demo seed work.
 - `docs/DEMO_SEED_DATA_GUIDE.md`: safe demo seed data contract and future seed command expectations.

@@ -62,6 +62,7 @@ The repository documents and exposes these workflow areas:
 Reviewer references:
 
 - `docs/ARCHITECTURE.md`
+- `docs/DEMO_PERSONAS.md`
 - `docs/DEMO_WALKTHROUGH.md`
 - `docs/SMOKE_TEST_PLAN.md`
 - `docs/LOCAL_POSTGRESQL.md`
