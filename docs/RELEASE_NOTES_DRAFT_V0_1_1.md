@@ -2,7 +2,7 @@
 
 Status: draft, not yet tagged.
 
-This draft helps maintainers prepare the next small `0.x` documentation and open-source readiness release for Open Warehouse System. Review `CHANGELOG.md` and `docs/RELEASE_PROCESS.md` before creating a tag or GitHub release.
+This draft helps maintainers prepare the next small `0.x` documentation and open-source readiness release for Open Warehouse System. Review `CHANGELOG.md`, `docs/RELEASE_PROCESS.md`, and `docs/RELEASE_CANDIDATE_CHECKLIST_V0_1_1.md` before creating a tag or GitHub release.
 
 ## Suggested Summary
 
@@ -19,6 +19,7 @@ This draft helps maintainers prepare the next small `0.x` documentation and open
 - Added translation, localization, and region-adaptation guidance for workflow-level customer-facing review.
 - Added a localization workflow review template and good first issue path so contributors can map one route safely.
 - Added Codex for OSS form responses, pre-submit checks, repository health check guidance, global-readiness review, and reviewer FAQ materials.
+- Added a `v0.1.1` release candidate checklist for scope, required docs, verification, public data safety, tagging readiness, and post-release follow-up.
 
 ## Security And Data Safety
 

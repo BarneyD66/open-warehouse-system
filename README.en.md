@@ -147,6 +147,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/PULL_REQUEST_REVIEW_CHECKLIST.md`: PR review checklist for scope, verification, data safety, and localization.
 - `docs/REGIONAL_ADAPTATION_GUIDE.md`: practical checklist for adapting language, carriers, tax, customs, privacy, and billing by region.
 - `docs/REGION_PROFILE_TEMPLATE.md`: structured template for proposing new regional adaptation work.
+- `docs/RELEASE_CANDIDATE_CHECKLIST_V0_1_1.md`: pre-tag checklist for the documentation-only `v0.1.1` release candidate.
 - `docs/RELEASE_PROCESS.md`: release checklist, versioning notes, and release-note template.
 - `docs/RELEASE_NOTES_DRAFT_V0_1_1.md`: draft notes for the next small documentation and OSS-readiness release.
 - `docs/REPOSITORY_HEALTH_CHECK.md`: quick public-readiness checklist for repository state, documentation, safety, verification, and remote sync.
