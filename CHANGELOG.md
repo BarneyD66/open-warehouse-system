@@ -52,6 +52,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added August 2026 maintenance status snapshot covering recent docs, verification pattern, safety rules, and next steps.
 - Added safe fictional demo personas for customer, ops, warehouse, maintainer, and regional contributor review.
 - Added `v0.1.1` release candidate checklist for scope, required docs, verification, data safety, tagging, and follow-up.
+- Added feedback-to-issue playbook for converting community review notes into safe, reproducible GitHub issues.
 
 ### Changed
 

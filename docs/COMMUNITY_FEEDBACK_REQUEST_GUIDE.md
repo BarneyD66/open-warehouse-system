@@ -62,3 +62,5 @@ After receiving feedback:
 2. Add `good first issue` only when the task is small, reproducible, and safe for a first contributor.
 3. Link relevant docs such as `docs/OSS_REVIEWER_FAQ.md`, `docs/CONTRIBUTOR_QUICK_PATH.md`, `docs/GLOBAL_READINESS_REVIEW.md`, or `docs/SMOKE_TEST_PLAN.md`.
 4. Keep private customer, carrier, pricing, and production details out of public follow-up.
+
+Use `docs/FEEDBACK_TO_ISSUE_PLAYBOOK.md` when turning feedback into public GitHub issues.
