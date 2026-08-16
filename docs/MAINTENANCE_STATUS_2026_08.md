@@ -22,6 +22,7 @@ Recent docs-only maintenance has focused on reviewability and application readin
 - Global readiness: `docs/GLOBAL_READINESS_REVIEW.md`, `docs/REGIONAL_ADAPTATION_GUIDE.md`
 - Community feedback: `docs/COMMUNITY_FEEDBACK_REQUEST_GUIDE.md`, `docs/STAR_AND_FORK_MESSAGE.md`
 - Release preparation: `docs/RELEASE_NOTES_DRAFT_V0_1_1.md`, `CHANGELOG.md`
+- Roadmap scoping: `docs/ROADMAP_REVIEW_CHECKLIST.md`
 
 ## Verification Pattern
 
@@ -65,6 +66,7 @@ Good next small improvements:
 
 - Add safe fake seed data and a dry-run command.
 - Add one or two Playwright smoke tests for customer, ops, warehouse, or tracking routes.
+- Use `docs/ROADMAP_REVIEW_CHECKLIST.md` before converting broad roadmap ideas into issues or implementation tasks.
 - Keep `v0.1.1` draft release notes synchronized with public docs.
 - Convert clear community feedback into small, reproducible GitHub issues.
 - Continue documenting regional assumptions before implementing country-specific behavior.

@@ -2,6 +2,8 @@
 
 Open Warehouse System 的路线图围绕一个目标：让中小跨境仓储团队可以从开源版本开始，逐步走到可生产使用的 WMS/OMS/TMS 协同系统。
 
+Before turning a roadmap idea into an issue or implementation task, use `docs/ROADMAP_REVIEW_CHECKLIST.md` to confirm scope, safety, regional assumptions, and verification.
+
 ## 0.1 - Open-source Packaging
 
 - 完成 README、License、Contributing、Security、Issue/PR 模板。
