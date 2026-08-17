@@ -2,7 +2,7 @@
 
 This short path is for contributors who want to make a first useful pull request without learning the whole WMS domain first.
 
-For the full guide, see `docs/CONTRIBUTOR_ONBOARDING.md`. For a reviewer-oriented overview of the project, see `docs/OSS_REVIEWER_GUIDE.md`.
+For the full guide, see `docs/CONTRIBUTOR_ONBOARDING.md`. For a workflow-by-workflow contribution map, see `docs/CONTRIBUTOR_WORKFLOW_MAP.md`. For a reviewer-oriented overview of the project, see `docs/OSS_REVIEWER_GUIDE.md`.
 
 ## 1. Choose a Small Issue
 

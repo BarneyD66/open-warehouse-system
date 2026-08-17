@@ -54,6 +54,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added `v0.1.1` release candidate checklist for scope, required docs, verification, data safety, tagging, and follow-up.
 - Added feedback-to-issue playbook for converting community review notes into safe, reproducible GitHub issues.
 - Added roadmap review checklist for turning broad roadmap ideas into safe, scoped, verifiable issues or implementation tasks.
+- Added contributor workflow map linking roles, routes, API boundaries, docs, contribution shapes, and verification commands.
 
 ### Changed
 

@@ -118,6 +118,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/CI_WORKFLOW_GUIDE.md`: GitHub Actions checks, local reproduction, PR verification notes, and CI safety rules.
 - `docs/DEPENDENCY_UPDATE_POLICY.md`: dependency update risk levels, verification commands, and public data safety rules.
 - `docs/ARCHITECTURE.md`: application surfaces, domain modules, persistence and security boundaries.
+- `docs/CONTRIBUTOR_WORKFLOW_MAP.md`: route, role, API, docs, and verification map for small workflow contributions.
 - `docs/CONTRIBUTOR_QUICK_PATH.md`: short first-contribution path for new contributors.
 - `docs/CONTRIBUTOR_ONBOARDING.md`: first-run, first-contribution, and PR guidance for contributors.
 - `docs/CONTRIBUTOR_DECISION_RECORDS.md`: lightweight project decisions for contributors and maintainers.
