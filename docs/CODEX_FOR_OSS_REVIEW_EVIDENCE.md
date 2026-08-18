@@ -28,6 +28,9 @@ Start with these files:
 - `docs/REPOSITORY_HEALTH_CHECK.md`: public-readiness checks for repository state, docs, safety, verification, and remote sync.
 - `docs/MAINTENANCE_STATUS_2026_08.md`: recent maintenance snapshot, verification pattern, safety reminder, and next steps.
 - `docs/RELEASE_NOTES_DRAFT_V0_1_1.md`: draft release notes for the next documentation and OSS-readiness release.
+- `docs/ROADMAP_REVIEW_CHECKLIST.md`: roadmap scoping rules for safe, verifiable future work.
+- `docs/CONTRIBUTOR_WORKFLOW_MAP.md`: route, role, API, docs, and verification map for small contributions.
+- `docs/PUBLIC_ISSUE_QUEUE.md`: ready-to-publish issue backlog for safe public collaboration.
 - `CHANGELOG.md`: public maintenance history.
 
 Suggested local commands:
@@ -120,11 +123,15 @@ The repository includes contributor-facing material for small reviewable work:
 - `docs/CONTRIBUTOR_QUICK_PATH.md`
 - `docs/CONTRIBUTOR_ONBOARDING.md`
 - `docs/GOOD_FIRST_ISSUE_DRAFTS.md`
+- `docs/PUBLIC_ISSUE_QUEUE.md`
+- `docs/CONTRIBUTOR_WORKFLOW_MAP.md`
 - `docs/ISSUE_TRIAGE_LABELS.md`
 - `.github/ISSUE_TEMPLATE/`
 - `.github/pull_request_template.md`
 
 Good first issues are expected to stay narrow, use fake demo data, include acceptance criteria, and run the smallest relevant verification commands.
+
+Maintainers can use `docs/ROADMAP_REVIEW_CHECKLIST.md` before opening a broad roadmap task, then publish smaller issues from `docs/PUBLIC_ISSUE_QUEUE.md`.
 
 ## Demo Data Evidence
 
