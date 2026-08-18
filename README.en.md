@@ -145,6 +145,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/OSS_REVIEWER_GUIDE.md`: quick review path for OSS evaluators, maintainers, and first-time contributors.
 - `docs/POSTGRES_MIGRATION_REVIEW_CHECKLIST.md`: PostgreSQL schema, migration, data access, and rollback review checklist.
 - `docs/PRIVACY_DATA_RETENTION_GUIDE.md`: privacy and data-retention engineering checklist for deployments and regional adaptation.
+- `docs/PUBLIC_ISSUE_QUEUE.md`: ready-to-publish safe issue queue for maintainers and first-time contributors.
 - `docs/PUBLIC_DEMO_CHECKLIST.md`: public demo, screenshot, video, and application-material safety checklist.
 - `docs/PULL_REQUEST_REVIEW_CHECKLIST.md`: PR review checklist for scope, verification, data safety, and localization.
 - `docs/REGIONAL_ADAPTATION_GUIDE.md`: practical checklist for adapting language, carriers, tax, customs, privacy, and billing by region.

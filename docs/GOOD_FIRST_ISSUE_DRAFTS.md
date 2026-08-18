@@ -4,6 +4,8 @@ These drafts can be copied into GitHub Issues when the maintainers want to invit
 
 Keep each issue small. A good first issue should have a clear file or route, clear acceptance criteria, and no need for real customer data, production credentials, logs, private pricing sheets, or `.env.local`.
 
+For a shorter maintainer queue of ready-to-publish issues, see `docs/PUBLIC_ISSUE_QUEUE.md`.
+
 ## 1. Document CSV import and export examples
 
 Suggested labels: `good first issue`, `documentation`, `inventory`
