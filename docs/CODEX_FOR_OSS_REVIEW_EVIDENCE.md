@@ -27,6 +27,7 @@ Start with these files:
 - `docs/CODEX_CREDIT_USE_PLAN.md`: responsible use plan for Codex/API credits.
 - `docs/REPOSITORY_HEALTH_CHECK.md`: public-readiness checks for repository state, docs, safety, verification, and remote sync.
 - `docs/MAINTENANCE_STATUS_2026_08.md`: recent maintenance snapshot, verification pattern, safety reminder, and next steps.
+- `docs/PUBLIC_MAINTENANCE_LOG_2026_08.md`: recent public maintenance commits and verification trail.
 - `docs/RELEASE_NOTES_DRAFT_V0_1_1.md`: draft release notes for the next documentation and OSS-readiness release.
 - `docs/ROADMAP_REVIEW_CHECKLIST.md`: roadmap scoping rules for safe, verifiable future work.
 - `docs/CONTRIBUTOR_WORKFLOW_MAP.md`: route, role, API, docs, and verification map for small contributions.

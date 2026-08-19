@@ -21,7 +21,7 @@ Recent docs-only maintenance has focused on reviewability and application readin
 - Repository health: `docs/REPOSITORY_HEALTH_CHECK.md`
 - Global readiness: `docs/GLOBAL_READINESS_REVIEW.md`, `docs/REGIONAL_ADAPTATION_GUIDE.md`
 - Community feedback: `docs/COMMUNITY_FEEDBACK_REQUEST_GUIDE.md`, `docs/STAR_AND_FORK_MESSAGE.md`
-- Release preparation: `docs/RELEASE_NOTES_DRAFT_V0_1_1.md`, `CHANGELOG.md`
+- Release preparation: `docs/RELEASE_NOTES_DRAFT_V0_1_1.md`, `CHANGELOG.md`, `docs/PUBLIC_MAINTENANCE_LOG_2026_08.md`
 - Roadmap scoping: `docs/ROADMAP_REVIEW_CHECKLIST.md`
 - Contributor issue flow: `docs/CONTRIBUTOR_WORKFLOW_MAP.md`, `docs/PUBLIC_ISSUE_QUEUE.md`, `docs/FEEDBACK_TO_ISSUE_PLAYBOOK.md`
 
@@ -62,6 +62,7 @@ For a fast review, start with:
 6. `docs/RELEASE_NOTES_DRAFT_V0_1_1.md`
 7. `docs/CONTRIBUTOR_WORKFLOW_MAP.md`
 8. `docs/PUBLIC_ISSUE_QUEUE.md`
+9. `docs/PUBLIC_MAINTENANCE_LOG_2026_08.md`
 
 ## Near-term Next Steps
 
