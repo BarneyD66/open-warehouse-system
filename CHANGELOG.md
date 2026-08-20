@@ -65,6 +65,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Demo login documentation now reflects the current customer self-registration flow instead of the old fixed `test / test` prototype login.
 - Draft `v0.1.1` release notes now include recent translation, localization, Codex for OSS application, global-readiness, repository health check, and reviewer FAQ materials.
 - Draft `v0.1.1` release notes now include roadmap scoping, contributor workflow map, feedback-to-issue, and public issue queue materials.
+- Draft `v0.1.1` release notes and reviewer evidence now include issue publishing safety materials.
 - Codex for OSS review evidence now highlights localization and release-readiness materials for reviewers.
 - Codex for OSS review evidence now highlights roadmap-to-issue contributor materials for reviewers.
 - Star/fork outreach copy now uses readable Chinese and English text and points readers toward useful feedback, not empty activity.

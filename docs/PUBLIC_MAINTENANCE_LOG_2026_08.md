@@ -7,8 +7,8 @@ It is intended for reviewers, maintainers, and contributors who want to see the 
 ## Scope
 
 - Repository: `https://github.com/BarneyD66/open-warehouse-system`
-- Branch: `main`
-- Period covered: 2026-08-11 to 2026-08-19
+- Branches: `main` and active public documentation branches
+- Period covered: 2026-08-11 to 2026-08-20
 - Change type: public documentation, reviewer evidence, contributor onboarding, issue preparation, and safety guidance
 - Data policy: fake demo data and public docs only
 
@@ -18,6 +18,7 @@ This log does not cover uncommitted local product work, private customer materia
 
 | Date | Commit | Area | Reviewer value |
 | --- | --- | --- | --- |
+| 2026-08-20 | `4d614f9` | Issue publishing safety | Added the issue publishing checklist on a public docs branch so maintainers can safely convert queue items into GitHub issues. |
 | 2026-08-19 | `657eca1` | Release and review evidence | Synchronized `v0.1.1` release notes, Codex review evidence, maintenance status, and changelog with the roadmap-to-issue contributor materials. |
 | 2026-08-18 | `e6859bb` | Public issue queue | Added ready-to-publish safe GitHub issue drafts for maintainers and first-time contributors. |
 | 2026-08-17 | `61866ec` | Contributor workflow map | Mapped roles, routes, API boundaries, docs, contribution shapes, and verification commands. |
@@ -58,8 +59,8 @@ Public maintenance must not include:
 
 ## How Reviewers Can Use This Log
 
-1. Confirm the public `main` branch contains the listed commits.
+1. Confirm the public `main` branch or named public documentation branch contains the listed commits.
 2. Read `CHANGELOG.md` for the full public change list.
 3. Use `docs/CODEX_FOR_OSS_REVIEW_EVIDENCE.md` for the application review path.
-4. Use `docs/CONTRIBUTOR_WORKFLOW_MAP.md` and `docs/PUBLIC_ISSUE_QUEUE.md` to see how future work is broken into safe issues.
+4. Use `docs/CONTRIBUTOR_WORKFLOW_MAP.md`, `docs/PUBLIC_ISSUE_QUEUE.md`, and `docs/ISSUE_PUBLISHING_CHECKLIST.md` to see how future work is broken into safe issues.
 5. Use `docs/ROADMAP_REVIEW_CHECKLIST.md` to check that roadmap items stay scoped and verifiable.

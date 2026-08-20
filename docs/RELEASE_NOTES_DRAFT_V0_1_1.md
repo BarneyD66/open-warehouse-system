@@ -6,7 +6,7 @@ This draft helps maintainers prepare the next small `0.x` documentation and open
 
 ## Suggested Summary
 
-`v0.1.1` is a documentation, onboarding, localization, application-readiness, and maintainer-readiness update for the early Open Warehouse System public launch. It improves reviewer orientation, safe demo guidance, CI reproduction, release process, dependency update rules, workflow-level localization review, Codex for OSS application materials, roadmap scoping, public issue preparation, and contributor entry points without changing runtime warehouse behavior.
+`v0.1.1` is a documentation, onboarding, localization, application-readiness, and maintainer-readiness update for the early Open Warehouse System public launch. It improves reviewer orientation, safe demo guidance, CI reproduction, release process, dependency update rules, workflow-level localization review, Codex for OSS application materials, roadmap scoping, public issue preparation, issue publishing safety, and contributor entry points without changing runtime warehouse behavior.
 
 ## Highlights
 
@@ -20,7 +20,7 @@ This draft helps maintainers prepare the next small `0.x` documentation and open
 - Added a localization workflow review template and good first issue path so contributors can map one route safely.
 - Added Codex for OSS form responses, pre-submit checks, repository health check guidance, global-readiness review, and reviewer FAQ materials.
 - Added a `v0.1.1` release candidate checklist for scope, required docs, verification, public data safety, tagging readiness, and post-release follow-up.
-- Added roadmap review, contributor workflow map, feedback-to-issue, and public issue queue docs so maintainers can turn broad ideas into safe, scoped, verifiable GitHub issues.
+- Added roadmap review, contributor workflow map, feedback-to-issue, public issue queue, and issue publishing checklist docs so maintainers can turn broad ideas into safe, scoped, verifiable GitHub issues.
 
 ## Security And Data Safety
 
@@ -60,7 +60,7 @@ npm run db:init
 ```markdown
 ## Summary
 
-`v0.1.1` improves open-source reviewer readiness, contributor onboarding, demo safety, CI reproduction, release process, dependency update guidance, workflow-level localization review, public issue preparation, and Codex for OSS application readiness for Open Warehouse System.
+`v0.1.1` improves open-source reviewer readiness, contributor onboarding, demo safety, CI reproduction, release process, dependency update guidance, workflow-level localization review, public issue preparation, issue publishing safety, and Codex for OSS application readiness for Open Warehouse System.
 
 ## Added
 
@@ -70,7 +70,7 @@ npm run db:init
 - Maintainer handoff, release, privacy, deployment, PostgreSQL migration, and secret-handling checklists.
 - Translation contribution guide, localization issue labels, and localization workflow review template.
 - Codex for OSS form responses, repository health check, global-readiness review, and OSS reviewer FAQ.
-- Roadmap review checklist, contributor workflow map, feedback-to-issue playbook, and public issue queue for scoped contributor work.
+- Roadmap review checklist, contributor workflow map, feedback-to-issue playbook, public issue queue, and issue publishing checklist for scoped contributor work.
 
 ## Security And Data Safety
 
@@ -96,5 +96,5 @@ Before publishing:
 - Move the relevant `CHANGELOG.md` entries from `Unreleased` into `v0.1.1 - YYYY-MM-DD`.
 - Confirm the commit range does not include unrelated local product work.
 - Confirm no private data, logs, screenshots, `.env.local`, or production documents are staged.
-- Confirm application-facing docs still link to `docs/CODEX_FOR_OSS_FORM_RESPONSES.md`, `docs/REPOSITORY_HEALTH_CHECK.md`, `docs/GLOBAL_READINESS_REVIEW.md`, `docs/OSS_REVIEWER_FAQ.md`, `docs/ROADMAP_REVIEW_CHECKLIST.md`, `docs/CONTRIBUTOR_WORKFLOW_MAP.md`, and `docs/PUBLIC_ISSUE_QUEUE.md`.
+- Confirm application-facing docs still link to `docs/CODEX_FOR_OSS_FORM_RESPONSES.md`, `docs/REPOSITORY_HEALTH_CHECK.md`, `docs/GLOBAL_READINESS_REVIEW.md`, `docs/OSS_REVIEWER_FAQ.md`, `docs/ROADMAP_REVIEW_CHECKLIST.md`, `docs/CONTRIBUTOR_WORKFLOW_MAP.md`, `docs/PUBLIC_ISSUE_QUEUE.md`, and `docs/ISSUE_PUBLISHING_CHECKLIST.md`.
 - Create an annotated tag only after verification passes.

@@ -32,6 +32,7 @@ Start with these files:
 - `docs/ROADMAP_REVIEW_CHECKLIST.md`: roadmap scoping rules for safe, verifiable future work.
 - `docs/CONTRIBUTOR_WORKFLOW_MAP.md`: route, role, API, docs, and verification map for small contributions.
 - `docs/PUBLIC_ISSUE_QUEUE.md`: ready-to-publish issue backlog for safe public collaboration.
+- `docs/ISSUE_PUBLISHING_CHECKLIST.md`: safety, scope, label, acceptance criteria, and verification checklist before publishing issues.
 - `CHANGELOG.md`: public maintenance history.
 
 Suggested local commands:
@@ -125,6 +126,7 @@ The repository includes contributor-facing material for small reviewable work:
 - `docs/CONTRIBUTOR_ONBOARDING.md`
 - `docs/GOOD_FIRST_ISSUE_DRAFTS.md`
 - `docs/PUBLIC_ISSUE_QUEUE.md`
+- `docs/ISSUE_PUBLISHING_CHECKLIST.md`
 - `docs/CONTRIBUTOR_WORKFLOW_MAP.md`
 - `docs/ISSUE_TRIAGE_LABELS.md`
 - `.github/ISSUE_TEMPLATE/`
@@ -132,7 +134,7 @@ The repository includes contributor-facing material for small reviewable work:
 
 Good first issues are expected to stay narrow, use fake demo data, include acceptance criteria, and run the smallest relevant verification commands.
 
-Maintainers can use `docs/ROADMAP_REVIEW_CHECKLIST.md` before opening a broad roadmap task, then publish smaller issues from `docs/PUBLIC_ISSUE_QUEUE.md`.
+Maintainers can use `docs/ROADMAP_REVIEW_CHECKLIST.md` before opening a broad roadmap task, publish smaller issues from `docs/PUBLIC_ISSUE_QUEUE.md`, and run `docs/ISSUE_PUBLISHING_CHECKLIST.md` before copying an issue to GitHub.
 
 ## Demo Data Evidence
 
