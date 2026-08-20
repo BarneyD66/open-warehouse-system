@@ -133,6 +133,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/FEEDBACK_TO_ISSUE_PLAYBOOK.md`: guide for converting community feedback into safe, reproducible GitHub issues.
 - `docs/GLOBAL_READINESS_REVIEW.md`: reviewer checklist for global-ready claims, adaptation boundaries, and regional review rules.
 - `docs/INTERNATIONALIZATION.md`: localization, regional adaptation, and global-readiness notes.
+- `docs/ISSUE_PUBLISHING_CHECKLIST.md`: safety, scope, labels, acceptance criteria, and verification checklist before publishing GitHub issues.
 - `docs/LOCAL_DEMO_RESET.md`: safe local fallback data reset guidance.
 - `docs/LOCAL_POSTGRESQL.md`: local PostgreSQL and Docker Compose setup.
 - `docs/LOCALIZATION_WORKFLOW_REVIEW_TEMPLATE.md`: fill-in template for reviewing one customer workflow before localization work.

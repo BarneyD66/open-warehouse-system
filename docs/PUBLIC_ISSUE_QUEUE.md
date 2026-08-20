@@ -2,7 +2,7 @@
 
 This queue helps maintainers publish small, reviewable GitHub issues during the Open Warehouse System `0.x` phase.
 
-Use it after `docs/ROADMAP_REVIEW_CHECKLIST.md` and `docs/CONTRIBUTOR_WORKFLOW_MAP.md`. Each item below is intentionally narrow, safe for public review, and designed to avoid real customer data, production credentials, private pricing sheets, logs, labels, invoices, or `.env.local`.
+Use it after `docs/ROADMAP_REVIEW_CHECKLIST.md`, `docs/CONTRIBUTOR_WORKFLOW_MAP.md`, and `docs/ISSUE_PUBLISHING_CHECKLIST.md`. Each item below is intentionally narrow, safe for public review, and designed to avoid real customer data, production credentials, private pricing sheets, logs, labels, invoices, or `.env.local`.
 
 ## Queue Rules
 
@@ -10,6 +10,7 @@ Use it after `docs/ROADMAP_REVIEW_CHECKLIST.md` and `docs/CONTRIBUTOR_WORKFLOW_M
 - Keep the scope to one route, workflow, document, or verification path.
 - Use fake demo records only.
 - Include labels, acceptance criteria, and verification commands.
+- Run `docs/ISSUE_PUBLISHING_CHECKLIST.md` before copying a draft into GitHub.
 - Close or rewrite issues that require private documents or production integrations.
 
 ## Ready-To-Publish Issues

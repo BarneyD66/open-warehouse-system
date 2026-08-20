@@ -57,6 +57,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added contributor workflow map linking roles, routes, API boundaries, docs, contribution shapes, and verification commands.
 - Added public issue queue with ready-to-publish safe backlog items for maintainers and first-time contributors.
 - Added August 2026 public maintenance log covering recent commits, verification pattern, reviewer use, and public data safety notes.
+- Added issue publishing checklist for public safety, workflow scope, labels, acceptance criteria, and verification before creating GitHub issues.
 
 ### Changed
 
