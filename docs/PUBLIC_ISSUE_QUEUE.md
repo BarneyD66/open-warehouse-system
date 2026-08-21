@@ -141,5 +141,6 @@ After publishing:
 
 - Add labels.
 - Cross-link related docs or prior issues.
+- Reply with a scoped maintainer note from `docs/FIRST_ISSUE_RESPONSE_TEMPLATE.md`.
 - Invite contributors to ask clarifying questions before broadening scope.
 - Close stale issues that drift into private integrations or production data.

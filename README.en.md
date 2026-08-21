@@ -131,6 +131,7 @@ This is a starter, not a claim of out-of-the-box legal or logistics compliance i
 - `docs/DOCKER_COMPOSE_RUNBOOK.md`: Docker Compose PostgreSQL startup, reset, healthcheck, and troubleshooting notes.
 - `docs/EXPORT_LOCALIZATION_CHECKLIST.md`: CSV, Excel, template, and printable export localization checklist.
 - `docs/FEEDBACK_TO_ISSUE_PLAYBOOK.md`: guide for converting community feedback into safe, reproducible GitHub issues.
+- `docs/FIRST_ISSUE_RESPONSE_TEMPLATE.md`: maintainer reply templates for safe, scoped first issue responses.
 - `docs/GLOBAL_READINESS_REVIEW.md`: reviewer checklist for global-ready claims, adaptation boundaries, and regional review rules.
 - `docs/INTERNATIONALIZATION.md`: localization, regional adaptation, and global-readiness notes.
 - `docs/ISSUE_PUBLISHING_CHECKLIST.md`: safety, scope, labels, acceptance criteria, and verification checklist before publishing GitHub issues.
