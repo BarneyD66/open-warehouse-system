@@ -120,3 +120,7 @@ Verification:
 - Use `docs/FIRST_ISSUE_RESPONSE_TEMPLATE.md` for the first maintainer reply.
 - Ask contributors to clarify scope before expanding the task.
 - Close or rewrite the issue if it drifts into private data, production credentials, or broad ERP replacement work.
+
+## Related Pull Request Draft
+
+When merging the issue publishing documentation branch, use `docs/ISSUE_PUBLISHING_PR_DRAFT.md` for the copy-ready pull request title, body, safety notes, validation summary, and pre-merge checklist.
