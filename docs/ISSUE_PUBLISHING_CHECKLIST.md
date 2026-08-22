@@ -118,6 +118,7 @@ Verification:
 - Link back to `docs/PUBLIC_ISSUE_QUEUE.md` if the issue came from the queue.
 - Link related docs and prior issues.
 - Use `docs/FIRST_ISSUE_RESPONSE_TEMPLATE.md` for the first maintainer reply.
+- Use `docs/PUBLIC_COLLABORATION_REVIEW_LOOP.md` when a contributor is ready to turn the issue into a pull request.
 - Ask contributors to clarify scope before expanding the task.
 - Close or rewrite the issue if it drifts into private data, production credentials, or broad ERP replacement work.
 

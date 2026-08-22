@@ -19,6 +19,7 @@ This PR adds a small documentation workflow for publishing and responding to pub
 
 - Added `docs/ISSUE_PUBLISHING_CHECKLIST.md` for checking public safety, workflow scope, labels, acceptance criteria, and verification before creating GitHub issues.
 - Added `docs/FIRST_ISSUE_RESPONSE_TEMPLATE.md` with maintainer reply templates for acknowledgement, reproduction requests, scope reduction, unsafe-data redaction, regional-claim clarification, and closing not-publicly-actionable issues.
+- Added `docs/PUBLIC_COLLABORATION_REVIEW_LOOP.md` for moving safe issues into scoped pull requests, review gates, and maintainer outcome notes.
 - Updated `docs/PUBLIC_ISSUE_QUEUE.md` so queued issue drafts point maintainers to the publishing checklist and first-response templates.
 - Updated reviewer and release materials so the issue publishing workflow appears in `v0.1.1` draft release notes, Codex for OSS review evidence, maintenance status, maintenance log, README, and changelog.
 
@@ -41,13 +42,13 @@ The project already has public issue drafts and contributor guidance. This PR cl
 
 ## Follow-up
 
-After merge, maintainers can publish one small issue from `docs/PUBLIC_ISSUE_QUEUE.md` and use `docs/FIRST_ISSUE_RESPONSE_TEMPLATE.md` for the first public maintainer reply.
+After merge, maintainers can publish one small issue from `docs/PUBLIC_ISSUE_QUEUE.md`, use `docs/FIRST_ISSUE_RESPONSE_TEMPLATE.md` for the first public maintainer reply, and use `docs/PUBLIC_COLLABORATION_REVIEW_LOOP.md` when that issue becomes a pull request.
 ```
 
 ## Pre-Merge Checklist
 
 - Confirm the branch contains docs-only changes.
-- Confirm `CHANGELOG.md` mentions the new issue publishing and first-response docs.
-- Confirm `README.en.md` links to both new docs.
+- Confirm `CHANGELOG.md` mentions the new issue publishing, first-response, and collaboration review docs.
+- Confirm `README.en.md` links to the new docs.
 - Confirm no unrelated local work is included in the PR.
 - Confirm validation commands are listed in the PR body.
