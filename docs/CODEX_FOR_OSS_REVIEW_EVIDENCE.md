@@ -24,6 +24,7 @@ Start with these files:
 - `docs/DEMO_WALKTHROUGH.md`: route-by-route local demo path.
 - `docs/CODEX_FOR_OSS_APPLICATION_EN.md`: application pitch and current capabilities.
 - `docs/CODEX_FOR_OSS_FORM_RESPONSES.md`: copy-ready application form answers and pre-submit checks.
+- `docs/CODEX_FOR_OSS_PROGRESS_UPDATE_2026_08_23.md`: current application-period maintenance update for reviewers.
 - `docs/CODEX_CREDIT_USE_PLAN.md`: responsible use plan for Codex/API credits.
 - `docs/REPOSITORY_HEALTH_CHECK.md`: public-readiness checks for repository state, docs, safety, verification, and remote sync.
 - `docs/MAINTENANCE_STATUS_2026_08.md`: recent maintenance snapshot, verification pattern, safety reminder, and next steps.

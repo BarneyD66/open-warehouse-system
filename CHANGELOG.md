@@ -61,6 +61,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Added first issue response templates for maintainers to acknowledge, scope, redact, clarify, or close public GitHub issues safely.
 - Added copy-ready pull request draft for the issue publishing safety documentation branch.
 - Added public collaboration review loop for moving safe issues into scoped pull requests, review gates, and maintainer outcomes.
+- Added Codex for OSS progress update for the 2026-08-23 application-period maintenance snapshot.
 
 ### Changed
 
