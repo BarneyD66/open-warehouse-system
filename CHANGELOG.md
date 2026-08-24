@@ -73,6 +73,7 @@ This project is still in the `0.x` phase. Release notes should stay short, workf
 - Codex for OSS review evidence now highlights localization and release-readiness materials for reviewers.
 - Codex for OSS review evidence now highlights roadmap-to-issue contributor materials for reviewers.
 - Star/fork outreach copy now uses readable Chinese and English text and points readers toward useful feedback, not empty activity.
+- August 2026 maintenance status and public maintenance log now include the latest issue publishing, collaboration review, and Codex for OSS progress-update materials.
 
 ### Security
 

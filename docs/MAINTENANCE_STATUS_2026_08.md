@@ -16,14 +16,14 @@ It is intended for reviewers, maintainers, and early contributors who want a qui
 
 Recent docs-only maintenance has focused on reviewability and application readiness:
 
-- Codex for OSS application material: `docs/CODEX_FOR_OSS_APPLICATION_EN.md`, `docs/CODEX_FOR_OSS_FORM_RESPONSES.md`
+- Codex for OSS application material: `docs/CODEX_FOR_OSS_APPLICATION_EN.md`, `docs/CODEX_FOR_OSS_FORM_RESPONSES.md`, `docs/CODEX_FOR_OSS_PROGRESS_UPDATE_2026_08_23.md`
 - Reviewer orientation: `docs/CODEX_FOR_OSS_REVIEW_EVIDENCE.md`, `docs/OSS_REVIEWER_GUIDE.md`, `docs/OSS_REVIEWER_FAQ.md`
 - Repository health: `docs/REPOSITORY_HEALTH_CHECK.md`
 - Global readiness: `docs/GLOBAL_READINESS_REVIEW.md`, `docs/REGIONAL_ADAPTATION_GUIDE.md`
 - Community feedback: `docs/COMMUNITY_FEEDBACK_REQUEST_GUIDE.md`, `docs/STAR_AND_FORK_MESSAGE.md`
 - Release preparation: `docs/RELEASE_NOTES_DRAFT_V0_1_1.md`, `CHANGELOG.md`, `docs/PUBLIC_MAINTENANCE_LOG_2026_08.md`
 - Roadmap scoping: `docs/ROADMAP_REVIEW_CHECKLIST.md`
-- Contributor issue flow: `docs/CONTRIBUTOR_WORKFLOW_MAP.md`, `docs/PUBLIC_ISSUE_QUEUE.md`, `docs/ISSUE_PUBLISHING_CHECKLIST.md`, `docs/FEEDBACK_TO_ISSUE_PLAYBOOK.md`
+- Contributor issue flow: `docs/CONTRIBUTOR_WORKFLOW_MAP.md`, `docs/PUBLIC_ISSUE_QUEUE.md`, `docs/ISSUE_PUBLISHING_CHECKLIST.md`, `docs/FIRST_ISSUE_RESPONSE_TEMPLATE.md`, `docs/PUBLIC_COLLABORATION_REVIEW_LOOP.md`, `docs/FEEDBACK_TO_ISSUE_PLAYBOOK.md`
 
 ## Verification Pattern
 
@@ -64,6 +64,7 @@ For a fast review, start with:
 8. `docs/PUBLIC_ISSUE_QUEUE.md`
 9. `docs/PUBLIC_MAINTENANCE_LOG_2026_08.md`
 10. `docs/ISSUE_PUBLISHING_CHECKLIST.md`
+11. `docs/PUBLIC_COLLABORATION_REVIEW_LOOP.md`
 
 ## Near-term Next Steps
 
