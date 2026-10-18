@@ -13,7 +13,7 @@ from docx.shared import Inches, Pt, RGBColor
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "deliverables" / "英国驿站仓储物流工作台操作教程.docx"
+OUT = ROOT / "deliverables" / "新途跨境仓储物流工作台操作教程.docx"
 
 BLUE = RGBColor(46, 116, 181)
 DARK_BLUE = RGBColor(31, 77, 120)
@@ -246,7 +246,7 @@ def apply_styles(doc):
         style.paragraph_format.line_spacing = 1.25
 
     header = section.header.paragraphs[0]
-    header.text = "英国驿站仓储/物流工作台操作教程"
+    header.text = "新途跨境仓储/物流工作台操作教程"
     header.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     set_run_font(header.runs[0], size=9, color=MUTED)
     footer = section.footer.paragraphs[0]
@@ -259,7 +259,7 @@ def add_cover(doc):
     add_para(doc, "操作手册", size=12, bold=True, color=BLUE, after=6)
     p = doc.add_paragraph()
     p.paragraph_format.space_after = Pt(6)
-    r = p.add_run("英国驿站仓储/物流工作台操作教程")
+    r = p.add_run("新途跨境仓储/物流工作台操作教程")
     set_run_font(r, size=26, bold=True, color=INK)
     add_para(doc, "面向客户、运营、仓库员工和管理者的日常使用说明", size=13, color=MUTED, after=18)
     add_table(

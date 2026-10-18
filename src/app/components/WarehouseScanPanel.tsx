@@ -526,7 +526,7 @@ export function WarehouseScanPanel({
                 <SubmissionForm className="grid gap-2 rounded-md border border-amber-200 bg-amber-50/70 p-3" onSubmit={submitPurchaseDiscrepancy}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="text-xs font-semibold text-amber-950">登记到货差异</p>
-                    <span className="rounded-md bg-white px-2 py-1 text-[11px] font-semibold text-amber-800">
+                    <span className="rounded-md bg-white px-2 py-1 text-[13px] font-semibold text-amber-800">
                       {activePurchaseTask?.discrepancyReports?.filter((item) => item.status === "open" || item.status === "customer_pending").length ?? 0} 条待确认
                     </span>
                   </div>
@@ -565,7 +565,7 @@ export function WarehouseScanPanel({
           <div>
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs font-semibold text-slate-500">最近扫码记录</p>
-              <span className="text-[11px] text-slate-400">{scanMode === "return" ? returnLastScans.length : scanMode === "purchase" ? purchaseLastScans.length : currentLastScans.length} 条</span>
+              <span className="text-[13px] text-slate-400">{scanMode === "return" ? returnLastScans.length : scanMode === "purchase" ? purchaseLastScans.length : currentLastScans.length} 条</span>
             </div>
             <div className="mt-2 max-h-40 space-y-2 overflow-y-auto pr-1">
               {(scanMode === "return" ? returnLastScans : scanMode === "purchase" ? purchaseLastScans : currentLastScans).slice(0, 6).map((scan) => (
@@ -574,7 +574,7 @@ export function WarehouseScanPanel({
                     <span className="font-semibold text-slate-800">{actionLabel[scan.action] ?? scan.action}</span>
                     <span className="text-slate-400">{formatScanTime(scan.scannedAt)}</span>
                   </div>
-                  <p className="mt-1 truncate font-mono text-[11px] text-slate-500">{scan.skuCode || scan.code} / {scan.operator}</p>
+                  <p className="mt-1 truncate font-mono text-[13px] text-slate-500">{scan.skuCode || scan.code} / {scan.operator}</p>
                 </div>
               ))}
               {(scanMode === "return" ? returnLastScans : scanMode === "purchase" ? purchaseLastScans : currentLastScans).length === 0 ? <p className="rounded-md border border-dashed border-slate-200 p-3 text-center text-xs text-slate-500">暂无扫码记录</p> : null}
@@ -602,8 +602,8 @@ export function WarehouseScanPanel({
           {matches.map((record) => (
             <article className="rounded-md border border-slate-200 bg-slate-50 p-3" key={`${record.type}-${record.id}`}>
               <div className="flex items-center justify-between gap-2">
-                <span className="rounded-md border border-cyan-200 bg-cyan-50 px-2 py-1 text-[11px] font-semibold text-cyan-800">{typeLabel[record.type]}</span>
-                <span className="font-mono text-[11px] text-slate-500">{record.id}</span>
+                <span className="rounded-md border border-cyan-200 bg-cyan-50 px-2 py-1 text-[13px] font-semibold text-cyan-800">{typeLabel[record.type]}</span>
+                <span className="font-mono text-[13px] text-slate-500">{record.id}</span>
               </div>
               <p className="mt-2 truncate text-sm font-semibold text-slate-950">{record.title}</p>
               <p className="mt-1 truncate text-xs text-slate-500">{record.detail}</p>

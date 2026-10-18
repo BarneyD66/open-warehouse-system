@@ -100,19 +100,34 @@ export async function WorkspaceDashboard() {
   const shippedOrders = coreData.outboundOrders.filter((item) => item.status === "shipped").length;
   const blockedOrders = coreData.outboundOrders.filter((item) => item.status === "blocked").length;
   const activeReturns = coreData.returnOrders.filter((item) => !["restocked", "disposed", "closed"].includes(item.status)).length;
-  const primaryStep = skuCount === 0
+  const profileRecorded = Boolean(account?.companyName?.trim() && account?.contactName?.trim());
+  const primaryStep = !profileRecorded && skuCount === 0
+    ? {
+        body: "可以先保存店铺与联系人资料，方便仓库联系；也可稍后填写，直接创建 SKU。",
+        cta: "填写资料（可选）",
+        href: "/account",
+        title: "开始使用：资料 → SKU → 入库 → 出库",
+      }
+    : skuCount === 0
       ? {
           body: "创建平台使用的 SKU 编码和商品名称，仓库会用它匹配入库与订单。",
           cta: "创建第一个 SKU",
           href: "/skus",
           title: "下一步：创建商品 SKU",
         }
-      : {
-          body: "前往“出库发货”上传订单文件、校验 CSV 或手工创建出库申请，提交后可在总览查看处理进度。",
-          cta: "进入出库发货",
-          href: "/outbound",
-          title: "创建出库订单并跟进发货",
-        };
+      : !inbounds.some((item) => item.status === "putaway_completed")
+        ? {
+            body: "填写到仓货件、SKU 和运输信息。仓库收货上架后，即可使用可用库存创建出库订单。",
+            cta: "创建入库预报",
+            href: "/inbound",
+            title: "下一步：预报入库并等待上架",
+          }
+        : {
+            body: "商品已上架，可上传订单或手工创建出库申请，并在业务进度中跟进发货。",
+            cta: "进入出库发货",
+            href: "/outbound",
+            title: "下一步：创建出库订单",
+          };
 
   return (
     <CustomerWorkbenchShell active="overview" customerCode={session.customerCode} customerCompany={account?.companyName ?? coreData.customer?.companyName} eyebrow="多平台订单与英国仓服务" title="订单处理工作台">
@@ -132,6 +147,10 @@ export async function WorkspaceDashboard() {
                     {primaryStep.cta}
                     <ArrowRight size={16} />
                   </Link>
+                  {!profileRecorded && skuCount === 0 ? <Link className="mt-3 block text-sm font-semibold text-cyan-800 underline" href="/skus">稍后填写，先创建 SKU</Link> : null}
+                  <nav aria-label="开始使用步骤" className="mt-5 flex flex-wrap gap-3 text-xs text-slate-600">
+                    {[{ href: "/account", label: "1 资料（可选）" }, { href: "/skus", label: "2 SKU" }, { href: "/inbound", label: "3 入库" }, { href: "/outbound", label: "4 出库" }].map((step) => <Link className="min-h-10 rounded-md border border-slate-200 px-3 py-2 hover:bg-slate-50" href={step.href} key={step.href}>{step.label}</Link>)}
+                  </nav>
                 </div>
 
                 <aside className="rounded-lg border border-slate-200 bg-slate-50 p-4">

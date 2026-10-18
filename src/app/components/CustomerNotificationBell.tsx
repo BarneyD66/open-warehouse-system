@@ -121,7 +121,7 @@ export function CustomerNotificationBell() {
       >
         <Bell aria-hidden="true" className="m-auto" size={19} />
         {unreadCount > 0 ? (
-          <span aria-hidden="true" className="pointer-events-none absolute right-0.5 top-0.5 z-10 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white shadow-[0_2px_6px_rgba(225,29,72,0.35)]">
+          <span aria-hidden="true" className="pointer-events-none absolute right-0.5 top-0.5 z-10 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-600 px-1 text-[13px] font-bold leading-none text-white ring-2 ring-white shadow-[0_2px_6px_rgba(225,29,72,0.35)]">
             {unreadLabel}
           </span>
         ) : null}

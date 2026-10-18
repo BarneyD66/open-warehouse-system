@@ -55,7 +55,7 @@ function internalLabelHtml(order: CoreOutboundOrder) {
     section { max-width: 620px; margin: 0 auto; background: white; border: 2px solid #0f172a; border-radius: 8px; padding: 24px; }
     header { display: flex; justify-content: space-between; gap: 16px; border-bottom: 2px solid #0f172a; padding-bottom: 16px; }
     h1 { margin: 8px 0 0; font-size: 28px; }
-    .muted { color: #64748b; font-size: 12px; font-weight: 700; }
+    .muted { color: #64748b; font-size: 13px; font-weight: 700; }
     .service { margin-top: 6px; color: #475569; font-weight: 700; }
     .address { margin-top: 24px; }
     .name { margin-top: 6px; font-size: 22px; font-weight: 800; }

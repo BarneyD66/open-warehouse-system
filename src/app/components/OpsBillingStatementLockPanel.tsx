@@ -19,10 +19,10 @@ function ApprovalTimelineList({ events }: { events: ApprovalTimelineEvent[] }) {
   if (latest.length === 0) return null;
   return (
     <div className="mt-3 rounded-md border border-slate-200 bg-white px-3 py-2">
-      <p className="text-[11px] font-semibold text-slate-500">锁账审批记录</p>
+      <p className="text-[13px] font-semibold text-slate-500">锁账审批记录</p>
       <div className="mt-2 grid gap-2 md:grid-cols-2">
         {latest.map((event) => (
-          <div className="rounded-md bg-slate-50 px-2 py-1 text-[11px] leading-4 text-slate-600" key={event.id}>
+          <div className="rounded-md bg-slate-50 px-2 py-1 text-[13px] leading-4 text-slate-600" key={event.id}>
             <p className="font-semibold text-slate-900">{event.label} · {event.actor}</p>
             <p>{new Date(event.occurredAt).toLocaleString("zh-CN", { hour12: false })}</p>
             {event.note ? <p className="text-slate-500">{event.note}</p> : null}

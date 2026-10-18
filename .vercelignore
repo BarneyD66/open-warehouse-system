@@ -11,3 +11,6 @@ prototype-*.png
 tmp-upload-test
 cursor-talk-to-figma-*.tgz
 figma-socket*.log
+
+.env
+.env.*.local

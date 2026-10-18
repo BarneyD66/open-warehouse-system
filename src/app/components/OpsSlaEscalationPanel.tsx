@@ -60,15 +60,15 @@ export function OpsSlaEscalationPanel({ items }: Props) {
         </div>
         <div className="grid grid-cols-3 gap-2 text-center sm:min-w-[360px]">
           <div className="rounded-md border border-rose-100 bg-rose-50 px-3 py-2">
-            <p className="text-[11px] font-semibold text-rose-700">高优先级</p>
+            <p className="text-[13px] font-semibold text-rose-700">高优先级</p>
             <p className="mt-1 text-xl font-semibold text-rose-950">{criticalCount}</p>
           </div>
           <div className="rounded-md border border-rose-100 bg-white px-3 py-2">
-            <p className="text-[11px] font-semibold text-rose-700">已超时</p>
+            <p className="text-[13px] font-semibold text-rose-700">已超时</p>
             <p className="mt-1 text-xl font-semibold text-rose-950">{overdueCount}</p>
           </div>
           <div className="rounded-md border border-amber-100 bg-amber-50 px-3 py-2">
-            <p className="text-[11px] font-semibold text-amber-800">即将超时</p>
+            <p className="text-[13px] font-semibold text-amber-800">即将超时</p>
             <p className="mt-1 text-xl font-semibold text-amber-950">{nearDueCount}</p>
           </div>
         </div>

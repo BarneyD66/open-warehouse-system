@@ -216,7 +216,7 @@ function SectionTitle({ eyebrow, title, action }: { eyebrow: string; title: stri
   return (
     <div className="flex min-h-14 items-center justify-between gap-3 border-b border-slate-100 px-5">
       <div>
-        <p className="text-[11px] font-semibold uppercase text-cyan-700">{eyebrow}</p>
+        <p className="text-[13px] font-semibold uppercase text-cyan-700">{eyebrow}</p>
         <h2 className="mt-1 text-base font-semibold text-slate-950">{title}</h2>
       </div>
       {action}
@@ -231,7 +231,7 @@ function Metric({ icon: Icon, label, value, tone, caption }: { icon: LucideIcon;
         <span className={`flex h-10 w-10 items-center justify-center rounded-md ${iconTone[tone]}`}>
           <Icon size={18} />
         </span>
-        <span className="rounded-md bg-slate-50 px-2 py-1 text-[11px] font-semibold text-slate-500">{caption}</span>
+        <span className="rounded-md bg-slate-50 px-2 py-1 text-[13px] font-semibold text-slate-500">{caption}</span>
       </div>
       <p className="mt-4 text-sm text-slate-500">{label}</p>
       <p className="mt-1 text-2xl font-semibold text-slate-950">{value}</p>

@@ -1563,7 +1563,7 @@ const cleanPartnerCarriers = [
 
 const cleanHeroSlides = [
   {
-    title: "英国驿站",
+    title: "新途跨境",
     subtitle: "中国卖家的一站式英国仓储、履约和售后中心",
     titleEn: "UK Station",
     subtitleEn: "One-stop UK warehousing, fulfillment and after-sales center for Chinese sellers",
@@ -1889,7 +1889,7 @@ function CleanMegaFooter({ language }: { language: SiteLanguage }) {
                 </div>
               </div>
             </div>
-            <p className="text-xs text-cyan-50/70">{language === "en" ? "Copyright © 2026 UK Station · UK Storage · Fulfillment · FBA Prep · Returns" : "Copyright © 2026 英国驿站 · 英国仓储 · 履约 · FBA 中转 · 退货售后"}</p>
+            <p className="text-xs text-cyan-50/70">{language === "en" ? "Copyright © 2026 UK Station · UK Storage · Fulfillment · FBA Prep · Returns" : "Copyright © 2026 新途跨境 · 英国仓储 · 履约 · FBA 中转 · 退货售后"}</p>
           </div>
         </div>
       </div>
@@ -4037,7 +4037,7 @@ export default function HomePage() {
             <Link className="site-header-brand" href={surfaceHref("marketing", "/")}>
               <BrandLogoMark isMarketing={surface === "marketing"} />
               <div className="site-header-brand-copy">
-                <p className="font-semibold tracking-tight text-slate-950">{language === "en" ? "UK Station" : "英国驿站"}</p>
+                <p className="font-semibold tracking-tight text-slate-950">{language === "en" ? "UK Station" : "新途跨境"}</p>
                 <p className="text-xs text-slate-500 sm:text-sm">{language === "en" ? "UK fulfillment · Self-built system" : "英国仓配 · 自营系统"}</p>
               </div>
             </Link>

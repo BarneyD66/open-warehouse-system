@@ -434,14 +434,14 @@ export default async function WarehousePage() {
                               {allocation?.lots.length ? (
                                 <div className="mt-1 grid gap-1">
                                   {allocation.lots.slice(0, 3).map((lot) => (
-                                    <p className="text-[11px] leading-4 text-slate-600" key={lot.lotId}>
+                                    <p className="text-[13px] leading-4 text-slate-600" key={lot.lotId}>
                                       批次 {lot.lotNo} x {lot.quantity} / {lot.locationCode || "未设库位"} / {lot.expiryDate || "无效期"}
                                     </p>
                                   ))}
-                                  {allocation.shortageQty > 0 ? <p className="text-[11px] font-semibold text-rose-700">批次可用不足，缺 {allocation.shortageQty}</p> : null}
+                                  {allocation.shortageQty > 0 ? <p className="text-[13px] font-semibold text-rose-700">批次可用不足，缺 {allocation.shortageQty}</p> : null}
                                 </div>
                               ) : (
-                                <p className="mt-1 text-[11px] font-semibold text-amber-700">暂无可用批次，需人工确认库存或批次台账。</p>
+                                <p className="mt-1 text-[13px] font-semibold text-amber-700">暂无可用批次，需人工确认库存或批次台账。</p>
                               )}
                             </div>
                           );

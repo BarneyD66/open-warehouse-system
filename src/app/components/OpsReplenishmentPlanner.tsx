@@ -93,7 +93,7 @@ export function OpsReplenishmentPlanner({
             ["在办单据", activePlans.length + activeTransfers.length],
           ].map(([label, value]) => (
             <div className="min-w-24 rounded-md border border-slate-200 bg-slate-50 px-3 py-2" key={label}>
-              <p className="text-[11px] font-semibold text-slate-500">{label}</p>
+              <p className="text-[13px] font-semibold text-slate-500">{label}</p>
               <p className="mt-1 text-lg font-semibold text-slate-950">{value}</p>
             </div>
           ))}
@@ -120,7 +120,7 @@ export function OpsReplenishmentPlanner({
                 <td className="px-4 py-3 align-top">
                   <p className="font-mono text-xs font-semibold text-slate-950">{item.skuCode}</p>
                   <p className="mt-1 text-xs text-slate-500">{item.customerCode} / {item.warehouseCode}</p>
-                  {item.locationCode ? <p className="mt-1 font-mono text-[11px] text-cyan-700">库位 {item.locationCode}</p> : null}
+                  {item.locationCode ? <p className="mt-1 font-mono text-[13px] text-cyan-700">库位 {item.locationCode}</p> : null}
                 </td>
                 <td className="px-4 py-3 align-top text-xs text-slate-600">
                   <p>可售 {numberText(item.availableQty)} / 占用 {numberText(item.reservedQty)}</p>

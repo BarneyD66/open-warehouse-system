@@ -85,7 +85,7 @@ export async function CustomerWorkbenchShell({
                 </Link>
               );
             })}
-            <p className="px-3 pb-1 pt-5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">帮助与支持</p>
+            <p className="px-3 pb-1 pt-5 text-[13px] font-semibold uppercase tracking-[0.14em] text-slate-500">帮助与支持</p>
             {supportNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = active === item.key;
@@ -119,13 +119,15 @@ export async function CustomerWorkbenchShell({
                 <p className="text-sm text-slate-500">{eyebrow}</p>
                 <h1 className="text-2xl font-semibold tracking-tight text-slate-950">{title}</h1>
               </div>
-              <div className="grid gap-2 sm:flex sm:items-center">
+              <div className="flex flex-wrap items-center gap-2">
                 {actions}
                 <CustomerNotificationBell />
                 <LogoutButton nextPath="/login" />
               </div>
             </div>
-            <nav className="grid grid-cols-2 gap-2 border-t border-slate-100 px-4 py-2 sm:grid-cols-4 lg:hidden">
+            <details className="border-t border-slate-100 lg:hidden">
+              <summary className="cursor-pointer px-4 py-3 text-base font-semibold text-slate-800">工作台菜单</summary>
+            <nav aria-label="客户工作台导航" className="grid grid-cols-2 gap-2 border-t border-slate-100 p-3 sm:grid-cols-4">
               {mobileNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = active === item.key;
@@ -144,6 +146,7 @@ export async function CustomerWorkbenchShell({
                 );
               })}
             </nav>
+            </details>
           </header>
           {children}
         </section>

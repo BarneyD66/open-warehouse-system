@@ -147,23 +147,23 @@ export function OpsCarrierHealthPanel({ channels, outbounds }: Props) {
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
         <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-slate-500">API 渠道</p>
+          <p className="text-[13px] font-semibold text-slate-500">API 渠道</p>
           <p className="mt-1 text-xl font-semibold text-slate-950">{apiChannels.length}</p>
         </div>
         <div className="rounded-md border border-amber-100 bg-amber-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-amber-800">配置缺口</p>
+          <p className="text-[13px] font-semibold text-amber-800">配置缺口</p>
           <p className="mt-1 text-xl font-semibold text-amber-950">{channelRiskRows.length}</p>
         </div>
         <div className="rounded-md border border-rose-100 bg-rose-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-rose-700">面单失败</p>
+          <p className="text-[13px] font-semibold text-rose-700">面单失败</p>
           <p className="mt-1 text-xl font-semibold text-rose-950">{labelFailedOrders.length}</p>
         </div>
         <div className="rounded-md border border-cyan-100 bg-cyan-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-cyan-800">轨迹待同步</p>
+          <p className="text-[13px] font-semibold text-cyan-800">轨迹待同步</p>
           <p className="mt-1 text-xl font-semibold text-cyan-950">{trackingDueOrders.length}</p>
         </div>
         <div className="rounded-md border border-rose-100 bg-white px-3 py-2">
-          <p className="text-[11px] font-semibold text-rose-700">派送/赔付异常</p>
+          <p className="text-[13px] font-semibold text-rose-700">派送/赔付异常</p>
           <p className="mt-1 text-xl font-semibold text-rose-950">{exceptionOrders.length + claimRows.length}</p>
         </div>
       </div>

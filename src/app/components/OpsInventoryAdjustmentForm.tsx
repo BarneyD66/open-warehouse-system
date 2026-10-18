@@ -31,10 +31,10 @@ function ApprovalTimelineList({ events }: { events?: ApprovalTimelineEvent[] }) 
   if (latest.length === 0) return null;
   return (
     <div className="mt-3 rounded-md border border-slate-200 bg-white px-3 py-2">
-      <p className="text-[11px] font-semibold text-slate-500">审批记录</p>
+      <p className="text-[13px] font-semibold text-slate-500">审批记录</p>
       <div className="mt-2 grid gap-2">
         {latest.map((event) => (
-          <div className="grid gap-1 border-l-2 border-cyan-500 pl-2 text-[11px] text-slate-600" key={event.id}>
+          <div className="grid gap-1 border-l-2 border-cyan-500 pl-2 text-[13px] text-slate-600" key={event.id}>
             <p className="font-semibold text-slate-900">{event.label} · {event.actor}</p>
             <p>{new Date(event.occurredAt).toLocaleString("zh-CN", { hour12: false })}</p>
             {event.note ? <p className="leading-4 text-slate-500">{event.note}</p> : null}
@@ -187,7 +187,7 @@ export function OpsInventoryAdjustmentForm({ balances, adjustments, canReview, d
               ))}
             </select>
             {selected ? (
-              <span className="mt-1 text-[11px] font-semibold text-slate-500">
+              <span className="mt-1 text-[13px] font-semibold text-slate-500">
                 当前：可用 {selected.availableQty} / 占用 {selected.reservedQty} / 冻结 {selectedFrozenQty} / 残次 {selectedDefectiveQty} / 在途 {selected.inboundQty}
               </span>
             ) : null}
@@ -314,7 +314,7 @@ export function OpsInventoryAdjustmentForm({ balances, adjustments, canReview, d
                   <span className="font-mono font-semibold text-slate-900">{item.skuCode}</span>
                   <span>{controlActionLabels[item.controlAction ?? "manual_adjust"]} / 可用 {formatDelta(item.availableDelta)} / 冻结 {formatDelta(item.frozenDelta ?? 0)} / 残次 {formatDelta(item.defectiveDelta ?? 0)}</span>
                   <span>{statusLabel(item.status)}</span>
-                  {item.approvalTimeline?.[0] ? <span className="basis-full text-[11px] text-slate-500">最近审批：{item.approvalTimeline[0].label} / {item.approvalTimeline[0].actor}</span> : null}
+                  {item.approvalTimeline?.[0] ? <span className="basis-full text-[13px] text-slate-500">最近审批：{item.approvalTimeline[0].label} / {item.approvalTimeline[0].actor}</span> : null}
                 </div>
               ))}
             </div>

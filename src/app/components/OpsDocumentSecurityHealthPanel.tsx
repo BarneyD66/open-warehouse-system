@@ -191,27 +191,27 @@ export function OpsDocumentSecurityHealthPanel({ documents, auditLogs = [] }: Pr
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
         <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-slate-500">文件总数</p>
+          <p className="text-[13px] font-semibold text-slate-500">文件总数</p>
           <p className="mt-1 text-xl font-semibold text-slate-950">{documents.length}</p>
         </div>
         <div className="rounded-md border border-emerald-100 bg-emerald-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-emerald-800">扫描通过率</p>
+          <p className="text-[13px] font-semibold text-emerald-800">扫描通过率</p>
           <p className="mt-1 text-xl font-semibold text-emerald-950">{cleanRate}%</p>
         </div>
         <div className="rounded-md border border-cyan-100 bg-cyan-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-cyan-800">对象存储覆盖</p>
+          <p className="text-[13px] font-semibold text-cyan-800">对象存储覆盖</p>
           <p className="mt-1 text-xl font-semibold text-cyan-950">{objectRate}%</p>
         </div>
         <div className="rounded-md border border-amber-100 bg-amber-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-amber-800">待扫描</p>
+          <p className="text-[13px] font-semibold text-amber-800">待扫描</p>
           <p className="mt-1 text-xl font-semibold text-amber-950">{pendingDocs.length}</p>
         </div>
         <div className="rounded-md border border-rose-100 bg-rose-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-rose-700">已拦截</p>
+          <p className="text-[13px] font-semibold text-rose-700">已拦截</p>
           <p className="mt-1 text-xl font-semibold text-rose-950">{blockedDocs.length}</p>
         </div>
         <div className="rounded-md border border-slate-200 bg-white px-3 py-2">
-          <p className="text-[11px] font-semibold text-slate-600">本地/数据库存储</p>
+          <p className="text-[13px] font-semibold text-slate-600">本地/数据库存储</p>
           <p className="mt-1 text-xl font-semibold text-slate-950">{localDocs.length}</p>
         </div>
       </div>
@@ -231,8 +231,8 @@ export function OpsDocumentSecurityHealthPanel({ documents, auditLogs = [] }: Pr
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="max-w-sm truncate text-sm font-semibold text-slate-950">{row.originalName}</p>
-                      <span className={`rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold ${scanTone}`}>{scanStatusLabel(row.scanStatus)}</span>
-                      <span className="rounded-full bg-cyan-50 px-2 py-0.5 text-[11px] font-semibold text-cyan-800">{storageProviderLabel(row.storageProvider)}</span>
+                      <span className={`rounded-full bg-slate-100 px-2 py-0.5 text-[13px] font-semibold ${scanTone}`}>{scanStatusLabel(row.scanStatus)}</span>
+                      <span className="rounded-full bg-cyan-50 px-2 py-0.5 text-[13px] font-semibold text-cyan-800">{storageProviderLabel(row.storageProvider)}</span>
                     </div>
                     <p className="mt-1 text-xs text-slate-500">{row.customerCode} / {refTypeLabel(row.refType)} {row.refId} / {categoryLabel(row.category)} / {fileSizeText(row.size)}</p>
                     <p className="mt-1 text-xs text-slate-500">上传：{row.uploadedByRole === "customer" ? "客户" : "员工"} {row.uploadedBy} / {formatDateTime(row.uploadedAt)}</p>

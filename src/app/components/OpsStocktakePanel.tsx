@@ -133,7 +133,7 @@ export function OpsStocktakePanel({ candidates, batches }: { candidates: Stockta
           ["当前批次", activeBatch?.id ?? "-"],
         ].map(([label, value]) => (
           <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2" key={label}>
-            <p className="text-[11px] font-semibold text-slate-500">{label}</p>
+            <p className="text-[13px] font-semibold text-slate-500">{label}</p>
             <p className="mt-1 truncate text-lg font-semibold text-slate-950">{value}</p>
           </div>
         ))}
@@ -250,7 +250,7 @@ export function OpsStocktakePanel({ candidates, batches }: { candidates: Stockta
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap gap-1">
                     {(item.riskLabels.length ? item.riskLabels : ["常规抽盘"]).map((label) => (
-                      <span className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[11px] font-semibold text-amber-800" key={label}>{label}</span>
+                      <span className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-[13px] font-semibold text-amber-800" key={label}>{label}</span>
                     ))}
                   </div>
                 </td>

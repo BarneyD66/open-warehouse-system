@@ -220,19 +220,19 @@ export function OpsBillingDisputePanel({ customers, records, workOrders = [], do
         </div>
         <div className="grid grid-cols-2 gap-2 text-center sm:min-w-[460px] sm:grid-cols-4">
           <div className="rounded-md border border-rose-100 bg-rose-50 px-3 py-2">
-            <p className="text-[11px] font-semibold text-rose-700">争议账单</p>
+            <p className="text-[13px] font-semibold text-rose-700">争议账单</p>
             <p className="mt-1 text-xl font-semibold text-rose-950">{disputedRecords.length}</p>
           </div>
           <div className="rounded-md border border-amber-100 bg-amber-50 px-3 py-2">
-            <p className="text-[11px] font-semibold text-amber-800">争议金额</p>
+            <p className="text-[13px] font-semibold text-amber-800">争议金额</p>
             <p className="mt-1 text-xl font-semibold text-amber-950">{formatMoney(disputedAmount)}</p>
           </div>
           <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-            <p className="text-[11px] font-semibold text-slate-600">已逾期</p>
+            <p className="text-[13px] font-semibold text-slate-600">已逾期</p>
             <p className="mt-1 text-xl font-semibold text-slate-950">{overdueCount}</p>
           </div>
           <div className="rounded-md border border-indigo-100 bg-indigo-50 px-3 py-2">
-            <p className="text-[11px] font-semibold text-indigo-700">待复核工单</p>
+            <p className="text-[13px] font-semibold text-indigo-700">待复核工单</p>
             <p className="mt-1 text-xl font-semibold text-indigo-950">{financeReviewWorkOrders.length}</p>
           </div>
         </div>

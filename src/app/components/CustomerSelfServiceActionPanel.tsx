@@ -78,7 +78,7 @@ export function CustomerSelfServiceActionPanel({ data }: { data: CustomerSelfSer
     <section className="rounded-lg border border-slate-200/80 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
       <div className="flex min-h-14 items-center justify-between gap-3 border-b border-slate-100 px-5">
         <div>
-          <p className="text-[11px] font-semibold uppercase text-cyan-700">自助中心</p>
+          <p className="text-[13px] font-semibold uppercase text-cyan-700">自助中心</p>
           <h2 className="mt-1 text-base font-semibold text-slate-950">我的操作清单</h2>
         </div>
         <div className="flex items-center gap-2">

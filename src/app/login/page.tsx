@@ -10,7 +10,7 @@ export default function LoginPage() {
         <div className="workspace-account-overlay" />
         <div className="workspace-login-shell">
           <div className="workspace-account-copy workspace-login-copy">
-            <p>英国驿站仓储系统</p>
+            <p>新途跨境仓储系统</p>
             <h1>专属仓储工作台</h1>
             <span>我们为英国仓配业务自建的客户系统，覆盖需求提交、SKU、入库、库存、出库、账单、资料和待办。客户可自主注册，也可按自己的业务配置资料、平台和作业信息。</span>
           </div>

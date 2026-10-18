@@ -262,42 +262,42 @@ export function OpsFinanceControlPanel({ customers, records, workOrders = [] }: 
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
         <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-slate-500">未结金额</p>
+          <p className="text-[13px] font-semibold text-slate-500">未结金额</p>
           <p className="mt-1 text-xl font-semibold text-slate-950">{money(openAmount)}</p>
         </div>
         <div className="rounded-md border border-rose-100 bg-rose-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-rose-700">逾期金额</p>
+          <p className="text-[13px] font-semibold text-rose-700">逾期金额</p>
           <p className="mt-1 text-xl font-semibold text-rose-950">{money(overdueAmount)}</p>
         </div>
         <div className="rounded-md border border-cyan-100 bg-cyan-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-cyan-800">待核销</p>
+          <p className="text-[13px] font-semibold text-cyan-800">待核销</p>
           <p className="mt-1 text-xl font-semibold text-cyan-950">{paymentSubmitted.length}</p>
         </div>
         <div className="rounded-md border border-rose-100 bg-white px-3 py-2">
-          <p className="text-[11px] font-semibold text-rose-700">争议账单</p>
+          <p className="text-[13px] font-semibold text-rose-700">争议账单</p>
           <p className="mt-1 text-xl font-semibold text-rose-950">{disputed.length}</p>
         </div>
         <div className="rounded-md border border-amber-100 bg-amber-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-amber-800">待开票</p>
+          <p className="text-[13px] font-semibold text-amber-800">待开票</p>
           <p className="mt-1 text-xl font-semibold text-amber-950">{invoiceRequested.length}</p>
         </div>
         <div className="rounded-md border border-slate-200 bg-white px-3 py-2">
-          <p className="text-[11px] font-semibold text-slate-600">月结月份</p>
+          <p className="text-[13px] font-semibold text-slate-600">月结月份</p>
           <p className="mt-1 text-xl font-semibold text-slate-950">{monthSet.size}</p>
         </div>
       </div>
 
       <div className="mt-3 grid gap-2 md:grid-cols-3">
         <Link className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-amber-900 hover:bg-amber-100" href="/api/ops/reports/finance-adjustments?kind=work_order">
-          <p className="text-[11px] font-semibold">财务复核工单</p>
+          <p className="text-[13px] font-semibold">财务复核工单</p>
           <p className="mt-1 text-xl font-semibold">{financeReviewWorkOrders.length}</p>
         </Link>
         <Link className="rounded-md border border-cyan-200 bg-cyan-50 px-3 py-2 text-cyan-900 hover:bg-cyan-100" href="/api/ops/reports/finance-adjustments">
-          <p className="text-[11px] font-semibold">调账/赔付记录</p>
+          <p className="text-[13px] font-semibold">调账/赔付记录</p>
           <p className="mt-1 text-xl font-semibold">{adjustmentRecords.length}</p>
         </Link>
         <Link className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-emerald-900 hover:bg-emerald-100" href="/api/ops/reports/finance-adjustments">
-          <p className="text-[11px] font-semibold">调账/赔付净额</p>
+          <p className="text-[13px] font-semibold">调账/赔付净额</p>
           <p className="mt-1 text-xl font-semibold">{money(adjustmentAmount)}</p>
         </Link>
       </div>

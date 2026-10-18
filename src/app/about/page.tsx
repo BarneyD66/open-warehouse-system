@@ -42,7 +42,7 @@ export default function AboutPage() {
           <div className="self-center">
             <p className="section-eyebrow">公司简介</p>
             <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight text-slate-950 sm:text-5xl">
-              英国驿站，服务中国卖家的英国仓储、履约和售后中心。
+              新途跨境，服务中国卖家的英国仓储、履约和售后中心。
             </h1>
             <p className="mt-6 max-w-3xl text-base leading-8 text-slate-600">
               我们专注为跨境卖家提供英国本地仓配服务，把入仓、库存、出库、FBA 中转、退货处理和费用核对放在同一条清晰链路里，让您先跑通流程，再稳步放量。
@@ -58,7 +58,7 @@ export default function AboutPage() {
           </div>
 
           <div className="about-premium-image">
-            <Image alt="英国驿站仓库操作现场" className="object-cover" fill priority sizes="(min-width: 1024px) 540px, 100vw" src="/assets/uk-warehouse-brand-control-desk.png" />
+            <Image alt="新途跨境仓库操作现场" className="object-cover" fill priority sizes="(min-width: 1024px) 540px, 100vw" src="/assets/uk-warehouse-brand-control-desk.png" />
           </div>
         </div>
       </section>
@@ -93,7 +93,7 @@ export default function AboutPage() {
             <h2>让英国仓配更清楚、更稳定。</h2>
           </div>
           <p>
-            对正在试仓、起量或多平台经营的卖家来说，真正重要的不是一个低价标签，而是入仓、出库、退货、FBA 和费用核对能不能长期稳定运转。英国驿站希望成为您在英国市场可持续经营的本地协同伙伴。
+            对正在试仓、起量或多平台经营的卖家来说，真正重要的不是一个低价标签，而是入仓、出库、退货、FBA 和费用核对能不能长期稳定运转。新途跨境希望成为您在英国市场可持续经营的本地协同伙伴。
           </p>
           <Link className="clean-primary-button inline-flex min-h-12 items-center justify-center gap-2 rounded-md px-5 text-sm font-semibold text-white" href={surfaceHref("customer", "/inquiry")}>
             提交需求 <ArrowRight size={16} />

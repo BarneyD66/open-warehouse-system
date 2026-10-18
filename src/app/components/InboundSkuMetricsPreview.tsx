@@ -20,7 +20,7 @@ export function InboundSkuMetricsPreview({ value }: { value: string }) {
           ["箱数 / 托数", `${metrics.cartons}`],
         ].map(([label, metric]) => (
           <div className="rounded-md border border-cyan-100 bg-white p-2.5" key={label}>
-            <p className="text-[11px] font-semibold leading-4 text-slate-500 sm:text-xs">{label}</p>
+            <p className="text-[13px] font-semibold leading-4 text-slate-500 sm:text-xs">{label}</p>
             <p className="mt-1 text-base font-semibold text-slate-950 sm:text-lg">{metric}</p>
           </div>
         ))}

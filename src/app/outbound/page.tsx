@@ -52,7 +52,7 @@ function OrderProgress({ order }: { order: CoreOutboundOrder }) {
       {steps.map((step, index) => (
         <div className="min-w-0" key={step}>
           <div className={`h-1.5 rounded-full ${index <= current ? "bg-cyan-700" : "bg-slate-200"}`} />
-          <p className={`mt-1 truncate text-[10px] font-semibold sm:text-xs ${index <= current ? "text-cyan-800" : "text-slate-400"}`}>{step}</p>
+          <p className={`mt-1 truncate text-[13px] font-semibold sm:text-xs ${index <= current ? "text-cyan-800" : "text-slate-400"}`}>{step}</p>
         </div>
       ))}
     </div>
@@ -141,7 +141,7 @@ export default async function OutboundPage() {
     <CustomerWorkbenchShell active="outbound" customerCode={session.customerCode} customerCompany={coreData.customer?.companyName} eyebrow="创建出库并跟进发货" title="出库发货">
       <div className="bg-slate-100 text-slate-950">
         <div className="mx-auto grid max-w-7xl gap-5 px-4 py-6 sm:px-6 lg:grid-cols-[0.82fr_1.18fr] lg:px-8">
-          <aside className="space-y-5">
+          <aside className="order-last space-y-5 lg:order-first">
             <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <span className="inline-flex rounded-md border border-cyan-200 bg-cyan-50 px-2 py-1 text-xs font-semibold text-cyan-800">出库申请</span>
               <h1 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">创建出库与尾程发货需求</h1>
@@ -166,8 +166,8 @@ export default async function OutboundPage() {
           </aside>
 
           <div className="space-y-5">
-            <CustomerOutboundBulkTools />
             <CustomerOutboundForm />
+            <CustomerOutboundBulkTools />
             <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
               <div className="flex items-center justify-between gap-3 border-b border-slate-200 px-4 py-3">
                 <div className="flex items-center gap-2">

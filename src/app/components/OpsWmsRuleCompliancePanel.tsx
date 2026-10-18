@@ -255,27 +255,27 @@ export function OpsWmsRuleCompliancePanel({ balances, locations, lots, outboundO
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
         <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-slate-500">有效策略</p>
+          <p className="text-[13px] font-semibold text-slate-500">有效策略</p>
           <p className="mt-1 text-xl font-semibold text-slate-950">{activePolicies.length}</p>
         </div>
         <div className="rounded-md border border-amber-100 bg-amber-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-amber-800">策略待确认</p>
+          <p className="text-[13px] font-semibold text-amber-800">策略待确认</p>
           <p className="mt-1 text-xl font-semibold text-amber-950">{pausedPolicies.length}</p>
         </div>
         <div className="rounded-md border border-rose-100 bg-rose-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-rose-700">库位风险</p>
+          <p className="text-[13px] font-semibold text-rose-700">库位风险</p>
           <p className="mt-1 text-xl font-semibold text-rose-950">{locationRows.length}</p>
         </div>
         <div className="rounded-md border border-rose-100 bg-white px-3 py-2">
-          <p className="text-[11px] font-semibold text-rose-700">批次风险</p>
+          <p className="text-[13px] font-semibold text-rose-700">批次风险</p>
           <p className="mt-1 text-xl font-semibold text-rose-950">{lotRows.length}</p>
         </div>
         <div className="rounded-md border border-cyan-100 bg-cyan-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-cyan-800">库存风险</p>
+          <p className="text-[13px] font-semibold text-cyan-800">库存风险</p>
           <p className="mt-1 text-xl font-semibold text-cyan-950">{inventoryRows.length}</p>
         </div>
         <div className="rounded-md border border-slate-200 bg-white px-3 py-2">
-          <p className="text-[11px] font-semibold text-slate-600">可导出报表</p>
+          <p className="text-[13px] font-semibold text-slate-600">可导出报表</p>
           <p className="mt-1 text-xl font-semibold text-slate-950">3</p>
         </div>
       </div>

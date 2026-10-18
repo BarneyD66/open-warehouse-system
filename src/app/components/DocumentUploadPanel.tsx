@@ -113,10 +113,10 @@ export function DocumentUploadPanel({ refType, refId, category, title, documents
                   {fileSizeLabel(item.size)} / {new Date(item.uploadedAt).toLocaleDateString("zh-CN")}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-semibold ${scanBadgeClass(item.scanStatus)}`}>
+                  <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[13px] font-semibold ${scanBadgeClass(item.scanStatus)}`}>
                     {documentScanStatusLabel(item.scanStatus)}
                   </span>
-                  <span className="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                  <span className="inline-flex items-center rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[13px] font-semibold text-slate-600">
                     {documentStorageProviderLabel(item.storageProvider)}
                   </span>
                 </div>

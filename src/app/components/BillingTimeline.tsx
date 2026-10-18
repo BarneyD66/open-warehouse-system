@@ -51,7 +51,7 @@ export function BillingTimeline({ events = [], title = "处理进度", emptyText
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-semibold text-slate-950">{event.label}</p>
-                  <span className="font-mono text-[11px] text-slate-500">{dateText(event.occurredAt)}</span>
+                  <span className="font-mono text-[13px] text-slate-500">{dateText(event.occurredAt)}</span>
                   <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-0.5 font-semibold text-slate-600">{event.actor}</span>
                 </div>
                 {event.note ? <p className="mt-1 text-slate-600">{event.note}</p> : null}

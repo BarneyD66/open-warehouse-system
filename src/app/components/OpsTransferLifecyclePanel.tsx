@@ -49,9 +49,9 @@ function ApprovalTimelineList({ events }: { events?: ApprovalTimelineEvent[] }) 
   if (latest.length === 0) return null;
   return (
     <div className="mt-2 grid gap-1 rounded-md bg-slate-50 p-2">
-      <p className="text-[11px] font-semibold text-slate-500">审批记录</p>
+      <p className="text-[13px] font-semibold text-slate-500">审批记录</p>
       {latest.map((event) => (
-        <div className="text-[11px] leading-4 text-slate-600" key={event.id}>
+        <div className="text-[13px] leading-4 text-slate-600" key={event.id}>
           <p className="font-semibold text-slate-900">{event.label} · {event.actor}</p>
           <p>{new Date(event.occurredAt).toLocaleString("zh-CN", { hour12: false })}</p>
           {event.note ? <p className="text-slate-500">{event.note}</p> : null}
@@ -138,7 +138,7 @@ export function OpsTransferLifecyclePanel({ rows, documents = [] }: { rows: Tran
             ["已签收", receiveTotal],
           ].map(([label, value]) => (
             <div className="min-w-20 rounded-md border border-slate-200 bg-slate-50 px-3 py-2" key={label}>
-              <p className="text-[11px] font-semibold text-slate-500">{label}</p>
+              <p className="text-[13px] font-semibold text-slate-500">{label}</p>
               <p className="mt-1 text-lg font-semibold text-slate-950">{value}</p>
             </div>
           ))}
@@ -165,8 +165,8 @@ export function OpsTransferLifecyclePanel({ rows, documents = [] }: { rows: Tran
               <tr key={row.id}>
                 <td className="px-4 py-3 align-top">
                   <p className="font-mono text-xs font-semibold text-slate-950">{row.id}</p>
-                  <p className="mt-1 font-mono text-[11px] text-slate-500">{row.skuCode}</p>
-                  {row.relatedPlanId ? <p className="mt-1 text-[11px] text-cyan-700">补货计划 {row.relatedPlanId}</p> : null}
+                  <p className="mt-1 font-mono text-[13px] text-slate-500">{row.skuCode}</p>
+                  {row.relatedPlanId ? <p className="mt-1 text-[13px] text-cyan-700">补货计划 {row.relatedPlanId}</p> : null}
                 </td>
                 <td className="px-4 py-3 align-top text-xs text-slate-600">
                   <p>{row.fromWarehouseCode}</p>
@@ -182,8 +182,8 @@ export function OpsTransferLifecyclePanel({ rows, documents = [] }: { rows: Tran
                 </td>
                 <td className="px-4 py-3 align-top">
                   <span className={`inline-flex rounded-md border px-2 py-1 text-xs font-semibold ${statusClass[row.status]}`}>{statusLabel[row.status]}</span>
-                  {row.trackingNumber ? <p className="mt-2 font-mono text-[11px] text-slate-500">{row.trackingNumber}</p> : null}
-                  {row.exceptionNote ? <p className="mt-2 max-w-44 text-[11px] leading-4 text-rose-700">{row.exceptionNote}</p> : null}
+                  {row.trackingNumber ? <p className="mt-2 font-mono text-[13px] text-slate-500">{row.trackingNumber}</p> : null}
+                  {row.exceptionNote ? <p className="mt-2 max-w-44 text-[13px] leading-4 text-rose-700">{row.exceptionNote}</p> : null}
                   <ApprovalTimelineList events={row.approvalTimeline} />
                 </td>
                 <td className="px-4 py-3 align-top">

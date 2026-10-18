@@ -260,27 +260,27 @@ export function OpsPlatformSyncHealthPanel({ data, outbounds, probeRecords = [] 
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-6">
         <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-slate-500">API 连接</p>
+          <p className="text-[13px] font-semibold text-slate-500">API 连接</p>
           <p className="mt-1 text-xl font-semibold text-slate-950">{apiConnections.length}</p>
         </div>
         <div className="rounded-md border border-amber-100 bg-amber-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-amber-800">到期未拉单</p>
+          <p className="text-[13px] font-semibold text-amber-800">到期未拉单</p>
           <p className="mt-1 text-xl font-semibold text-amber-950">{dueConnections.length}</p>
         </div>
         <div className="rounded-md border border-rose-100 bg-rose-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-rose-700">连接异常</p>
+          <p className="text-[13px] font-semibold text-rose-700">连接异常</p>
           <p className="mt-1 text-xl font-semibold text-rose-950">{errorConnections.length + failedJobs.length}</p>
         </div>
         <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-slate-500">已暂停</p>
+          <p className="text-[13px] font-semibold text-slate-500">已暂停</p>
           <p className="mt-1 text-xl font-semibold text-slate-950">{pausedConnections.length}</p>
         </div>
         <div className="rounded-md border border-cyan-100 bg-cyan-50 px-3 py-2">
-          <p className="text-[11px] font-semibold text-cyan-800">取消待复核</p>
+          <p className="text-[13px] font-semibold text-cyan-800">取消待复核</p>
           <p className="mt-1 text-xl font-semibold text-cyan-950">{cancellationJobs.reduce((sum, job) => sum + (job.cancelledRows ?? 0), 0)}</p>
         </div>
         <div className="rounded-md border border-rose-100 bg-white px-3 py-2">
-          <p className="text-[11px] font-semibold text-rose-700">回传待处理</p>
+          <p className="text-[13px] font-semibold text-rose-700">回传待处理</p>
           <p className="mt-1 text-xl font-semibold text-rose-950">{fulfillmentRetryOrders.length}</p>
         </div>
       </div>

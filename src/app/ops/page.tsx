@@ -1657,7 +1657,7 @@ function ReturnOrdersTable({ rows, documents, activeFilter = "all", keyword = ""
       <div className="grid gap-2 border-b border-slate-100 p-4 sm:grid-cols-3 xl:grid-cols-6">
         {summaryItems.map((item) => (
           <Link className={`rounded-md border px-3 py-2 transition hover:bg-white ${toneClasses[item.tone].pill} ${activeFilter === item.filter ? "ring-2 ring-cyan-300" : ""}`} href={`/ops?section=outbound&returnStatus=${item.filter}`} key={item.label}>
-            <p className="text-[11px] font-semibold">{item.label}</p>
+            <p className="text-[13px] font-semibold">{item.label}</p>
             <p className="mt-1 text-xl font-semibold">{item.value}</p>
           </Link>
         ))}
@@ -2127,7 +2127,7 @@ function CustomerReviewTable({ accounts, auditLogs, documents, customerProfiles 
           {recentLogs.map((log) => (
             <article className="rounded-md border border-slate-200 bg-slate-50 p-3" key={log.id}>
               <div className="flex items-start justify-between gap-3">
-                <p className="font-mono text-[11px] text-slate-500">{log.customerCode || log.targetId}</p>
+                <p className="font-mono text-[13px] text-slate-500">{log.customerCode || log.targetId}</p>
                 {statusPill(log.actorRole === "staff" ? "员工" : log.actorRole === "customer" ? "客户" : "系统", log.actorRole === "staff" ? "cyan" : "slate")}
               </div>
               <p className="mt-2 text-sm font-semibold text-slate-950">{log.summary}</p>
@@ -2360,7 +2360,7 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
               {permittedDomainNav.map(({ id, label, icon: Icon }) => (
                 <Link
                   aria-current={activeSection === id ? "page" : undefined}
-                  className={`flex h-14 flex-col items-center justify-center gap-1 rounded-md text-[11px] font-semibold transition ${
+                  className={`flex h-14 flex-col items-center justify-center gap-1 rounded-md text-[13px] font-semibold transition ${
                     activeSection === id ? "bg-slate-950 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-950"
                   }`}
                   href={`/ops?section=${id}`}
@@ -2412,7 +2412,7 @@ export default async function OpsPage({ searchParams }: OpsPageProps) {
               {permittedDomainNav.map(({ id, label, icon: Icon }) => (
                 <Link
                   aria-current={activeSection === id ? "page" : undefined}
-                  className={`flex min-h-12 min-w-[4.25rem] flex-col items-center justify-center gap-1 rounded-md px-2 text-[11px] font-semibold transition ${
+                  className={`flex min-h-12 min-w-[4.25rem] flex-col items-center justify-center gap-1 rounded-md px-2 text-[13px] font-semibold transition ${
                     activeSection === id ? "bg-slate-950 text-white shadow-sm" : "text-slate-500 hover:bg-slate-50 hover:text-slate-950"
                   }`}
                   href={`/ops?section=${id}`}

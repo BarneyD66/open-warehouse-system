@@ -84,7 +84,7 @@ export function MarketingHeader({ surface: surfaceOverride }: { surface?: Runtim
               <Image alt="" height={80} src="/assets/uk-station-logo.png" width={80} />
             </span>
             <span className="site-header-brand-copy">
-              <span className="block font-semibold tracking-tight text-slate-950">英国驿站</span>
+              <span className="block font-semibold tracking-tight text-slate-950">新途跨境</span>
               <span className="block text-xs text-slate-500 sm:text-sm">英国仓配 · 自营系统</span>
             </span>
         </Link>

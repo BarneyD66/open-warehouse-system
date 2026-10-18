@@ -264,19 +264,19 @@ export function OpsAuditLogPanel({ logs }: { logs: AuditLogRecord[] }) {
       {staffLoginSummary.failed.length + staffLoginSummary.success.length > 0 ? (
         <div className="mt-4 grid gap-2 md:grid-cols-4">
           <div className="rounded-md border border-emerald-100 bg-emerald-50 px-3 py-2">
-            <p className="text-[11px] font-semibold text-emerald-800">员工登录成功</p>
+            <p className="text-[13px] font-semibold text-emerald-800">员工登录成功</p>
             <p className="mt-1 text-xl font-semibold text-emerald-950">{staffLoginSummary.success.length}</p>
           </div>
           <div className="rounded-md border border-amber-100 bg-amber-50 px-3 py-2">
-            <p className="text-[11px] font-semibold text-amber-800">员工登录失败</p>
+            <p className="text-[13px] font-semibold text-amber-800">员工登录失败</p>
             <p className="mt-1 text-xl font-semibold text-amber-950">{staffLoginSummary.failed.length}</p>
           </div>
           <div className="rounded-md border border-rose-100 bg-rose-50 px-3 py-2">
-            <p className="text-[11px] font-semibold text-rose-700">触发锁定</p>
+            <p className="text-[13px] font-semibold text-rose-700">触发锁定</p>
             <p className="mt-1 text-xl font-semibold text-rose-950">{staffLoginSummary.locked.length}</p>
           </div>
           <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-            <p className="text-[11px] font-semibold text-slate-500">失败最多账号</p>
+            <p className="text-[13px] font-semibold text-slate-500">失败最多账号</p>
             <p className="mt-1 truncate text-sm font-semibold text-slate-950">
               {staffLoginSummary.topFailedAccounts.length > 0 ? staffLoginSummary.topFailedAccounts.map(([account, count]) => `${account} ${count}次`).join("，") : "暂无"}
             </p>

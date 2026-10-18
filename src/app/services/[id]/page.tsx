@@ -22,12 +22,12 @@ export async function generateMetadata({ params }: PageProps) {
 
   if (!service) {
     return {
-      title: "海外仓服务 | 英国驿站",
+      title: "海外仓服务 | 新途跨境",
     };
   }
 
   return {
-    title: `${service.title} | 英国驿站`,
+    title: `${service.title} | 新途跨境`,
     description: service.body,
   };
 }

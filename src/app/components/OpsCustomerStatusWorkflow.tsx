@@ -134,7 +134,7 @@ export function OpsCustomerStatusWorkflow({ customerCode, status, documents = []
       </select>
       <textarea className="min-h-16 rounded-md border border-slate-200 bg-white p-2 text-xs text-slate-700 outline-none focus:border-cyan-500" onChange={(event) => setNote(event.target.value)} placeholder={text.notePlaceholder} value={note} />
       <div className="grid gap-2 rounded-md border border-slate-200 bg-slate-50 p-2">
-        <p className="text-[11px] font-semibold text-slate-500">账期与额度</p>
+        <p className="text-[13px] font-semibold text-slate-500">账期与额度</p>
         <div className="grid gap-2 sm:grid-cols-3">
           <input className="h-9 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700 outline-none focus:border-cyan-500" min="0" onChange={(event) => setTermDays(event.target.value)} placeholder="账期天数" type="number" value={termDays} />
           <input className="h-9 rounded-md border border-slate-200 bg-white px-2 text-xs text-slate-700 outline-none focus:border-cyan-500" min="0" onChange={(event) => setLimit(event.target.value)} placeholder="信用额度 GBP" type="number" value={limit} />
@@ -147,7 +147,7 @@ export function OpsCustomerStatusWorkflow({ customerCode, status, documents = []
       </div>
       {needsSensitiveConfirm ? (
         <div className="rounded-md border border-amber-200 bg-amber-50 p-2">
-          <p className="text-[11px] font-semibold text-amber-900">暂停/恢复客户账号属于敏感操作，请填写原因并输入客户编号确认。</p>
+          <p className="text-[13px] font-semibold text-amber-900">暂停/恢复客户账号属于敏感操作，请填写原因并输入客户编号确认。</p>
           <input
             className="mt-2 h-9 w-full rounded-md border border-amber-200 bg-white px-2 font-mono text-xs text-slate-800 outline-none focus:border-amber-500"
             onChange={(event) => setConfirmation(event.target.value)}

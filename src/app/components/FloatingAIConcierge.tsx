@@ -110,7 +110,7 @@ export function FloatingAIConcierge() {
         type="button"
         aria-label="打开 AI 专属客服"
       >
-        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-200 text-[9px] font-bold text-slate-950 sm:h-5 sm:w-5 sm:text-[10px]">AI</span>
+        <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-cyan-200 text-[13px] font-bold text-slate-950 sm:h-5 sm:w-5 sm:text-[13px]">AI</span>
         {open ? <X size={22} /> : <MessageCircle size={23} />}
       </button>
     </div>

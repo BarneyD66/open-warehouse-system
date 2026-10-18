@@ -18,7 +18,7 @@ export async function generateMetadata({ params }: { params: NewsDetailParams })
   if (!article) return {};
 
   return {
-    title: `${article.title} | 英国驿站`,
+    title: `${article.title} | 新途跨境`,
     description: article.summary,
   };
 }

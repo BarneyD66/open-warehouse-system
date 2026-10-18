@@ -70,7 +70,7 @@ export function OpsReturnTrackingUploadButton() {
       </label>
       {result ? (
         <button
-          className="inline-flex min-h-8 items-center justify-center rounded-md border border-cyan-200 bg-white px-2 text-[11px] font-semibold text-cyan-800 hover:bg-cyan-50"
+          className="inline-flex min-h-8 items-center justify-center rounded-md border border-cyan-200 bg-white px-2 text-[13px] font-semibold text-cyan-800 hover:bg-cyan-50"
           onClick={() =>
             downloadCsv("运营退货追踪号导入结果.csv", [
               ["行号", "客户编号", "退货单号", "状态", "处理结果"],
@@ -82,7 +82,7 @@ export function OpsReturnTrackingUploadButton() {
           下载结果
         </button>
       ) : null}
-      {message ? <span className="text-[11px] font-semibold text-cyan-700">{message}</span> : null}
+      {message ? <span className="text-[13px] font-semibold text-cyan-700">{message}</span> : null}
     </span>
   );
 }

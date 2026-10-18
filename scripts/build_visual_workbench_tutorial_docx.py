@@ -12,7 +12,7 @@ from docx.shared import Inches, Pt, RGBColor
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "deliverables" / "英国驿站仓储物流工作台图文操作教程-最终版.docx"
+OUT = ROOT / "deliverables" / "新途跨境仓储物流工作台图文操作教程-最终版.docx"
 SHOT_DIR = ROOT / "deliverables" / "tutorial-screenshots"
 
 
@@ -221,7 +221,7 @@ def setup_document():
     for section in doc.sections:
         header = section.header.paragraphs[0]
         header.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-        run = header.add_run("英国驿站仓储/物流工作台图文操作教程")
+        run = header.add_run("新途跨境仓储/物流工作台图文操作教程")
         set_run(run, size=8.5, color="64748B")
         footer = section.footer.paragraphs[0]
         footer.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -234,7 +234,7 @@ def cover(doc):
     for _ in range(3):
         doc.add_paragraph()
     add_para(doc, "操作手册", size=13, bold=True, color=BLUE)
-    add_para(doc, "英国驿站仓储/物流工作台", size=26, bold=True, color=DARK, space_after=2)
+    add_para(doc, "新途跨境仓储/物流工作台", size=26, bold=True, color=DARK, space_after=2)
     add_para(doc, "图文操作教程 - 最终版", size=20, bold=True, color=DARK, space_after=14)
     add_para(doc, "适用于客户、运营、仓库员工、财务和管理者。目标是让新人看完后知道每个入口点哪里、每一步做什么、出现异常时找谁处理。", size=11, color="334155")
 

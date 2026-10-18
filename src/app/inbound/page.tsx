@@ -26,7 +26,7 @@ export default async function InboundPage() {
     >
       <div className="text-slate-950">
         <div className="mx-auto grid max-w-7xl gap-5 px-4 py-6 sm:px-6 lg:grid-cols-[0.8fr_1.2fr] lg:px-8">
-          <aside className="space-y-5">
+          <aside className="order-last space-y-5 lg:order-first">
             <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
               <span className="inline-flex rounded-md border border-cyan-200 bg-cyan-50 px-2 py-1 text-xs font-semibold text-cyan-800">入库预报</span>
               <h1 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">提交到仓信息</h1>
