@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 70" role="img" aria-labelledby="title desc">
+  <title id="title">Parcelforce Worldwide</title>
+  <desc id="desc">Parcelforce Worldwide wordmark for partner display</desc>
+  <rect width="180" height="70" fill="none"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 36c17-25 58-31 96-18" stroke="#e30613" stroke-width="7"/>
+    <path d="M28 48c23 10 58 6 86-13" stroke="#0055a4" stroke-width="7"/>
+  </g>
+  <text x="10" y="38" fill="#0b3f8a" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="800" letter-spacing="0">
+    Parcelforce
+  </text>
+  <text x="12" y="59" fill="#e30613" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="700" letter-spacing="1.2">
+    WORLDWIDE
+  </text>
+</svg>
