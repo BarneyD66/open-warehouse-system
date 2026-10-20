@@ -38,6 +38,7 @@ const returnActionLabel: Record<ReturnScanRecord["action"], string> = {
 };
 
 const outboundStatusLabels: Record<CoreOutboundOrder["status"], string> = {
+    cancelled: "已撤回",
   pending_review: "待审核",
   picking: "拣货中",
   label_pending: "待生成面单",

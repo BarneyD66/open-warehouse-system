@@ -60,6 +60,7 @@ function CheckItem({
 
 function orderStatusLabel(status: CoreOutboundOrder["status"]) {
   const labels: Record<CoreOutboundOrder["status"], string> = {
+    cancelled: "已撤回",
     blocked: "需要处理",
     handover: "等待交运",
     label_pending: "生成面单",

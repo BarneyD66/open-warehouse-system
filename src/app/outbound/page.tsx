@@ -1,3 +1,5 @@
+import { CustomerOutboundEditor } from "../components/CustomerOutboundEditor";
+import { splitOutboundLines } from "@/lib/customerOutboundInput";
 import Link from "next/link";
 import { AlertTriangle, ArrowRight, Boxes, ClipboardCheck, Download, FileCheck2, PackageCheck, Truck } from "lucide-react";
 import { requireCustomerSession } from "@/lib/customerAuth";
@@ -14,6 +16,7 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const statusTone: Record<CoreOutboundOrder["status"], string> = {
+  cancelled: "border-slate-200 bg-slate-50 text-slate-600",
   pending_review: "border-cyan-200 bg-cyan-50 text-cyan-800",
   picking: "border-amber-200 bg-amber-50 text-amber-800",
   label_pending: "border-rose-200 bg-rose-50 text-rose-800",
@@ -32,6 +35,7 @@ const exceptionStatusLabel: Record<OutboundExceptionRecord["status"], string> = 
 
 function statusLabel(status: CoreOutboundOrder["status"]) {
   const labels: Record<CoreOutboundOrder["status"], string> = {
+    cancelled: "已撤回",
     pending_review: "待校验",
     picking: "拣货中",
     label_pending: "待生成面单",
@@ -44,6 +48,7 @@ function statusLabel(status: CoreOutboundOrder["status"]) {
 }
 
 function OrderProgress({ order }: { order: CoreOutboundOrder }) {
+  if (order.status === "cancelled") return <p className="mt-3 text-sm text-slate-600">申请已撤回，已释放该单预占库存。</p>;
   const delivered = order.trackingEvents?.some((event) => event.status === "delivered") ?? false;
   const current = delivered ? 4 : order.status === "shipped" ? 3 : order.status === "handover" ? 3 : order.status === "packing_check" || order.status === "label_pending" ? 2 : order.status === "picking" ? 1 : 0;
   const steps = ["待校验", "待拣货", "待打包", "已交运", "已签收"];
@@ -179,15 +184,18 @@ export default async function OutboundPage() {
                 {orders.length > 0 ? (
                   orders.map((order) => {
                     const exception = latestException(order);
+                    const { products, packaging } = splitOutboundLines(order.skuLines);
                     return (
                       <div className="grid gap-3 px-4 py-4 md:grid-cols-[1fr_auto]" key={order.id}>
                         <div>
                           <p className="font-mono text-xs font-semibold text-slate-500">{order.id}</p>
                           <h3 className="mt-1 text-sm font-semibold text-slate-950">{order.channel}</h3>
                           <p className="mt-2 text-sm leading-6 text-slate-600">
-                            {order.orderCount} 单 / {order.skuLines?.map((line) => `${line.skuCode} x ${line.quantity}`).join("；") || "SKU 待确认"}
+                            {order.orderCount} 单 / 商品：{products.map((line) => `${line.skuCode} x ${line.quantity}`).join("；") || "缺少商品明细，请核对后编辑"}
+                            <br />包材：{packaging.map((line) => `${line.skuCode} x ${line.quantity}`).join("；") || "无"}
                           </p>
                           <OrderProgress order={order} />
+                          <CustomerOutboundEditor key={order.updatedAt ?? order.createdAt} order={order} />
                           <div className="mt-2 grid gap-1 text-xs leading-5 text-slate-500">
                             <p>承运服务：{order.carrierName ? `${order.carrierName} ${order.carrierServiceName ?? ""}` : "待运营确认"}</p>
                             <p>追踪号：{order.trackingNumber || "待生成"}</p>

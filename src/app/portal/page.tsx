@@ -191,6 +191,7 @@ function opsTone(kind: "logistics" | "outbound" | "inventory", status: string): 
 
 function coreOutboundStatusMeta(status: CoreOutboundOrder["status"]): { label: string; tone: Tone } {
   const labels: Record<CoreOutboundOrder["status"], { label: string; tone: Tone }> = {
+    cancelled: { label: "已撤回", tone: "rose" },
     pending_review: { label: "待审核", tone: "cyan" },
     picking: { label: "拣货中", tone: "amber" },
     label_pending: { label: "待生成面单", tone: "rose" },

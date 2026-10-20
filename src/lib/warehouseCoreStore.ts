@@ -1,9 +1,11 @@
 import { buildCoreTelegramEvents, snapshotCoreNotifications, type CoreNotificationSnapshot } from "./warehouseTelegramEvents";
 import { queueWarehouseTelegramEvents, warehouseTelegramConfigured } from "./warehouseTelegramNotifications";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+
 import path from "node:path";
 import { cancelCarrierLabel, purchaseCarrierLabel } from "./carrierGateway";
-import { getSql, hasPostgresConfig } from "./db";
+import { hasPostgresConfig } from "./db";
+import { coreSql as getSql, withCoreMutation, afterCoreCommit, readCoreFile, stageCoreFile } from "./coreTransaction";
+import { CustomerOutboundEditError, parseCustomerOutboundLines, splitOutboundLines } from "./customerOutboundInput";
 import { addCustomerWorkOrderMessage, createCustomerWorkOrder } from "./opsExpansionStore";
 
 export type CustomerProfile = {
@@ -446,7 +448,7 @@ export type OutboundCustomerExceptionDecision = "accepted" | "redelivery_confirm
 
 export type OutboundOperationLog = {
   id: string;
-  action: "work_mode_assigned" | "status_changed" | "document_reprinted" | "intercept_requested" | "intercept_completed" | "scan_pick" | "scan_sort" | "scan_pack" | "scan_ship" | "scan_intercept" | "exception_created" | "exception_resolved" | "customer_exception_decision";
+  action: "customer_edit" | "customer_withdraw" | "work_mode_assigned" | "status_changed" | "document_reprinted" | "intercept_requested" | "intercept_completed" | "scan_pick" | "scan_sort" | "scan_pack" | "scan_ship" | "scan_intercept" | "exception_created" | "exception_resolved" | "customer_exception_decision";
   label: string;
   detail?: string;
   operator: string;
@@ -571,7 +573,9 @@ export type CoreOutboundOrder = {
   restockLocationCode?: string;
   shippedAt?: string;
   handoverAt?: string;
-  status: "pending_review" | "picking" | "label_pending" | "packing_check" | "handover" | "shipped" | "blocked";
+  reservedInventory?: Array<{ balanceId: string; skuCode: string; quantity: number }>;
+  inventoryRelease?: { at: string; lines: Array<{ balanceId: string; skuCode: string; quantity: number }> };
+  status: "cancelled" | "pending_review" | "picking" | "label_pending" | "packing_check" | "handover" | "shipped" | "blocked";
   createdAt: string;
   updatedAt?: string;
 };
@@ -1439,9 +1443,11 @@ async function readPostgresCoreData(customerCode?: string): Promise<WarehouseCor
   ]);
 
   if (!customerCode && customers.length === 0 && skus.length === 0 && outboundOrders.length === 0) {
-    const seeded = seedCoreData();
-    await writePostgresCoreData(seeded);
-    return seeded;
+    return withCoreMutation(async () => {
+      const [existing] = await getSql()`select customer_code from warehouse_customers limit 1`;
+      if (existing) return readPostgresCoreData();
+      const seeded = seedCoreData(); await writePostgresCoreData(seeded); return seeded;
+    }, ensureCoreSchema, coreStorePath);
   }
 
   return {
@@ -1469,6 +1475,11 @@ async function readPostgresCoreData(customerCode?: string): Promise<WarehouseCor
 }
 
 async function writePostgresCoreData(data: WarehouseCoreData) {
+  const terminal = await getSql()<Array<{ id: string; payload: CoreOutboundOrder }>>`select id,payload from warehouse_outbound_orders where status='cancelled'`;
+  for (const row of terminal) {
+    const incoming = data.outboundOrders.find(o => o.id === row.id);
+    if (incoming && JSON.stringify(incoming) !== JSON.stringify(row.payload)) throw new CustomerOutboundEditError("已撤回申请不可修改，请刷新状态");
+  }
   const sql = getSql();
   await ensureCoreSchema();
 
@@ -1797,7 +1808,7 @@ async function readCoreData() {
   if (hasPostgresConfig()) return readPostgresCoreData();
 
   try {
-    const raw = await readFile(coreStorePath, "utf8");
+    const raw = await readCoreFile(coreStorePath);
     const parsed = JSON.parse(raw) as Partial<WarehouseCoreData>;
     return {
       customers: Array.isArray(parsed.customers) ? parsed.customers : [],
@@ -1822,10 +1833,12 @@ async function readCoreData() {
   }
 }
 
+const cancelledSnapshots = new WeakMap<WarehouseCoreData, Map<string, string>>();
 const coreNotificationSnapshots = new WeakMap<WarehouseCoreData, CoreNotificationSnapshot>();
 
 async function readCoreDataForNotificationMutation() {
   const data = await readCoreData();
+  cancelledSnapshots.set(data, new Map(data.outboundOrders.filter(o => o.status === "cancelled").map(o => [o.id, JSON.stringify(o)])));
   if (warehouseTelegramConfigured()) {
     try { coreNotificationSnapshots.set(data, snapshotCoreNotifications(data)); }
     catch { console.warn("WAREHOUSE_TELEGRAM_SNAPSHOT_FAILED"); }
@@ -1834,17 +1847,20 @@ async function readCoreDataForNotificationMutation() {
 }
 
 async function writeCoreData(data: WarehouseCoreData) {
+  for (const [id, saved] of cancelledSnapshots.get(data) ?? []) {
+    if (JSON.stringify(data.outboundOrders.find(o => o.id === id)) !== saved) throw new CustomerOutboundEditError("已撤回申请不可修改，请刷新状态");
+  }
   if (hasPostgresConfig()) {
     await writePostgresCoreData(data);
   } else {
-    await mkdir(path.dirname(coreStorePath), { recursive: true });
-    await writeFile(coreStorePath, JSON.stringify(data, null, 2), "utf8");
+    stageCoreFile(coreStorePath, JSON.stringify(data, null, 2));
   }
   // Only confirmed writes generate notifications. Restore/seed has no captured baseline.
   const before = coreNotificationSnapshots.get(data);
   if (before) {
     try {
-      queueWarehouseTelegramEvents(buildCoreTelegramEvents(before, data));
+      const events = buildCoreTelegramEvents(before, data);
+      afterCoreCommit(() => queueWarehouseTelegramEvents(events));
       coreNotificationSnapshots.set(data, snapshotCoreNotifications(data));
     } catch { console.warn("WAREHOUSE_TELEGRAM_EVENT_FAILED"); }
   }
@@ -1855,9 +1871,11 @@ export async function getWarehouseCoreData() {
 }
 
 export async function restoreWarehouseCoreData(data: WarehouseCoreData) {
+  return withCoreMutation(async () => {
   if (hasPostgresConfig()) await clearPostgresCoreData();
   await writeCoreData(data);
   return data;
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function getWarehouseCoreDataForCustomer(customerCode: string) {
@@ -1930,6 +1948,7 @@ export async function getCustomerCreditRisk(customerCode: string) {
 }
 
 export async function upsertWarehouseCustomer(profile: CustomerProfile) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const index = data.customers.findIndex((item) => item.customerCode === profile.customerCode);
   if (index >= 0) {
@@ -1939,12 +1958,14 @@ export async function upsertWarehouseCustomer(profile: CustomerProfile) {
   }
   await writeCoreData(data);
   return profile;
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function updateWarehouseCustomerProfile(
   customerCode: string,
   profile: Partial<Pick<CustomerProfile, "companyName" | "contactName" | "phone" | "wechat" | "email" | "vatNumber" | "eoriNumber" | "platforms" | "storeUrl" | "businessAddress" | "status" | "paymentTermDays" | "creditLimit" | "billingCycle">>,
 ) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const index = data.customers.findIndex((item) => item.customerCode === customerCode);
   if (index < 0) return null;
@@ -1957,6 +1978,7 @@ export async function updateWarehouseCustomerProfile(
   };
   await writeCoreData(data);
   return data.customers[index];
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function createWarehouseSku({
@@ -1976,6 +1998,7 @@ export async function createWarehouseSku({
   imageUrl?: string;
   alertQty?: number;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const normalizedSku = skuCode.trim().toUpperCase();
   if (!normalizedSku || !productName.trim()) return null;
@@ -2012,6 +2035,7 @@ export async function createWarehouseSku({
 
   await writeCoreData(data);
   return sku;
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function updateWarehouseSkuDetails({
@@ -2031,6 +2055,7 @@ export async function updateWarehouseSkuDetails({
   imageUrl?: string;
   alertQty?: number;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const normalizedSku = skuCode.trim().toUpperCase();
   const index = data.skus.findIndex((item) => item.customerCode === customerCode && item.skuCode === normalizedSku);
@@ -2058,6 +2083,7 @@ export async function updateWarehouseSkuDetails({
 
   await writeCoreData(data);
   return { sku, before, alertQty: Math.max(0, Math.floor(alertQty)), previousAlertQty };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 function parseCsvRow(row: string) {
@@ -2109,6 +2135,7 @@ function cleanSkuImageUrl(value?: string) {
 }
 
 export async function importCustomerSkusCsv(customerCode: string, csv: string) {
+  return withCoreMutation(async () => {
   const lines = csv
     .replace(/^\uFEFF/, "")
     .split(/\r?\n/)
@@ -2183,6 +2210,7 @@ export async function importCustomerSkusCsv(customerCode: string, csv: string) {
 
   await writeCoreData(data);
   return { imported, updated, errors };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function batchUpdateCoreOutboundOrderStatus({
@@ -2224,6 +2252,7 @@ export async function assignOutboundWorkMode({
   operator: string;
   note?: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const index = data.outboundOrders.findIndex((item) => item.id === id);
   if (index < 0) return null;
@@ -2262,6 +2291,7 @@ export async function assignOutboundWorkMode({
 
   await writeCoreData(data);
   return data.outboundOrders[index];
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export type OutboundPickWaveStrategy = "single_wave" | "work_mode" | "carrier" | "channel" | "cutoff_time" | "warehouse_zone" | "sku_heat";
@@ -2323,6 +2353,7 @@ export async function batchGenerateOutboundPickWaves({
   assignedPicker?: string;
   note?: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const uniqueIds = Array.from(new Set(ids.map((id) => id.trim()).filter(Boolean)));
   const updated: CoreOutboundOrder[] = [];
@@ -2392,6 +2423,7 @@ export async function batchGenerateOutboundPickWaves({
     skipped,
     waves: Array.from(waveByGroup.entries()).map(([groupKey, waveNo]) => ({ groupKey, waveNo })),
   };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export function getCarrierRateRules() {
@@ -2632,6 +2664,7 @@ export async function importOutboundWeightsCsv({
   operator: string;
   carrierConfigs?: CarrierRulePreference[];
 }): Promise<OutboundWeightImportResult> {
+  return withCoreMutation(async () => {
   const parsed = parseSimpleCsv(csv);
   const data = await readCoreDataForNotificationMutation();
   const updatedAt = now();
@@ -2714,6 +2747,7 @@ export async function importOutboundWeightsCsv({
     issues,
     rows,
   };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 function makeTrackingNumber(rule: CarrierRateRule, orderId: string) {
@@ -2760,6 +2794,16 @@ function appendTrackingEvent(order: CoreOutboundOrder, event: Omit<OutboundTrack
 }
 
 function deductReservedOutboundInventory(data: WarehouseCoreData, order: CoreOutboundOrder, updatedAt: string, operator: string, note?: string) {
+  if (order.reservedInventory?.length) {
+    for (const allocation of order.reservedInventory) {
+      const balance = data.inventoryBalances.find(b => b.id === allocation.balanceId && b.customerCode === order.customerCode && b.skuCode === allocation.skuCode);
+      if (!balance || balance.reservedQty < allocation.quantity) throw new CustomerOutboundEditError("预占库存不一致，请联系运营核对");
+      const beforeQty = balance.availableQty + balance.reservedQty;
+      balance.reservedQty -= allocation.quantity; balance.updatedAt = updatedAt;
+      data.inventoryMovements.unshift({id:makeCoreId("MOV"),customerCode:order.customerCode,skuCode:allocation.skuCode,refType:"outbound",refId:order.id,movementType:"out",quantity:allocation.quantity,beforeQty,afterQty:balance.availableQty+balance.reservedQty,note:note || "出库已交运，扣减该单预占库存",occurredAt:updatedAt,operator});
+    }
+    return;
+  }
   order.skuLines?.forEach((line) => {
     const balance = data.inventoryBalances.find((item) => item.customerCode === order.customerCode && item.skuCode === line.skuCode);
     if (!balance) return;
@@ -2825,6 +2869,7 @@ export async function rateCoreOutboundShipment({
   operator: string;
   carrierConfigs?: CarrierRulePreference[];
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const index = data.outboundOrders.findIndex((item) => item.id === id);
   if (index < 0) return null;
@@ -2849,6 +2894,7 @@ export async function rateCoreOutboundShipment({
 
   await writeCoreData(data);
   return { order: data.outboundOrders[index], rate, operator };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function matchCoreOutboundCarrier({
@@ -2906,6 +2952,7 @@ export async function reconcileCoreOutboundShippingFee({
   note?: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const index = data.outboundOrders.findIndex((item) => item.id === id);
   if (index < 0) return null;
@@ -2922,6 +2969,7 @@ export async function reconcileCoreOutboundShippingFee({
 
   await writeCoreData(data);
   return data.outboundOrders[index];
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function generateCoreOutboundShippingLabel({
@@ -2939,6 +2987,7 @@ export async function generateCoreOutboundShippingLabel({
   operator: string;
   carrierConfigs?: CarrierRulePreference[];
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const index = data.outboundOrders.findIndex((item) => item.id === id);
   if (index < 0) return null;
@@ -3025,6 +3074,7 @@ export async function generateCoreOutboundShippingLabel({
   data.outboundOrders[index] = nextOrder;
   await writeCoreData(data);
   return { order: nextOrder, rate, gateway };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function cancelCoreOutboundShippingLabel({
@@ -3038,6 +3088,7 @@ export async function cancelCoreOutboundShippingLabel({
   carrierConfigs?: CarrierRulePreference[];
   reason?: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const index = data.outboundOrders.findIndex((item) => item.id === id);
   if (index < 0) return { order: null, error: "未找到出库单" };
@@ -3077,6 +3128,7 @@ export async function cancelCoreOutboundShippingLabel({
   };
   await writeCoreData(data);
   return { order: data.outboundOrders[index], error: null, gateway };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function fallbackCoreOutboundShippingLabel({
@@ -3088,6 +3140,7 @@ export async function fallbackCoreOutboundShippingLabel({
   operator: string;
   reason?: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const index = data.outboundOrders.findIndex((item) => item.id === id);
   if (index < 0) return { order: null, error: "未找到出库单" };
@@ -3128,6 +3181,7 @@ export async function fallbackCoreOutboundShippingLabel({
   data.outboundOrders[index] = nextOrder;
   await writeCoreData(data);
   return { order: nextOrder, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function recordOutboundDocumentReprint({
@@ -3141,6 +3195,7 @@ export async function recordOutboundDocumentReprint({
   reason: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const index = data.outboundOrders.findIndex((item) => item.id === id);
   if (index < 0) return null;
@@ -3176,6 +3231,7 @@ export async function recordOutboundDocumentReprint({
 
   await writeCoreData(data);
   return data.outboundOrders[index];
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function requestCoreOutboundIntercept({
@@ -3187,6 +3243,7 @@ export async function requestCoreOutboundIntercept({
   reason: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const index = data.outboundOrders.findIndex((item) => item.id === id);
   if (index < 0) return { order: null, error: "未找到出库单" };
@@ -3217,6 +3274,7 @@ export async function requestCoreOutboundIntercept({
 
   await writeCoreData(data);
   return { order: data.outboundOrders[index], error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function interceptCoreOutboundOrder({
@@ -3230,6 +3288,7 @@ export async function interceptCoreOutboundOrder({
   restockLocationCode?: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const index = data.outboundOrders.findIndex((item) => item.id === id);
   if (index < 0) return { order: null, error: "未找到出库单" };
@@ -3263,6 +3322,7 @@ export async function interceptCoreOutboundOrder({
 
   await writeCoreData(data);
   return { order: data.outboundOrders[index], error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function resolveCoreOutboundException({
@@ -3278,6 +3338,7 @@ export async function resolveCoreOutboundException({
   note?: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const index = data.outboundOrders.findIndex((item) => item.id === id);
   if (index < 0) return { order: null, error: "未找到出库单" };
@@ -3317,6 +3378,7 @@ export async function resolveCoreOutboundException({
 
   await writeCoreData(data);
   return { order: data.outboundOrders[index], error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function scanCoreOutboundTask({
@@ -3334,6 +3396,7 @@ export async function scanCoreOutboundTask({
   locationCode?: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const cleanCode = code.trim();
   if (!cleanCode) return { order: null, error: "请扫描或输入条码", message: "", codeType: "unknown" as OutboundScanCodeType };
@@ -3346,6 +3409,7 @@ export async function scanCoreOutboundTask({
   const index = data.outboundOrders.findIndex((item) => item.id === order?.id);
   if (index < 0) return { order: null, error: "未找到出库任务", message: "", codeType };
   order = data.outboundOrders[index];
+  if (order.status === "cancelled") return { order, error: "该申请已撤回，不能扫描出库", message: "", codeType };
 
   if (["outbound_order", "platform_order", "pick_wave", "pick_list", "tracking", "basket"].includes(codeType)) {
     return {
@@ -3516,6 +3580,7 @@ export async function scanCoreOutboundTask({
     message: completed ? `${scanActionLabel[action]}完成：${scannedTotal}/${requiredTotal}` : `${scanActionLabel[action]}成功：${skuCode} ${scannedTotal}/${requiredTotal}`,
     codeType,
   };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function addCoreOutboundTrackingEvent({
@@ -3537,6 +3602,7 @@ export async function addCoreOutboundTrackingEvent({
   carrierServiceName?: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const index = data.outboundOrders.findIndex((item) => item.id === id);
   if (index < 0) return null;
@@ -3583,6 +3649,7 @@ export async function addCoreOutboundTrackingEvent({
 
   await writeCoreData(data);
   return data.outboundOrders[index];
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function addCoreOutboundTrackingEventByReference({
@@ -3631,6 +3698,7 @@ export async function updateCoreOutboundPlatformFulfillment({
   status: CoreOutboundOrder["platformFulfillmentStatus"];
   error?: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const index = data.outboundOrders.findIndex((item) => item.id === id);
   if (index < 0) return null;
@@ -3644,6 +3712,7 @@ export async function updateCoreOutboundPlatformFulfillment({
   };
   await writeCoreData(data);
   return data.outboundOrders[index];
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function createCoreOutboundDeliveryException({
@@ -3673,6 +3742,7 @@ export async function createCoreOutboundDeliveryException({
   recordTrackingEvent?: boolean;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const index = data.outboundOrders.findIndex((item) => item.id === id);
   if (index < 0) return { order: null, exception: null, error: "未找到出库单" };
@@ -3758,6 +3828,7 @@ export async function createCoreOutboundDeliveryException({
 
   await writeCoreData(data);
   return { order: data.outboundOrders[index], exception: createdException, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function updateCoreOutboundDeliveryException({
@@ -3785,6 +3856,7 @@ export async function updateCoreOutboundDeliveryException({
   note?: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const index = data.outboundOrders.findIndex((item) => item.id === id);
   if (index < 0) return { order: null, exception: null, error: "未找到出库单" };
@@ -3856,6 +3928,7 @@ export async function updateCoreOutboundDeliveryException({
     });
   }
   return { order: data.outboundOrders[index], exception: finalException, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function customerConfirmCoreOutboundDeliveryException({
@@ -3873,6 +3946,7 @@ export async function customerConfirmCoreOutboundDeliveryException({
   note?: string;
   actorName: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const index = data.outboundOrders.findIndex((item) => item.id === id && item.customerCode === customerCode);
   if (index < 0) return { order: null, exception: null, error: "未找到可确认的出库单" };
@@ -3933,6 +4007,114 @@ export async function customerConfirmCoreOutboundDeliveryException({
   }
 
   return { order: data.outboundOrders[index], exception: finalException, error: null };
+  }, ensureCoreSchema, coreStorePath);
+}
+
+async function releaseCustomerReservation(data: WarehouseCoreData, order: CoreOutboundOrder) {
+  if (order.inventoryRelease) return;
+  let movements = data.inventoryMovements.filter(m => m.customerCode === order.customerCode && m.refType === "outbound" && m.refId === order.id);
+  if (hasPostgresConfig()) movements = await getSql()<InventoryMovement[]>`select sku_code as "skuCode",movement_type as "movementType",quantity from warehouse_inventory_movements where customer_code=${order.customerCode} and ref_type='outbound' and ref_id=${order.id}`;
+  const released: NonNullable<CoreOutboundOrder["reservedInventory"]> = [];
+  const at = now();
+  for (const line of order.skuLines ?? []) {
+    const balances = data.inventoryBalances.filter(b => b.customerCode === order.customerCode && b.skuCode === line.skuCode);
+    const net = movements.filter(m => m.skuCode === line.skuCode).reduce((n,m) => n + (m.movementType === "reserve" ? m.quantity : ["release","out"].includes(m.movementType) ? -m.quantity : 0),0);
+    let holds = order.reservedInventory?.filter(a => a.skuCode === line.skuCode) ?? [];
+    // Historical orders have no allocation metadata; one balance plus complete
+    // per-order ledger evidence is the only unambiguous fallback.
+    if (!holds.length && balances.length === 1 && net === line.quantity) holds = [{balanceId:balances[0].id,skuCode:line.skuCode,quantity:line.quantity}];
+    if (net !== line.quantity || holds.reduce((n,a)=>n+a.quantity,0) !== line.quantity || new Set(holds.map(a=>a.balanceId)).size !== holds.length) throw new CustomerOutboundEditError("该单预占归属不完整，请联系运营核对；库存未修改");
+    for (const hold of holds) {
+      const balance = balances.find(b => b.id === hold.balanceId);
+      if (!balance || !Number.isSafeInteger(hold.quantity) || hold.quantity <= 0 || balance.reservedQty < hold.quantity) throw new CustomerOutboundEditError("该单预占库存不一致，请联系运营核对；库存未修改");
+      balance.reservedQty -= hold.quantity; balance.availableQty += hold.quantity; balance.updatedAt = at;
+      data.inventoryMovements.unshift({id:makeCoreId("MOV"),customerCode:order.customerCode,skuCode:hold.skuCode,refType:"outbound",refId:order.id,movementType:"release",quantity:hold.quantity,note:"客户编辑或撤回：释放该单预占",operator:"customer",occurredAt:at});
+      released.push({...hold});
+    }
+  }
+  order.inventoryRelease = {at,lines:released};
+}
+
+export async function withdrawCustomerOutboundOrder(input: {id:string;customerCode:string;expectedUpdatedAt:string}) {
+  return withCoreMutation(async () => {
+    const data = await readCoreDataForNotificationMutation();
+    const order = data.outboundOrders.find(o=>o.id===input.id && o.customerCode===input.customerCode);
+    if (!order) throw new CustomerOutboundEditError("未找到出库申请",404);
+    if (order.status === "cancelled") return order;
+    if (order.status !== "pending_review" || order.shippedAt || order.handoverAt || order.interceptStatus === "completed" || order.inventoryRelease) throw new CustomerOutboundEditError("仅本人待审核且未发货的申请允许撤回");
+    if (!input.expectedUpdatedAt || input.expectedUpdatedAt !== (order.updatedAt ?? order.createdAt)) throw new CustomerOutboundEditError("申请已更新，请刷新后重试");
+    await releaseCustomerReservation(data,order);
+    order.status = "cancelled"; order.updatedAt = now();
+    order.operationLogs = appendOutboundOperationLog(order,{action:"customer_withdraw",label:"客户撤回待审核申请",detail:"终止申请并释放该单预占库存",operator:"customer",occurredAt:order.updatedAt});
+    await writeCoreData(data); return order;
+  },ensureCoreSchema,coreStorePath);
+}
+
+function validatedCustomerOutboundLines(data: WarehouseCoreData, customerCode: string, input: unknown) {
+  const valid = new Map(data.skus.filter(s => s.customerCode === customerCode && s.status === "active").map(s => [s.skuCode.toUpperCase(), s.skuCode]));
+  const merged = new Map<string, number>();
+  for (const line of parseCustomerOutboundLines(input)) {
+    const canonical = valid.get(line.skuCode.toUpperCase());
+    if (!canonical) throw new CustomerOutboundEditError("SKU 不存在、未启用或不属于当前客户，整单未提交", 400);
+    const quantity = (merged.get(canonical) ?? 0) + line.quantity;
+    if (!Number.isSafeInteger(quantity)) throw new CustomerOutboundEditError("SKU 数量超出范围", 400);
+    merged.set(canonical, quantity);
+  }
+  const lines = [...merged].map(([skuCode, quantity]) => ({ skuCode, quantity }));
+  if (!splitOutboundLines(lines).products.length) throw new CustomerOutboundEditError("请填写商品 SKU；包材不能代替出库商品", 400);
+  return lines;
+}
+
+function reserveCustomerOutboundLines(data: WarehouseCoreData, order: CoreOutboundOrder, at: string) {
+  order.reservedInventory = [];
+  for (const line of order.skuLines ?? []) {
+    const balances = data.inventoryBalances.filter(b => b.customerCode === order.customerCode && b.skuCode === line.skuCode && b.availableQty > 0);
+    if (balances.reduce((n, b) => n + b.availableQty, 0) < line.quantity) throw new CustomerOutboundEditError("库存不足，请刷新后重试");
+    let remaining = line.quantity;
+    for (const balance of balances) {
+      const quantity = Math.min(remaining, balance.availableQty);
+      if (!quantity) continue;
+      balance.availableQty -= quantity; balance.reservedQty += quantity; balance.updatedAt = at;
+      order.reservedInventory.push({ balanceId: balance.id, skuCode: line.skuCode, quantity });
+      data.inventoryMovements.unshift({ id: makeCoreId("MOV"), customerCode: order.customerCode, skuCode: line.skuCode,
+        refType: "outbound", refId: order.id, movementType: "reserve", quantity,
+        note: "客户出库申请预占库存", occurredAt: at, operator: "customer" });
+      remaining -= quantity;
+    }
+  }
+}
+
+export async function updateCustomerOutboundOrder(input: {
+  id: string; customerCode: string; expectedUpdatedAt: string; channel: string; orderCount: number;
+  skuLines: unknown; recipientName: string; deliveryAddress: string;
+  requestedShipDate?: string; note?: string;
+}) {
+  return withCoreMutation(async () => {
+    const data = await readCoreDataForNotificationMutation();
+    const order = data.outboundOrders.find(o => o.id === input.id && o.customerCode === input.customerCode);
+    if (!order) throw new CustomerOutboundEditError("未找到出库单", 404);
+    if (order.status !== "pending_review" || order.shippedAt || order.handoverAt || order.inventoryRelease || order.interceptStatus === "completed") {
+      throw new CustomerOutboundEditError("仅待审核且未取消的申请允许编辑");
+    }
+    if (!input.expectedUpdatedAt || input.expectedUpdatedAt !== (order.updatedAt ?? order.createdAt)) throw new CustomerOutboundEditError("订单已更新，请刷新后重新编辑");
+    if (!input.channel.trim() || !Number.isSafeInteger(input.orderCount) || input.orderCount <= 0 || !input.recipientName.trim() || !/\b(?:GIR\s?0AA|[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})\b/i.test(input.deliveryAddress)) throw new CustomerOutboundEditError("请填写渠道、正整数订单数、收件人和含英国邮编的地址", 400);
+    if (input.channel.length > 200 || input.recipientName.length > 300 || input.deliveryAddress.length > 3000 || (input.note?.length ?? 0) > 5000 || (input.requestedShipDate && !/^\d{4}-\d{2}-\d{2}$/.test(input.requestedShipDate))) throw new CustomerOutboundEditError("申请资料格式或长度不正确", 400);
+    const cleanLines = validatedCustomerOutboundLines(data, input.customerCode, input.skuLines);
+    // Reuse the attributed-release checks inside this transaction, without marking the order
+    // cancelled or persisting its permanent inventory-release record.
+    const temporary = { ...order };
+    await releaseCustomerReservation(data, temporary);
+    order.skuLines = cleanLines;
+    const at = new Date(Math.max(Date.now(), Date.parse(order.updatedAt ?? order.createdAt) + 1)).toISOString();
+    reserveCustomerOutboundLines(data, order, at);
+    order.channel = input.channel.trim(); order.orderCount = input.orderCount;
+    order.recipientName = input.recipientName.trim(); order.deliveryAddress = input.deliveryAddress.trim();
+    order.requestedShipDate = input.requestedShipDate?.trim() || undefined; order.note = input.note?.trim() || undefined;
+    order.workMode = inferOutboundWorkMode(order); order.updatedAt = at;
+    order.operationLogs = appendOutboundOperationLog(order, { action: "customer_edit", label: "客户编辑待审核申请", detail: "更新商品、包材和发货资料，重新核对预占库存", operator: "customer", occurredAt: at });
+    await writeCoreData(data);
+    return order;
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function createCustomerOutboundOrder({
@@ -3960,13 +4142,10 @@ export async function createCustomerOutboundOrder({
   platformOrderNo?: string;
   platformStoreName?: string;
 }) {
+  try { return await withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
-  const validSkuCodes = new Set(data.skus.filter((item) => item.customerCode === customerCode).map((item) => item.skuCode));
-  const cleanLines = skuLines
-    .map((line) => ({ skuCode: line.skuCode.trim().toUpperCase(), quantity: Math.max(0, Math.floor(line.quantity)) }))
-    .filter((line) => line.skuCode && line.quantity > 0 && validSkuCodes.has(line.skuCode));
-
-  if (!channel.trim() || orderCount <= 0 || cleanLines.length === 0) return null;
+  const cleanLines = validatedCustomerOutboundLines(data, customerCode, skuLines);
+  if (!channel.trim() || !Number.isSafeInteger(orderCount) || orderCount <= 0) throw new CustomerOutboundEditError("请填写渠道和正整数订单数",400);
 
   const createdAt = now();
   const inferredWorkMode = inferOutboundWorkMode({ channel, orderCount, skuLines: cleanLines });
@@ -4004,28 +4183,15 @@ export async function createCustomerOutboundOrder({
   };
 
   data.outboundOrders.unshift(order);
-  cleanLines.forEach((line) => {
-    const balance = data.inventoryBalances.find((item) => item.customerCode === customerCode && item.skuCode === line.skuCode);
-    if (!balance) return;
-    balance.reservedQty += line.quantity;
-    balance.availableQty = Math.max(0, balance.availableQty - line.quantity);
-    balance.updatedAt = createdAt;
-    data.inventoryMovements.unshift({
-      id: makeCoreId("MOV"),
-      customerCode,
-      skuCode: line.skuCode,
-      refType: "outbound",
-      refId: order.id,
-      movementType: "reserve",
-      quantity: line.quantity,
-      note: "客户提交出库申请后系统预占库存",
-      occurredAt: createdAt,
-      operator: "customer",
-    });
-  });
+  reserveCustomerOutboundLines(data, order, createdAt);
 
   await writeCoreData(data);
   return order;
+  }, ensureCoreSchema, coreStorePath);
+  } catch (error) {
+    if (error instanceof CustomerOutboundEditError) return null;
+    throw error;
+  }
 }
 
 export async function updateCoreOutboundOrderStatus({
@@ -4039,11 +4205,13 @@ export async function updateCoreOutboundOrderStatus({
   operator: string;
   note?: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const index = data.outboundOrders.findIndex((item) => item.id === id);
   if (index < 0) return null;
 
   const current = data.outboundOrders[index];
+  if (current.status === "cancelled" || status === "cancelled") return null;
   const updatedAt = now();
   const cleanNote = note?.trim();
 
@@ -4062,31 +4230,12 @@ export async function updateCoreOutboundOrderStatus({
   };
 
   if (status === "shipped" && current.status !== "shipped") {
-    current.skuLines?.forEach((line) => {
-      const balance = data.inventoryBalances.find((item) => item.customerCode === current.customerCode && item.skuCode === line.skuCode);
-      if (!balance) return;
-      const beforeQty = balance.availableQty + balance.reservedQty;
-      balance.reservedQty = Math.max(0, balance.reservedQty - line.quantity);
-      balance.updatedAt = updatedAt;
-      data.inventoryMovements.unshift({
-        id: makeCoreId("MOV"),
-        customerCode: current.customerCode,
-        skuCode: line.skuCode,
-        refType: "outbound",
-        refId: current.id,
-        movementType: "out",
-        quantity: line.quantity,
-        beforeQty,
-        afterQty: balance.availableQty + balance.reservedQty,
-        note: cleanNote || "出库已发货，扣减预占库存",
-        occurredAt: updatedAt,
-        operator,
-      });
-    });
+    deductReservedOutboundInventory(data, current, updatedAt, operator, cleanNote);
   }
 
   await writeCoreData(data);
   return data.outboundOrders[index];
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export function returnOrderStatusLabel(status: ReturnOrderStatus) {
@@ -4134,6 +4283,7 @@ export async function createCustomerReturnOrder({
   skuLines: Array<{ skuCode: string; quantity: number }>;
   customerNote?: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const normalizedLines = skuLines
     .map((line) => ({ skuCode: line.skuCode.trim().toUpperCase(), quantity: Math.floor(line.quantity) }))
@@ -4161,6 +4311,7 @@ export async function createCustomerReturnOrder({
   data.returnOrders.unshift(order);
   await writeCoreData(data);
   return order;
+  }, ensureCoreSchema, coreStorePath);
 }
 
 function restockReturnInventory(data: WarehouseCoreData, order: ReturnOrder, updatedAt: string, operator: string, note?: string) {
@@ -4226,6 +4377,7 @@ export async function updateReturnOrderStatus({
   opsNote?: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const current = data.returnOrders.find((item) => item.id === id);
   if (!current) return null;
@@ -4289,6 +4441,7 @@ export async function updateReturnOrderStatus({
 
   await writeCoreData(data);
   return current;
+  }, ensureCoreSchema, coreStorePath);
 }
 
 function resolveReturnOrderFromScan(data: WarehouseCoreData, code: string, activeReturnId?: string) {
@@ -4331,6 +4484,7 @@ export async function scanReturnOrderTask({
   locationCode?: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const cleanCode = normalizeScanCode(code);
   if (!cleanCode) return { returnOrder: null, error: "请扫描或输入退货单号、买家退货追踪号、原订单号、SKU 或库位", codeType: "return" as ReturnScanRecord["codeType"] };
 
@@ -4385,6 +4539,7 @@ export async function scanReturnOrderTask({
     message: action === "receive" ? `退货到仓已记录：${order.id}` : `退货质检已记录：${order.id}`,
     codeType,
   };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function confirmCustomerReturnResolution({
@@ -4400,6 +4555,7 @@ export async function confirmCustomerReturnResolution({
   note?: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const normalizedCustomer = customerCode.trim().toUpperCase();
   const order = data.returnOrders.find((item) => item.id === id && item.customerCode === normalizedCustomer);
@@ -4432,6 +4588,7 @@ export async function confirmCustomerReturnResolution({
 
   await writeCoreData(data);
   return { order, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function updateCustomerReturnTracking({
@@ -4447,6 +4604,7 @@ export async function updateCustomerReturnTracking({
   expectedArrivalDate?: string;
   customerNote?: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const normalizedCustomer = customerCode.trim().toUpperCase();
   const order = data.returnOrders.find((item) => item.id === id && item.customerCode === normalizedCustomer);
@@ -4464,6 +4622,7 @@ export async function updateCustomerReturnTracking({
 
   await writeCoreData(data);
   return { order, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function putawayInboundInventory({
@@ -4481,6 +4640,7 @@ export async function putawayInboundInventory({
   operator: string;
   note?: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const updatedAt = now();
   const normalizedCustomer = customerCode.trim().toUpperCase();
@@ -4586,6 +4746,7 @@ export async function putawayInboundInventory({
 
   await writeCoreData(data);
   return { movementCount, errors };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function upsertWarehouseLocation({
@@ -4609,6 +4770,7 @@ export async function upsertWarehouseLocation({
   allowMixedSku?: boolean;
   note?: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const updatedAt = now();
   const cleanLocationCode = locationCode.trim().toUpperCase();
@@ -4633,6 +4795,7 @@ export async function upsertWarehouseLocation({
   }
   await writeCoreData(data);
   return location;
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function importWarehouseLocationsCsv(csv: string) {
@@ -4690,6 +4853,7 @@ export async function adjustInventoryBalance({
   note?: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const normalizedSku = skuCode.trim().toUpperCase();
   const balance = data.inventoryBalances.find((item) => item.customerCode === customerCode && item.skuCode === normalizedSku);
@@ -4720,6 +4884,7 @@ export async function adjustInventoryBalance({
 
   await writeCoreData(data);
   return balance;
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function createInventoryAdjustmentRequest({
@@ -4751,6 +4916,7 @@ export async function createInventoryAdjustmentRequest({
   requestedBy: string;
   requestedByRole: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const normalizedSku = skuCode.trim().toUpperCase();
   const balance = balanceId
@@ -4822,6 +4988,7 @@ export async function createInventoryAdjustmentRequest({
   data.inventoryAdjustments.unshift(adjustment);
   await writeCoreData(data);
   return adjustment;
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function reviewInventoryAdjustmentRequest({
@@ -4835,6 +5002,7 @@ export async function reviewInventoryAdjustmentRequest({
   reviewNote?: string;
   reviewedBy: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const adjustment = data.inventoryAdjustments.find((item) => item.id === id);
   if (!adjustment) return { adjustment: null, balance: null, error: "未找到库存调整申请" };
@@ -4914,6 +5082,7 @@ export async function reviewInventoryAdjustmentRequest({
 
   await writeCoreData(data);
   return { adjustment, balance, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 function normalizeSerialNumbers(value: string[] | string | undefined) {
@@ -5030,6 +5199,7 @@ export async function createInventoryLot(input: {
   note?: string;
   createdBy: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const customerCode = input.customerCode.trim().toUpperCase();
   const skuCode = input.skuCode.trim().toUpperCase();
@@ -5072,6 +5242,7 @@ export async function createInventoryLot(input: {
   data.inventoryLots.unshift(lot);
   await writeCoreData(data);
   return { lot, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function updateInventoryLot(input: {
@@ -5083,6 +5254,7 @@ export async function updateInventoryLot(input: {
   note?: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const lot = data.inventoryLots.find((item) => item.id === input.id);
   if (!lot) return { lot: null, error: "未找到库存批次" };
@@ -5152,6 +5324,7 @@ export async function updateInventoryLot(input: {
 
   await writeCoreData(data);
   return { lot, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 function summarizeStocktakeItems(items: StocktakeBatchItem[]) {
@@ -5210,6 +5383,7 @@ export async function createStocktakeBatch({
   note?: string;
   createdBy: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const selectedIds = new Set((balanceIds ?? []).map((id) => id.trim()).filter(Boolean));
   const cleanWarehouse = warehouseCode?.trim().toUpperCase();
@@ -5243,6 +5417,7 @@ export async function createStocktakeBatch({
   data.stocktakeBatches.unshift(batch);
   await writeCoreData(data);
   return { batch, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function countStocktakeBatchItem({
@@ -5258,6 +5433,7 @@ export async function countStocktakeBatchItem({
   note?: string;
   countedBy: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const batch = data.stocktakeBatches.find((item) => item.id === batchId);
   if (!batch) return { batch: null, error: "未找到盘点批次" };
@@ -5280,6 +5456,7 @@ export async function countStocktakeBatchItem({
 
   await writeCoreData(data);
   return { batch, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function submitStocktakeBatch({
@@ -5291,6 +5468,7 @@ export async function submitStocktakeBatch({
   submittedBy: string;
   approvalNote?: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const batch = data.stocktakeBatches.find((item) => item.id === batchId);
   if (!batch) return { batch: null, createdAdjustments: [], error: "未找到盘点批次" };
@@ -5338,6 +5516,7 @@ export async function submitStocktakeBatch({
 
   await writeCoreData(data);
   return { batch, createdAdjustments, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 function estimateDailySales(balance: InventoryBalance) {
@@ -5397,6 +5576,7 @@ export async function createReplenishmentPlanFromBalance({
   note?: string;
   createdBy: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const balance = data.inventoryBalances.find((item) => item.id === balanceId);
   if (!balance) return { plan: null, error: "未找到对应库存记录" };
@@ -5426,6 +5606,7 @@ export async function createReplenishmentPlanFromBalance({
   data.replenishmentPlans.unshift(plan);
   await writeCoreData(data);
   return { plan, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function createTransferOrderFromBalance({
@@ -5445,6 +5626,7 @@ export async function createTransferOrderFromBalance({
   note?: string;
   createdBy: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const balance = data.inventoryBalances.find((item) => item.id === balanceId);
   if (!balance) return { transfer: null, error: "未找到对应库存记录" };
@@ -5479,6 +5661,7 @@ export async function createTransferOrderFromBalance({
   data.transferOrders.unshift(transfer);
   await writeCoreData(data);
   return { transfer, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export type TransferLifecycleAction = "approve" | "start_picking" | "ship" | "receive" | "partial_receive" | "mark_exception" | "cancel";
@@ -5743,6 +5926,7 @@ function purchaseStatusFromInbound(status: string): PurchaseReceiptStatus {
 }
 
 export async function syncInboundPrealertsToPurchaseReceipts(inbounds: PdaInboundPrealert[]) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const knownCustomers = new Set(data.customers.map((item) => item.customerCode));
   let created = 0;
@@ -5840,6 +6024,7 @@ export async function syncInboundPrealertsToPurchaseReceipts(inbounds: PdaInboun
 
   if (created > 0 || updated > 0) await writeCoreData(data);
   return { created, updated, skipped };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function createPurchaseReceiptOrder({
@@ -5861,6 +6046,7 @@ export async function createPurchaseReceiptOrder({
   note?: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const cleanCustomerCode = customerCode.trim();
   const cleanSupplierName = supplierName.trim();
@@ -5892,6 +6078,7 @@ export async function createPurchaseReceiptOrder({
   data.purchaseReceipts.unshift(order);
   await writeCoreData(data);
   return { order, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function receivePurchaseReceiptOrder({
@@ -5907,6 +6094,7 @@ export async function receivePurchaseReceiptOrder({
   note?: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const order = data.purchaseReceipts.find((item) => item.id === id);
   if (!order) return { order: null, error: "未找到采购到货单" };
@@ -5965,6 +6153,7 @@ export async function receivePurchaseReceiptOrder({
 
   await writeCoreData(data);
   return { order, postedQty, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function putawayPurchaseReceiptOrder({
@@ -5978,6 +6167,7 @@ export async function putawayPurchaseReceiptOrder({
   note?: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const order = data.purchaseReceipts.find((item) => item.id === id);
   if (!order) return { order: null, error: "未找到采购到货单" };
@@ -6052,6 +6242,7 @@ export async function putawayPurchaseReceiptOrder({
 
   await writeCoreData(data);
   return { order, postedQty, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function scanPurchaseReceiptTask({
@@ -6067,6 +6258,7 @@ export async function scanPurchaseReceiptTask({
   locationCode?: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const cleanCode = code.trim();
   if (!cleanCode) return { purchase: null, error: "请扫描或输入条码", message: "", codeType: "unknown" as PurchaseReceiptScanCodeType };
@@ -6224,6 +6416,7 @@ export async function scanPurchaseReceiptTask({
         : `扫码上架成功：${skuCode} ${line.putawayQty}/${line.receivedQty}`,
     codeType,
   };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function reportPurchaseReceiptDiscrepancy({
@@ -6249,6 +6442,7 @@ export async function reportPurchaseReceiptDiscrepancy({
   photoUrls?: string[];
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const order = data.purchaseReceipts.find((item) => item.id === id);
   if (!order) return { order: null, discrepancy: null, workOrder: null, error: "未找到采购到货单" };
@@ -6302,6 +6496,7 @@ export async function reportPurchaseReceiptDiscrepancy({
 
   await writeCoreData(data);
   return { order, discrepancy, workOrder, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function resolvePurchaseReceiptDiscrepancy({
@@ -6317,6 +6512,7 @@ export async function resolvePurchaseReceiptDiscrepancy({
   note?: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await readCoreDataForNotificationMutation();
   const order = data.purchaseReceipts.find((item) => item.id === id);
   if (!order) return { order: null, discrepancy: null, error: "未找到采购到货单" };
@@ -6355,6 +6551,7 @@ export async function resolvePurchaseReceiptDiscrepancy({
   }
 
   return { order, discrepancy, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function progressTransferOrder({
@@ -6374,6 +6571,7 @@ export async function progressTransferOrder({
   note?: string;
   operator: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const transfer = data.transferOrders.find((item) => item.id === id);
   if (!transfer) return { transfer: null, error: "未找到调拨单" };
@@ -6488,6 +6686,7 @@ export async function progressTransferOrder({
   transfer.updatedAt = updatedAt;
   await writeCoreData(data);
   return { transfer, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 function roundMoney(value: number) {
@@ -6546,6 +6745,7 @@ export async function createOpsBillingRecordFromRule({
   dueDate?: string;
   status?: BillingRecord["status"];
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const customer = data.customers.find((item) => item.customerCode === customerCode);
   if (!customer) return { record: null, error: "未找到客户" };
@@ -6593,6 +6793,7 @@ export async function createOpsBillingRecordFromRule({
   data.billingRecords.unshift(record);
   await writeCoreData(data);
   return { record, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function createManualBillingAdjustmentRecord({
@@ -6624,6 +6825,7 @@ export async function createManualBillingAdjustmentRecord({
   attachmentStatus?: BillingAdjustmentAttachmentStatus;
   status?: BillingRecord["status"];
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const customer = data.customers.find((item) => item.customerCode === customerCode);
   if (!customer) return { record: null, error: "未找到客户" };
@@ -6684,6 +6886,7 @@ export async function createManualBillingAdjustmentRecord({
   data.billingRecords.unshift(record);
   await writeCoreData(data);
   return { record, error: null };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function updateCustomerBillingRecord({
@@ -6699,6 +6902,7 @@ export async function updateCustomerBillingRecord({
   message?: string;
   paymentReference?: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const index = data.billingRecords.findIndex((item) => item.id === id && item.customerCode === customerCode);
   if (index < 0) return null;
@@ -6757,6 +6961,7 @@ export async function updateCustomerBillingRecord({
 
   await writeCoreData(data);
   return data.billingRecords[index];
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function updateBillingInvoiceStatus({
@@ -6770,6 +6975,7 @@ export async function updateBillingInvoiceStatus({
   reviewer: string;
   invoiceNote?: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const index = data.billingRecords.findIndex((item) => item.id === id);
   if (index < 0) return null;
@@ -6797,6 +7003,7 @@ export async function updateBillingInvoiceStatus({
 
   await writeCoreData(data);
   return data.billingRecords[index];
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function updateBillingStatementLock({
@@ -6812,6 +7019,7 @@ export async function updateBillingStatementLock({
   reviewer: string;
   reviewNote?: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const records = data.billingRecords.filter((item) => item.customerCode === customerCode && billingRecordMonth(item) === month);
   if (records.length === 0) return { records: [] as BillingRecord[], error: "未找到该客户本月账单记录" };
@@ -6852,6 +7060,7 @@ export async function updateBillingStatementLock({
     records: data.billingRecords.filter((item) => item.customerCode === customerCode && billingRecordMonth(item) === month),
     error: null,
   };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function updateCustomerBillingStatement({
@@ -6867,6 +7076,7 @@ export async function updateCustomerBillingStatement({
   message?: string;
   paymentReference?: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const records = data.billingRecords.filter((item) => item.customerCode === customerCode && billingRecordMonth(item) === month);
   if (records.length === 0) return { records: [] as BillingRecord[], error: "未找到该客户本月账单记录" };
@@ -6947,6 +7157,7 @@ export async function updateCustomerBillingStatement({
     records: data.billingRecords.filter((item) => item.customerCode === customerCode && billingRecordMonth(item) === month),
     error: null,
   };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function updateStaffBillingStatement({
@@ -6964,6 +7175,7 @@ export async function updateStaffBillingStatement({
   paymentReference?: string;
   reviewNote?: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const records = data.billingRecords.filter((item) => item.customerCode === customerCode && billingRecordMonth(item) === month);
   if (records.length === 0) return { records: [] as BillingRecord[], error: "未找到该客户本月账单记录" };
@@ -7082,6 +7294,7 @@ export async function updateStaffBillingStatement({
     records: data.billingRecords.filter((item) => item.customerCode === customerCode && billingRecordMonth(item) === month),
     error: null,
   };
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export async function updateStaffBillingRecord({
@@ -7101,6 +7314,7 @@ export async function updateStaffBillingRecord({
   paymentReference?: string;
   workOrderId?: string;
 }) {
+  return withCoreMutation(async () => {
   const data = await getWarehouseCoreData();
   const index = data.billingRecords.findIndex((item) => item.id === id);
   if (index < 0) return null;
@@ -7166,6 +7380,7 @@ export async function updateStaffBillingRecord({
 
   await writeCoreData(data);
   return data.billingRecords[index];
+  }, ensureCoreSchema, coreStorePath);
 }
 
 export function billingStatusLabel(status: BillingRecord["status"]) {
