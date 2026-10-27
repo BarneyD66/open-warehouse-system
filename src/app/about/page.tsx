@@ -1,3 +1,4 @@
+import { publicPageMetadata } from "@/lib/publicSeo";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, ClipboardCheck, Globe2, PackageCheck, ShieldCheck } from "lucide-react";
@@ -33,6 +34,8 @@ const capabilityCards = [
     icon: ShieldCheck,
   },
 ];
+
+export const metadata = publicPageMetadata("/about");
 
 export default function AboutPage() {
   return (

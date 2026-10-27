@@ -1,3 +1,4 @@
+import { publicPageMetadata } from "@/lib/publicSeo";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -18,6 +19,7 @@ export async function generateMetadata({ params }: { params: NewsDetailParams })
   if (!article) return {};
 
   return {
+    ...publicPageMetadata(`/news/${article.slug}`),
     title: `${article.title} | 英国驿站`,
     description: article.summary,
   };

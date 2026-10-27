@@ -1,3 +1,4 @@
+import { publicPageMetadata } from "@/lib/publicSeo";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -27,6 +28,7 @@ export async function generateMetadata({ params }: PageProps) {
   }
 
   return {
+    ...publicPageMetadata(servicePath(service.id)),
     title: `${service.title} | 英国驿站`,
     description: service.body,
   };
