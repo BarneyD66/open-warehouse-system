@@ -1,3 +1,4 @@
+import { publicPageMetadata } from "@/lib/publicSeo";
 import { Bot, CheckCircle2, MessageCircle, Sparkles, type LucideIcon } from "lucide-react";
 import { AIPlanAdvisor } from "../components/AIPlanAdvisor";
 import { PageHero, PageShell, PrimaryLink, SecondaryLink, SectionTitle } from "../components/MarketingShell";
@@ -15,6 +16,8 @@ const integrationRoadmap = [
   ["第三阶段", "履约自动回传", "仓库出库后把承运商、追踪号、发货状态回传平台，同时保留异常人工确认。"],
   ["第四阶段", "内容与销售分析", "YouTube / TikTok 内容 API 用于看视频、达人或内容效果，不直接替代订单履约接口。"],
 ];
+
+export const metadata = publicPageMetadata("/advisor");
 
 export default function AdvisorPage() {
   return (

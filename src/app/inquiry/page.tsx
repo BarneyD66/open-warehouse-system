@@ -1,9 +1,12 @@
+import { publicPageMetadata } from "@/lib/publicSeo";
 import Link from "next/link";
 import { ArrowRight, FileText, PackageCheck, ReceiptText } from "lucide-react";
 import { CustomerInquiryForm } from "../components/CustomerMvpForms";
 import { PageShell } from "../components/MarketingShell";
 
 export const dynamic = "force-dynamic";
+
+export const metadata = publicPageMetadata("/inquiry");
 
 export default function InquiryPage() {
   return (

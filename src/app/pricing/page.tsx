@@ -1,3 +1,4 @@
+import { publicPageMetadata } from "@/lib/publicSeo";
 import { AlertTriangle, Calculator, PackageCheck, ReceiptText, RefreshCcw, Truck, Warehouse } from "lucide-react";
 import { PricingEstimator } from "../components/PricingEstimator";
 import { InfoCard, PageHero, PageShell, PrimaryLink, SecondaryLink, SectionTitle } from "../components/MarketingShell";
@@ -51,6 +52,8 @@ const excludedCosts = [
   "预约不准时、送仓延误或承运商临时附加费",
   "第三方物流商、平台或客户指定服务产生的实际账单费用",
 ];
+
+export const metadata = publicPageMetadata("/pricing");
 
 export default function PricingPage() {
   return (

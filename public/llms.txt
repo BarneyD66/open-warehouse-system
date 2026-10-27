@@ -1,0 +1,19 @@
+# 英国驿站
+
+> 英国驿站面向中国跨境卖家，提供英国本地仓储、一件代发、退货处理、FBA 补仓与账单对账服务。
+
+## 主要公开页面
+
+- [首页](https://nexroutehub.com/)
+- [关于我们](https://nexroutehub.com/about)
+- [头程清关](https://nexroutehub.com/services/first-mile)
+- [仓储中转](https://nexroutehub.com/services/warehousing)
+- [一件代发](https://nexroutehub.com/services/fulfillment)
+- [贴标换标](https://nexroutehub.com/services/prep)
+- [售后维修](https://nexroutehub.com/services/after-sales)
+- [价格说明](https://nexroutehub.com/pricing)
+- [帮助中心](https://nexroutehub.com/help)
+- [AI 方案助手](https://nexroutehub.com/advisor)
+- [提交报价需求](https://nexroutehub.com/inquiry)
+- [新闻资讯](https://nexroutehub.com/news)
+- [站点地图](https://nexroutehub.com/sitemap.xml)

@@ -1,9 +1,12 @@
+import { publicPageMetadata } from "@/lib/publicSeo";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { MarketingFooter, MarketingHeader } from "../components/MarketingShell";
 import { surfaceHref } from "@/lib/surfaceLinks";
 import { newsArticles, newsCategories } from "./data";
+
+export const metadata = publicPageMetadata("/news");
 
 export default function NewsPage() {
   const firstArticleByCategory = Object.fromEntries(

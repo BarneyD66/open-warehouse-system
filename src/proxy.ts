@@ -140,6 +140,8 @@ export function proxy(request: NextRequest) {
     if (pathname === "/admin") return redirectTo(request, "admin", hasStaffSession(request) ? "/ops" : "/ops-login");
     return hasSurfaceUrl("admin") ? redirectTo(request, "admin", "/ops") : redirectTo(request, "marketing", "/");
   }
+  // The quotation form is also an anonymous public marketing entry point.
+  if (pathname === "/inquiry") return NextResponse.next();
   if (startsWithAny(pathname, customerPrefixes) || pathname === "/app") {
     if ((pathname === "/login" || pathname === "/app") && hasCustomerSession(request)) return redirectTo(request, "customer", "/portal");
     if (startsWithAny(pathname, protectedCustomerPrefixes) && !hasCustomerSession(request)) return redirectTo(request, "customer", "/login");

@@ -1,3 +1,4 @@
+import { publicPageMetadata } from "@/lib/publicSeo";
 import { AlertTriangle, PackageCheck, ReceiptText, RefreshCcw, ShieldCheck, Truck } from "lucide-react";
 import { InfoCard, PageHero, PageShell, PrimaryLink, SecondaryLink, SectionTitle } from "../components/MarketingShell";
 import { surfaceHref } from "@/lib/surfaceLinks";
@@ -17,6 +18,8 @@ const inboundChecklist = [
   ["到仓信息", "预计到仓时间、运输方式、承运商、追踪号、送仓预约。"],
   ["服务要求", "仓储、一件代发、FBA 中转、退货换标、拍照质检或打托。"],
 ];
+
+export const metadata = publicPageMetadata("/help");
 
 export default function HelpPage() {
   return (
