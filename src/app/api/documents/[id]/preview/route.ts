@@ -62,6 +62,7 @@ async function handleGet(request: Request, id: string) {
       "Content-Disposition": `inline; filename*=UTF-8''${encodeURIComponent(document.originalName)}`,
       "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy": "sandbox",
     },
   });
 }
